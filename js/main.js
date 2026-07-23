@@ -24,12 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (mobileToggle && mobileMenu) {
         mobileToggle.addEventListener('click', () => {
             mobileMenu.classList.toggle('open');
+            mobileToggle.classList.toggle('active');
         });
 
         // Close dropdown when a link is tapped
         mobileMenu.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => {
                 mobileMenu.classList.remove('open');
+                mobileToggle.classList.remove('active');
             });
         });
     }
