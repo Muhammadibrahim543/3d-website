@@ -69,6 +69,7 @@
 
             <div class="contact-grid">
                 <div class="clay-card reveal-on-scroll">
+                    <div id="customizer-preview-container"></div>
                     <div id="contact-feedback" style="font-family:var(--f-head); font-weight:700; margin-bottom:1rem;"></div>
                     <form id="shapey-contact-form">
                         <div class="form-group">
@@ -88,9 +89,9 @@
                                 <option>Carbon Fiber (Ultra Stiff)</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label data-i18n="label_file">STL / STEP CAD File Placeholder</label>
-                            <input type="file" class="clay-input" accept=".stl,.step,.stp">
+                        <div class="form-group" id="file-upload-group">
+                            <label data-i18n="label_file">Upload Optional Photo / Reference File</label>
+                            <input type="file" class="clay-input" accept="image/*,.stl,.step,.stp">
                         </div>
                         <div class="form-group">
                             <label for="project-details" data-i18n="label_details">Project Details & Size</label>

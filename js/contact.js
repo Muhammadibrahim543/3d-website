@@ -2,13 +2,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const contactForm = document.getElementById('shapey-contact-form');
     const formFeedback = document.getElementById('contact-feedback');
 
-    // Pre-fill from calculator if URL query parameters exist
+    // Pre-fill from calculator or customizer if URL query parameters exist
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('material') && document.getElementById('material-choice')) {
         document.getElementById('material-choice').value = urlParams.get('material');
     }
     if (urlParams.has('details') && document.getElementById('project-details')) {
         document.getElementById('project-details').value = urlParams.get('details');
+    }
+
+    // Check for live customizer snapshot payload
+    let pendingCustomOrder = null;
+    try {
+        const storedPending = localStorage.getItem('kiras_pending_custom_order');
+        if (storedPending) {
+            pendingCustomOrder = JSON.parse(storedPending);
+        }
+    } catch(e) {}
+
+    const isFromCustomizer = urlParams.get('from') === 'customizer' || pendingCustomOrder !== null;
+    const fileUploadGroup = document.getElementById('file-upload-group');
+    const previewContainer = document.getElementById('customizer-preview-container');
+
+    if (isFromCustomizer && fileUploadGroup) {
+        // HIDE STL file requirement completely when ordering a customizer design!
+        fileUploadGroup.style.display = 'none';
+    }
+
+    if (isFromCustomizer && previewContainer && pendingCustomOrder) {
+        previewContainer.innerHTML = `
+            <div class="customizer-order-preview-card" style="background:#181621; color:#FFFFFF; padding:1.4rem; border-radius:24px; margin-bottom:1.8rem; text-align:center; border:2px solid var(--c-primary); box-shadow: 0 12px 32px rgba(0,0,0,0.3);">
+                <div style="font-size:0.9rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--c-primary); font-weight:700; margin-bottom:0.6rem;">🎨 Your Custom 3D Nameplate Preview</div>
+                
+                <div style="background:#121019; padding:1rem; border-radius:18px; display:inline-block; max-width:100%; margin:0.5rem 0;">
+                    <img src="${pendingCustomOrder.snapshot}" alt="3D Custom Nameplate Preview" style="max-width:100%; height:auto; border-radius:12px; display:block; margin:0 auto;">
+                </div>
+                
+                <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:0.8rem; margin-top:1rem; font-size:0.95rem; font-family:var(--f-head); background:rgba(255,255,255,0.05); padding:0.8rem 1rem; border-radius:16px;">
+                    <span><strong>Text:</strong> <span style="color:var(--c-accent);">${pendingCustomOrder.text}</span></span>
+                    <span><strong>Font:</strong> ${pendingCustomOrder.font}</span>
+                    <span><strong>Color:</strong> ${pendingCustomOrder.color}</span>
+                    <span><strong>Thickness:</strong> ${pendingCustomOrder.thickness}mm</span>
+                    <span><strong>Quote:</strong> <strong style="color:var(--c-primary); font-size:1.1rem;">${pendingCustomOrder.price}</strong></span>
+                </div>
+
+                <!-- Direct WhatsApp Order Button -->
+                <div style="margin-top:1.2rem;">
+                    <a id="btn-whatsapp-direct" href="#" target="_blank" rel="noopener noreferrer" class="clay-btn btn-coral" style="background:#25D366; color:#FFF; width:100%; font-size:1.05rem; gap:0.5rem; justify-content:center;">
+                        💬 Order Directly via WhatsApp (+880 1793-500131)
+                    </a>
+                </div>
+            </div>
+        `;
+
+        // Configure WhatsApp direct message link
+        const btnWa = document.getElementById('btn-whatsapp-direct');
+        if (btnWa) {
+            const waMsg = `Hi Studio Kira's Creation! I want to order my customized 3D Nameplate:\n\n• Text/Name: ${pendingCustomOrder.text}\n• Font Style: ${pendingCustomOrder.font}\n• Base Color: ${pendingCustomOrder.color}\n• Thickness: ${pendingCustomOrder.thickness}mm\n• Quoted Price: ${pendingCustomOrder.price}\n\nPlease confirm my order!`;
+            btnWa.href = `https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}`;
+        }
     }
 
     if (contactForm) {
@@ -44,7 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 material: material,
                 details: details || 'Custom 3D Print Request',
                 status: 'Pending',
-                estimatedPrice: estPrice
+                estimatedPrice: estPrice,
+                snapshot: pendingCustomOrder ? pendingCustomOrder.snapshot : null
             };
 
             const existingOrders = JSON.parse(localStorage.getItem('kiras_orders') || '[]');

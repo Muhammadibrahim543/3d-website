@@ -174,11 +174,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (order.status === 'Printing') statusBadgeClass = 'printing';
             if (order.status === 'Completed') statusBadgeClass = 'completed';
 
+            const hasSnapshot = order.snapshot && order.snapshot.startsWith('data:image/');
+
             tr.innerHTML = `
                 <td><strong style="color:var(--c-primary);">${escapeHtml(order.id)}</strong></td>
                 <td style="font-size:0.9rem;">${escapeHtml(order.date)}<br><small style="color:var(--c-text-muted);">${escapeHtml(order.time || '')}</small></td>
                 <td><strong>${escapeHtml(order.name)}</strong><br><small style="color:var(--c-text-muted);">${escapeHtml(order.email)}</small></td>
-                <td><span style="font-weight:600;">${escapeHtml(order.material)}</span><br><small style="color:var(--c-text-muted);">${escapeHtml((order.details || '').substring(0, 35))}${(order.details || '').length > 35 ? '...' : ''}</small></td>
+                <td>
+                    <span style="font-weight:600;">${escapeHtml(order.material)}</span><br>
+                    <small style="color:var(--c-text-muted);">${escapeHtml((order.details || '').substring(0, 35))}${(order.details || '').length > 35 ? '...' : ''}</small>
+                    ${hasSnapshot ? `<br><button class="clay-btn btn-sm btn-view-design" data-id="${escapeHtml(order.id)}" style="margin-top:0.4rem; padding:0.25rem 0.6rem; font-size:0.75rem; background:var(--c-primary); color:#FFF;">🎨 View Custom Design</button>` : ''}
+                </td>
                 <td><strong>${escapeHtml(order.estimatedPrice || '৳0')}</strong></td>
                 <td>
                     <select class="clay-select status-switcher" data-id="${escapeHtml(order.id)}" style="padding:0.3rem 0.6rem; font-size:0.85rem; width:auto;">
@@ -194,6 +200,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
             tbody.appendChild(tr);
         });
+
+        // Attach View Design Listeners
+        tbody.querySelectorAll('.btn-view-design').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const id = e.target.getAttribute('data-id');
+                const allOrders = getOrders();
+                const targetOrder = allOrders.find(o => o.id === id);
+                if (targetOrder && targetOrder.snapshot) {
+                    const modal = document.getElementById('design-preview-modal');
+                    const modalTitle = document.getElementById('design-modal-title');
+                    const modalBody = document.getElementById('design-modal-body');
+
+                    if (modal && modalBody) {
+                        modalTitle.textContent = `Design Preview (Order ${targetOrder.id})`;
+                        modalBody.innerHTML = `
+                            <div style="background:#121019; padding:1rem; border-radius:18px; margin-bottom:1rem;">
+                                <img src="${targetOrder.snapshot}" alt="Customer Custom Design" style="max-width:100%; height:auto; border-radius:12px; display:block; margin:0 auto;">
+                            </div>
+                            <div style="text-align:left; background:rgba(255,255,255,0.05); padding:1rem; border-radius:14px; font-size:0.9rem; line-height:1.6;">
+                                <strong>Customer:</strong> ${escapeHtml(targetOrder.name)} (${escapeHtml(targetOrder.email)})<br>
+                                <strong>Quote:</strong> ${escapeHtml(targetOrder.estimatedPrice)}<br>
+                                <strong>Details:</strong><br>
+                                <pre style="white-space:pre-wrap; font-family:inherit; margin-top:0.3rem; color:var(--c-text-muted);">${escapeHtml(targetOrder.details)}</pre>
+                            </div>
+                        `;
+                        modal.classList.add('open');
+                        modal.style.display = 'flex';
+                    }
+                }
+            });
+        });
+
+        // Close Design Modal
+        const btnCloseDesign = document.getElementById('btn-close-design-modal');
+        const designModal = document.getElementById('design-preview-modal');
+        if (btnCloseDesign && designModal) {
+            btnCloseDesign.addEventListener('click', () => {
+                designModal.classList.remove('open');
+                designModal.style.display = 'none';
+            });
+        }
 
         // Attach Status Change Listeners
         tbody.querySelectorAll('.status-switcher').forEach(sel => {

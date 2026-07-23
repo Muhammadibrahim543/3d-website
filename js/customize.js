@@ -231,18 +231,69 @@ document.addEventListener('DOMContentLoaded', () => {
     inputName.addEventListener('input', updatePreview);
     inputThickness.addEventListener('input', updatePreview);
 
+    // Helper to generate standalone SVG snapshot image for order receipt
+    function generateSnapshotSVG() {
+        const text = inputName.value.trim() || 'CUSTOM NAME';
+        const upperText = text.toUpperCase();
+        const fontEl = fontOptions ? fontOptions.querySelector('.font-option.active') : null;
+        const fontName = fontEl ? fontEl.getAttribute('data-font') : currentFont;
+        const fontDisplayName = fontEl && fontEl.querySelector('small') ? fontEl.querySelector('small').textContent : 'Fredoka';
+
+        const sizer = document.querySelector('.layer-sizer');
+        const textWidth = sizer ? (sizer.offsetWidth || (upperText.length * 28)) : (upperText.length * 28);
+        const svgWidth = Math.max(340, textWidth + 90);
+        const svgHeight = 160;
+
+        const svgDoc = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="-${svgWidth/2} -${svgHeight/2} ${svgWidth} ${svgHeight}">
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Ahkio&amp;family=Balsamiq+Sans:wght@700&amp;family=Chewy&amp;family=Fredoka:wght@700&amp;family=Grandstander:wght@700&amp;family=Titan+One&amp;display=swap');
+            </style>
+            <rect x="-${svgWidth/2}" y="-${svgHeight/2}" width="${svgWidth}" height="${svgHeight}" rx="24" fill="#181621" />
+            <g transform="translate(0, 0)">
+                <circle cx="-${textWidth/2 + 20}" cy="0" r="9" fill="none" stroke="${currentColor}" stroke-width="10" />
+                <text x="0" y="0" text-anchor="middle" dominant-baseline="central" dy="0.05em" 
+                      fill="${currentColor}" stroke="${currentColor}" stroke-width="24" stroke-linejoin="round"
+                      font-family="${fontName}, sans-serif" font-size="46" font-weight="800">
+                    ${upperText}
+                </text>
+            </g>
+            <g transform="translate(-2, -4)">
+                <text x="0" y="0" text-anchor="middle" dominant-baseline="central" dy="0.05em" 
+                      fill="#F5F0E8" font-family="${fontName}, sans-serif" font-size="46" font-weight="800">
+                    ${upperText}
+                </text>
+            </g>
+        </svg>`;
+
+        return {
+            snapshotUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgDoc),
+            fontDisplayName: fontDisplayName
+        };
+    }
+
     // --- Order Button ---
     if (btnOrder) {
         btnOrder.addEventListener('click', () => {
             const text = inputName.value.trim() || 'Custom Name';
-            const fontEl = fontOptions.querySelector('.font-option.active');
-            const fontName = fontEl ? fontEl.querySelector('small').textContent : 'Fredoka';
             const thickness = inputThickness.value;
             const price = displayPrice.textContent;
+            
+            const snapData = generateSnapshotSVG();
 
-            const details = `Live Customizer Order:\n- Name/Text: ${text}\n- Font: ${fontName}\n- Base Color: ${currentColorName}\n- Thickness: ${thickness}mm\n- Quoted Price: ${price}`;
+            const pendingCustomOrder = {
+                text: text,
+                font: snapData.fontDisplayName,
+                color: currentColorName,
+                thickness: thickness,
+                price: price,
+                snapshot: snapData.snapshotUrl
+            };
 
-            window.location.href = `contact.html?material=${encodeURIComponent(currentColorName + ' PLA')}&details=${encodeURIComponent(details)}`;
+            localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingCustomOrder));
+
+            const details = `Live Customizer Order:\n- Name/Text: ${text}\n- Font Style: ${snapData.fontDisplayName}\n- Base Color: ${currentColorName}\n- Thickness: ${thickness}mm\n- Quoted Price: ${price}`;
+
+            window.location.href = `contact.html?from=customizer&material=${encodeURIComponent(currentColorName + ' PLA')}&details=${encodeURIComponent(details)}`;
         });
     }
 
