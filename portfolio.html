@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery // Kira's Creation Soft-3D Studio</title>
+    
+    <meta name="description" content="Explore our gallery of high precision 3D printed lithophanes, lamps, custom electronics enclosures, keychains, and prototypes by Kira's Creation.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700&family=Hind+Siliguri:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/pages.css">
+    <style>
+        .portfolio-card-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            padding: 0.35rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--c-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+        [data-theme="dark"] .portfolio-card-badge {
+            background: rgba(36, 33, 48, 0.92);
+            color: var(--c-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        .portfolio-item {
+            position: relative;
+            transition: all 0.35s var(--bouncy-ease);
+        }
+        .gallery-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .portfolio-item:hover .gallery-frame img {
+            transform: scale(1.06);
+        }
+        .portfolio-meta {
+            padding: 1.2rem;
+        }
+        .portfolio-specs {
+            display: flex;
+            gap: 0.8rem;
+            flex-wrap: wrap;
+            margin-top: 0.8rem;
+            font-size: 0.8rem;
+            color: var(--c-text-muted);
+        }
+        .spec-tag {
+            background: #F0EAD6;
+            color: #4E463E;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+        [data-theme="dark"] .spec-tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--c-text);
+        }
+        /* Modal Lightbox - Night Mode Aware */
+        .lightbox-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        .lightbox-modal.open {
+            display: flex;
+        }
+        .lightbox-content {
+            position: relative;
+            max-width: 920px;
+            width: 100%;
+            background: var(--c-bg-card);
+            color: var(--c-text);
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: grid;
+            grid-template-columns: 1.1fr 0.9fr;
+            transition: background-color 0.35s ease, color 0.35s ease;
+        }
+        @media (max-width: 768px) {
+            .lightbox-content {
+                grid-template-columns: 1fr;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
+        }
+        .lightbox-img-container {
+            position: relative;
+            background: var(--c-bg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 360px;
+            padding: 1.5rem;
+        }
+        .lightbox-img-container img {
+            width: 100%;
+            height: 100%;
+            max-height: 480px;
+            object-fit: contain;
+            border-radius: 20px;
+        }
+        .lightbox-details {
+            padding: 2.8rem 2.2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            background: var(--c-bg-card);
+            color: var(--c-text);
+        }
+        .lightbox-details h3 {
+            color: var(--c-text) !important;
+            font-size: 1.65rem;
+            margin-top: 0.6rem;
+            line-height: 1.35;
+            font-weight: 700;
+        }
+        .lightbox-details p {
+            color: var(--c-text-muted) !important;
+            margin-top: 1.1rem;
+            font-size: 0.98rem;
+            line-height: 1.7;
+        }
+        .lightbox-details span#lightboxCategory {
+            color: var(--c-primary) !important;
+            font-size: 0.85rem;
+            font-family: var(--f-head);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 42px;
+            height: 42px;
+            background: var(--c-bg-card);
+            color: var(--c-text);
+            border-radius: 50%;
+            border: 1px solid rgba(142, 132, 120, 0.25);
+            font-size: 1.4rem;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s var(--bouncy-ease), background 0.2s, color 0.2s;
+        }
+        .lightbox-close:hover {
+            transform: scale(1.1);
+            background: var(--c-primary);
+            color: #FFF;
+        }
+        .comparison-btn {
+            margin-top: 1rem;
+            width: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="site-wrapper">
+        <header class="main-header">
+            <div class="nav-pill">
+                <a href="index.html" class="brand-logo">
+                    <span class="brand-text">Kira's Creation</span>
+                </a>
+                <nav class="desktop-nav">
+                    <a href="index.html" data-i18n="nav_home">Home</a>
+                    <a href="services.html" data-i18n="nav_services">Services</a>
+                    <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                    <a href="portfolio.html" class="active" data-i18n="nav_gallery">Gallery</a>
+                    <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+
+                    <a href="customize.html" data-i18n="nav_customize">Customize</a>
+
+                    <a href="about.html" data-i18n="nav_about">About</a>
+                    <a href="contact.html" data-i18n="nav_contact">Contact</a>
+                </nav>
+                <div class="header-cta">
+                    <button class="theme-toggle-btn" aria-label="Toggle Theme">🌙</button>
+                    <button class="lang-toggle-btn">🌐 EN</button>
+                    <a href="contact.html" class="clay-btn btn-sm btn-coral" data-i18n="nav_estimate">Get Estimate</a>
+                </div>
+                <button class="mobile-toggle" aria-label="Toggle Menu">
+                    <span class="toggle-icon"></span>
+                </button>
+            </div>
+            <div class="mobile-menu-dropdown clay-card">
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+                    <button class="theme-toggle-btn" aria-label="Toggle Theme">🌙</button>
+                    <button class="lang-toggle-btn">🌐 EN</button>
+                </div>
+                <a href="index.html" data-i18n="nav_home">Home</a>
+                <a href="services.html" data-i18n="nav_services">Services</a>
+                <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                <a href="portfolio.html" class="active" data-i18n="nav_gallery">Gallery</a>
+                <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+
+                <a href="customize.html" data-i18n="nav_customize">Customize</a>
+
+                <a href="about.html" data-i18n="nav_about">About</a>
+                <a href="contact.html" data-i18n="nav_contact">Contact</a>
+            </div>
+        </header>
+
+        <main class="section-block" style="padding-top: 10rem;">
+            <div class="section-heading text-center reveal-on-scroll">
+                <h2 data-i18n="portfolio_headline">Shape Gallery & Real Showcase</h2>
+                <p class="section-sub" data-i18n="portfolio_sub">// CREATIVE_COMMISSIONS_BY_IBRAHIM</p>
+            </div>
+
+            <!-- Filter Pills -->
+            <div class="portfolio-filters reveal-on-scroll">
+                <button class="filter-pill active" data-filter="all" data-i18n="filter_all">All Projects (25+)</button>
+                <button class="filter-pill" data-filter="lamps" data-i18n="filter_lamps">Lighting & Lamps</button>
+                <button class="filter-pill" data-filter="art" data-i18n="filter_art">Artistic & Decor</button>
+                <button class="filter-pill" data-filter="custom" data-i18n="filter_custom">Custom & Keychains</button>
+                <button class="filter-pill" data-filter="functional" data-i18n="filter_functional">Functional & Accessories</button>
+            </div>
+
+            <!-- Portfolio Grid -->
+            <div class="portfolio-grid">
+
+                <!-- Ambient Lamp Classics -->
+                <div class="clay-card portfolio-item" data-category="lamps" data-desc="Layered bamboo PLA structure with internal diffused warm white LED illumination." data-img="images/torii_gate_lamp.webp">
+                    <span class="portfolio-card-badge">✨ Lightbox</span>
+                    <div class="gallery-frame">
+                        <img src="images/torii_gate_lamp.webp" alt="Torii Gate Ambient Lightbox" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="filter_lamps">Lighting & Lamps</span>
+                        <h4 data-i18n="cs2_title">Japanese Torii Gate Ambient Lightbox</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag">PLA Plastic</span>
+                            <span class="spec-tag">0.16mm Layer</span>
+                            <span class="spec-tag">LED Backlit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="clay-card portfolio-item" data-category="lamps" data-desc="Intricate geometric relief patterns projecting intricate shadow patterns on surrounding walls." data-img="images/mandala_cube_lamp.webp">
+                    <span class="portfolio-card-badge">💡 Lightbox</span>
+                    <div class="gallery-frame">
+                        <img src="images/mandala_cube_lamp.webp" alt="Mandala Geometric Light Cube" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="filter_lamps">Lighting & Lamps</span>
+                        <h4>Mandala Geometric Light Cube</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag">Matte Black & Gold</span>
+                            <span class="spec-tag">5V USB LED</span>
+                            <span class="spec-tag">High Contrast</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 1 -->
+                <div class="clay-card portfolio-item" data-category="functional" data-desc-key="g1_desc" data-img="images/Gemini_Generated_Image_1ojrbw1ojrbw1ojr-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g1_badge">📱 Desk Accessory</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_1ojrbw1ojrbw1ojr-01.webp" alt="Leaf Motif Phone Stand" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g1_cat">Functional & Accessories</span>
+                        <h4 data-i18n="g1_title">Leaf Motif Ergonomic Phone Stand</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g1_spec1">White & Black PLA</span>
+                            <span class="spec-tag" data-i18n="g1_spec2">Leaf Cutout</span>
+                            <span class="spec-tag" data-i18n="g1_spec3">Non-Slip Dock</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g2_desc" data-img="images/Gemini_Generated_Image_4js4rx4js4rx4js4-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g2_badge">🧩 Mechanical Puzzle</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_4js4rx4js4rx4js4-01.webp" alt="Interlocking Puzzle Cube" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g2_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g2_title">Dual-Color Mechanical Interlocking Cube</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g2_spec1">Red & Silk Bronze</span>
+                            <span class="spec-tag" data-i18n="g2_spec2">Print-in-Place</span>
+                            <span class="spec-tag" data-i18n="g2_spec3">Tactile Gears</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 3 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g3_desc" data-img="images/Gemini_Generated_Image_5fbyv05fbyv05fby-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g3_badge">🏔️ Landscape Art</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_5fbyv05fbyv05fby-01.webp" alt="Mountain Waterfall Silhouette" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g3_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g3_title">Twin Geometry Mountain & Waterfall Silhouette</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g3_spec1">Matte Black PLA</span>
+                            <span class="spec-tag" data-i18n="g3_spec2">Diamond Frame</span>
+                            <span class="spec-tag" data-i18n="g3_spec3">Wall & Table Decor</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 4 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g4_desc" data-img="images/Gemini_Generated_Image_8vm6n18vm6n18vm6-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g4_badge">🏛️ Fluted Decor</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_8vm6n18vm6n18vm6-01.webp" alt="Fluted Cylinder Vase" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g4_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g4_title">Architectural Fluted Cylinder Vase</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g4_spec1">Silk Bronze Finish</span>
+                            <span class="spec-tag" data-i18n="g4_spec2">Vertical Ribbing</span>
+                            <span class="spec-tag" data-i18n="g4_spec3">Modern Tabletop</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 5 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g5_desc" data-img="images/Gemini_Generated_Image_b110ivb110ivb110-02.webp">
+                    <span class="portfolio-card-badge" data-i18n="g5_badge">⏳ Spiral Sculpture</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_b110ivb110ivb110-02.webp" alt="Twisted Hourglass Stand" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g5_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g5_title">Mathematical Twisted Hourglass Stand</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g5_spec1">Pure White PLA</span>
+                            <span class="spec-tag" data-i18n="g5_spec2">Parametric Curves</span>
+                            <span class="spec-tag" data-i18n="g5_spec3">Minimalist Art</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 6 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g6_desc" data-img="images/Gemini_Generated_Image_c3sxjac3sxjac3sx-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g6_badge">☯️ Yin-Yang Set</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_c3sxjac3sxjac3sx-01.webp" alt="Ribbed Spiral Vases" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g6_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g6_title">Contrast Ribbed Spiral Mini Vases Pair</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g6_spec1">Black & Ivory Pair</span>
+                            <span class="spec-tag" data-i18n="g6_spec2">Swirling Waves</span>
+                            <span class="spec-tag" data-i18n="g6_spec3">Companion Set</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 7 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g7_desc" data-img="images/Gemini_Generated_Image_c4t7vyc4t7vyc4t7-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g7_badge">⛩️ Zen Silhouette</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_c4t7vyc4t7vyc4t7-01.webp" alt="Pagoda Bonsai Moon Plaque" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g7_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g7_title">Oriental Pagoda & Bonsai Moon Plaque</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g7_spec1">Jet Black PLA</span>
+                            <span class="spec-tag" data-i18n="g7_spec2">Circular Crescent</span>
+                            <span class="spec-tag" data-i18n="g7_spec3">Japanese Pagoda</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 8 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g8_desc" data-img="images/Gemini_Generated_Image_ddrleuddrleuddrl-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g8_badge">☪️ Islamic Art</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_ddrleuddrleuddrl-01.webp" alt="Arabic Calligraphy Surah Al-Falaq" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g8_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g8_title">3D Arabic Calligraphy Surah Al-Falaq Plaque</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g8_spec1">Cream & Wood Grain</span>
+                            <span class="spec-tag" data-i18n="g8_spec2">3D Relief</span>
+                            <span class="spec-tag" data-i18n="g8_spec3">Surah Al-Falaq</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 9 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g9_desc" data-img="images/Gemini_Generated_Image_dtoe8idtoe8idtoe-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g9_badge">🌷 Voronoi Flowers</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_dtoe8idtoe8idtoe-01.webp" alt="Voronoi Vase with Tulips" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g9_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g9_title">Voronoi Mesh Vase with 3D Printed Tulips</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g9_spec1">Black Voronoi Cage</span>
+                            <span class="spec-tag" data-i18n="g9_spec2">3 Color Tulips</span>
+                            <span class="spec-tag" data-i18n="g9_spec3">Eco Bio-PLA</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 10 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g10_desc" data-img="images/Gemini_Generated_Image_fd44sofd44sofd44-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g10_badge">🏷️ Pet & Name Tags</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_fd44sofd44sofd44-01.webp" alt="Custom Pet & Name Tags" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g10_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g10_title">Custom Dual-Color Pet & Keychain Name Tags</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g10_spec1">Multi-Color PLA</span>
+                            <span class="spec-tag" data-i18n="g10_spec2">Raised Text</span>
+                            <span class="spec-tag" data-i18n="g10_spec3">Custom Names</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 11 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g11_desc" data-img="images/Gemini_Generated_Image_gp0bdsgp0bdsgp0b-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g11_badge">🎖️ Desk Plaque</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_gp0bdsgp0bdsgp0b-01.webp" alt="16 December Ibrahim Plaque" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g11_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g11_title">16 December Ibrahim Victory Badge Stand</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g11_spec1">Cyan Blue & Charcoal</span>
+                            <span class="spec-tag" data-i18n="g11_spec2">Curved Arch</span>
+                            <span class="spec-tag" data-i18n="g11_spec3">Victory Day Plaque</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 12 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g12_desc" data-img="images/Gemini_Generated_Image_hug452hug452hug4-02.webp">
+                    <span class="portfolio-card-badge" data-i18n="g12_badge">🏛️ Architecture</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_hug452hug452hug4-02.webp" alt="Gothic Chapel Miniature" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g12_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g12_title">Miniature Gothic Village Chapel Replica</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g12_spec1">Dark Graphite PLA</span>
+                            <span class="spec-tag" data-i18n="g12_spec2">0.10mm Detail</span>
+                            <span class="spec-tag" data-i18n="g12_spec3">Shingle Roof</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 13 -->
+                <div class="clay-card portfolio-item" data-category="lamps" data-desc-key="g13_desc" data-img="images/Gemini_Generated_Image_j08u0nj08u0nj08u-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g13_badge">🏮 Ambient Lamp</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_j08u0nj08u0nj08u-01.webp" alt="Japanese Shoji Lantern" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g13_cat">Lighting & Lamps</span>
+                        <h4 data-i18n="g13_title">Traditional Japanese Shoji Wood Frame Lantern</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g13_spec1">Silk Wood PLA</span>
+                            <span class="spec-tag" data-i18n="g13_spec2">Warm LED Light</span>
+                            <span class="spec-tag" data-i18n="g13_spec3">Shoji Grid</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 14 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g14_desc" data-img="images/Gemini_Generated_Image_kch6a8kch6a8kch6-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g14_badge">🔑 Custom Logo</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_kch6a8kch6a8kch6-01.webp" alt="HUNTRAX Brand Keychain" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g14_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g14_title">HUNTRAX Custom Brand Emblem Keychain</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g14_spec1">Ivory White & Black</span>
+                            <span class="spec-tag" data-i18n="g14_spec2">High Contrast</span>
+                            <span class="spec-tag" data-i18n="g14_spec3">Brand Keyring</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 15 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g15_desc" data-img="images/Gemini_Generated_Image_l6dnmdl6dnmdl6dn-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g15_badge">🇧🇩 Bengali Name Tag</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_l6dnmdl6dnmdl6dn-01.webp" alt="Bengali Name Keychains" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g15_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g15_title">Personalized Bengali & English Name Keychains</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g15_spec1">Red & Black PLA</span>
+                            <span class="spec-tag" data-i18n="g15_spec2">Bengali Script</span>
+                            <span class="spec-tag" data-i18n="g15_spec3">Custom Names</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 16 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g16_desc" data-img="images/Gemini_Generated_Image_nrbc2bnrbc2bnrbc-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g16_badge">🛡️ Fan Art Plaque</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_nrbc2bnrbc2bnrbc-01.webp" alt="KPOP Demon Hunters Emblem" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g16_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g16_title">K-Pop Demon Hunters 3D Emblem Plaque</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g16_spec1">White & Black PLA</span>
+                            <span class="spec-tag" data-i18n="g16_spec2">Bold Typography</span>
+                            <span class="spec-tag" data-i18n="g16_spec3">Fan Emblem</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 17 -->
+                <div class="clay-card portfolio-item" data-category="functional" data-desc-key="g17_desc" data-img="images/Gemini_Generated_Image_s9fhbqs9fhbqs9fh-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g17_badge">🍃 Home Accessory</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_s9fhbqs9fhbqs9fh-01.webp" alt="Leaf Soap Dish" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g17_cat">Functional & Accessories</span>
+                        <h4 data-i18n="g17_title">Dual-Layer Leaf Drainage Soap & Trinket Tray</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g17_spec1">Sky Blue & White</span>
+                            <span class="spec-tag" data-i18n="g17_spec2">Slotted Drainage</span>
+                            <span class="spec-tag" data-i18n="g17_spec3">Leaf Outline</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 18 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g18_desc" data-img="images/Gemini_Generated_Image_smt185smt185smt1-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g18_badge">🏆 Desk Stand</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_smt185smt185smt1-01.webp" alt="16 Ibrahim December Desk Plaque" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g18_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g18_title">16 December Ibrahim Wide Desk Plaque</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g18_spec1">Ocean Blue & Charcoal</span>
+                            <span class="spec-tag" data-i18n="g18_spec2">Wide Arch</span>
+                            <span class="spec-tag" data-i18n="g18_spec3">Memorial Plaque</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 19 -->
+                <div class="clay-card portfolio-item" data-category="functional" data-desc-key="g19_desc" data-img="images/Gemini_Generated_Image_t9t4u5t9t4u5t9t4-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g19_badge">⚡ Electronics Case</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_t9t4u5t9t4u5t9t4-01.webp" alt="ESP32 Microcontroller Sliding Box" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g19_cat">Functional & Accessories</span>
+                        <h4 data-i18n="g19_title">ESP32 Microcontroller Sliding Case Box</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g19_spec1">Silk Copper PLA</span>
+                            <span class="spec-tag" data-i18n="g19_spec2">Sliding Lid</span>
+                            <span class="spec-tag" data-i18n="g19_spec3">Tactile Switch Port</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 20 -->
+                <div class="clay-card portfolio-item" data-category="functional" data-desc-key="g20_desc" data-img="images/Gemini_Generated_Image_tbyh3ltbyh3ltbyh-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g20_badge">🎲 Fidget Toy</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_tbyh3ltbyh3ltbyh-01.webp" alt="Infinity Fidget Cube" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g20_cat">Functional & Accessories</span>
+                        <h4 data-i18n="g20_title">Print-in-Place Interlocking Infinity Fidget Cube</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g20_spec1">Matte Tan PLA</span>
+                            <span class="spec-tag" data-i18n="g20_spec2">Print-in-Place Hinges</span>
+                            <span class="spec-tag" data-i18n="g20_spec3">Endless Flip</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 21 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g21_desc" data-img="images/Gemini_Generated_Image_ttuhg4ttuhg4ttuh-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g21_badge">🏷️ Name Tag</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_ttuhg4ttuhg4ttuh-01.webp" alt="IBRAHIM Ocean Blue Keychain" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g21_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g21_title">"IBRAHIM" Ocean Blue 3D Name Keychain</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g21_spec1">White & Blue PLA</span>
+                            <span class="spec-tag" data-i18n="g21_spec2">Cloud Frame</span>
+                            <span class="spec-tag" data-i18n="g21_spec3">Custom Lettering</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 22 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g22_desc" data-img="images/Gemini_Generated_Image_ualqw9ualqw9ualq-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g22_badge">🧥 Mini Planters</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_ualqw9ualqw9ualq-01.webp" alt="Mini Hoodie Desk Organizers" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g22_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g22_title">Mini Hoodie Desk Organizers Trio</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g22_spec1">White, Pink & Black</span>
+                            <span class="spec-tag" data-i18n="g22_spec2">Front Pocket Detail</span>
+                            <span class="spec-tag" data-i18n="g22_spec3">Pen & Plant Holder</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 23 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g23_desc" data-img="images/Gemini_Generated_Image_xjrrb2xjrrb2xjrr-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g23_badge">🏷️ Name Tag</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_xjrrb2xjrrb2xjrr-01.webp" alt="IFSHITA Heart Keychain" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g23_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g23_title">"IFSHITA" Blue Heart 3D Name Keychain</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g23_spec1">White Lettering</span>
+                            <span class="spec-tag" data-i18n="g23_spec2">Heart Accent</span>
+                            <span class="spec-tag" data-i18n="g23_spec3">Cyan Blue Base</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 24 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g24_desc" data-img="images/Gemini_Generated_Image_yc29tsyc29tsyc29-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g24_badge">🏠 Cottage Model</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_yc29tsyc29tsyc29-01.webp" alt="Medieval Stone Cottage Miniature" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g24_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g24_title">Medieval Stone Cottage Architectural Miniature</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g24_spec1">Blue Shingle Roof</span>
+                            <span class="spec-tag" data-i18n="g24_spec2">Stone Texture</span>
+                            <span class="spec-tag" data-i18n="g24_spec3">Brick Chimney</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 25 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g25_desc" data-img="images/Gemini_Generated_Image_yrxv9zyrxv9zyrxv-01.webp">
+                    <span class="portfolio-card-badge" data-i18n="g25_badge">🩺 Doctor Gift</span>
+                    <div class="gallery-frame">
+                        <img src="images/Gemini_Generated_Image_yrxv9zyrxv9zyrxv-01.webp" alt="Doctor Coat & Puffer Jacket Organizers" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g25_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g25_title">Doctor Coat & Puffer Jacket Desk Organizers</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g25_spec1">Stethoscope Detail</span>
+                            <span class="spec-tag" data-i18n="g25_spec2">White & Brown Set</span>
+                            <span class="spec-tag" data-i18n="g25_spec3">Medical Gift</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 26 -->
+                <div class="clay-card portfolio-item" data-category="art" data-desc-key="g26_desc" data-img="images/black_twisted_vase.webp">
+                    <span class="portfolio-card-badge" data-i18n="g26_badge">🖤 Parametric Vase</span>
+                    <div class="gallery-frame">
+                        <img src="images/black_twisted_vase.webp" alt="Black Parametric Twisted Spiral Vase" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g26_cat">Artistic & Decor</span>
+                        <h4 data-i18n="g26_title">Black Parametric Twisted Spiral Vase</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g26_spec1">Matte Black PLA</span>
+                            <span class="spec-tag" data-i18n="g26_spec2">Spiral Fins</span>
+                            <span class="spec-tag" data-i18n="g26_spec3">Tapered Neck</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 27 -->
+                <div class="clay-card portfolio-item" data-category="custom" data-desc-key="g27_desc" data-img="images/custom_blue_keychains_set.webp">
+                    <span class="portfolio-card-badge" data-i18n="g27_badge">🔑 Keychains Set</span>
+                    <div class="gallery-frame">
+                        <img src="images/custom_blue_keychains_set.webp" alt="Kira's Creation & Personalized Name Keychains Collection" loading="lazy">
+                    </div>
+                    <div class="portfolio-meta">
+                        <span data-i18n="g27_cat">Custom & Keychains</span>
+                        <h4 data-i18n="g27_title">Kira's Creation & Personalized Name Keychains Collection</h4>
+                        <div class="portfolio-specs">
+                            <span class="spec-tag" data-i18n="g27_spec1">Sky Blue & White PLA</span>
+                            <span class="spec-tag" data-i18n="g27_spec2">Custom Typography</span>
+                            <span class="spec-tag" data-i18n="g27_spec3">Gift & Studio Tags</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- Lightbox Modal -->
+        <div class="lightbox-modal" id="portfolioLightbox">
+            <div class="lightbox-content">
+                <button class="lightbox-close" id="lightboxClose">&times;</button>
+                <div class="lightbox-img-container">
+                    <img id="lightboxImg" src="" alt="Selected 3D Print">
+                </div>
+                <div class="lightbox-details">
+                    <div>
+                        <span id="lightboxCategory" style="font-size:0.85rem; color:var(--c-primary); font-family:var(--f-head); font-weight:700;">Category</span>
+                        <h3 id="lightboxTitle" style="margin-top:0.5rem; font-size:1.6rem; color:var(--c-text);">Title</h3>
+                        <p id="lightboxDesc" style="color:var(--c-text-muted); margin-top:1rem; font-size:0.95rem; line-height:1.6;">Description</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="main-footer">
+            <div class="footer-grid">
+                <div>
+                    <span class="brand-text">Kira's Creation</span>
+                    <p style="color:var(--c-text-muted); font-size:0.9rem; margin-top:0.5rem;" data-i18n="footer_subtitle">Approachable soft 3D manufacturing. Made with heart and organic plastics.</p>
+                </div>
+                <div class="footer-links">
+                    <h4 data-i18n="footer_explore">Explore</h4>
+                    <a href="index.html" data-i18n="nav_home">Home</a>
+                    <a href="services.html" data-i18n="nav_services">Services</a>
+                    <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                    <a href="portfolio.html" data-i18n="nav_gallery">Gallery</a>
+                    <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+
+                    <a href="customize.html" data-i18n="nav_customize">Customize</a>
+
+                    <a href="about.html" data-i18n="nav_about">About</a>
+                    <a href="contact.html" data-i18n="nav_contact">Contact</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Kira's Creation // Soft-3D Additive Studio. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/translations.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/portfolio.js"></script>
+    <script>
+        // Lightbox Modal Interactivity with i18n support
+        document.addEventListener('DOMContentLoaded', () => {
+            const lightbox = document.getElementById('portfolioLightbox');
+            const lightboxImg = document.getElementById('lightboxImg');
+            const lightboxTitle = document.getElementById('lightboxTitle');
+            const lightboxCategory = document.getElementById('lightboxCategory');
+            const lightboxDesc = document.getElementById('lightboxDesc');
+            const lightboxClose = document.getElementById('lightboxClose');
+
+            document.querySelectorAll('.portfolio-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const titleEl = item.querySelector('.portfolio-meta h4');
+                    const catEl = item.querySelector('.portfolio-meta > span');
+                    const descKey = item.getAttribute('data-desc-key');
+                    
+                    const currentLang = localStorage.getItem('shapey_lang') || 'en';
+                    const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
+
+                    lightboxTitle.textContent = titleEl ? titleEl.textContent : '';
+                    lightboxCategory.textContent = catEl ? catEl.textContent : '';
+                    lightboxDesc.textContent = (dict && descKey && dict[descKey]) ? dict[descKey] : (item.dataset.desc || '');
+                    lightboxImg.src = item.dataset.studio || item.dataset.img;
+                    lightbox.classList.add('open');
+                });
+            });
+
+            lightboxClose.addEventListener('click', () => {
+                lightbox.classList.remove('open');
+            });
+
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) {
+                    lightbox.classList.remove('open');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

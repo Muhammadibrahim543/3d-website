@@ -1,0 +1,119 @@
+/* ==========================================================================
+   SHAPEY - CLAYMORPHISM ANIMATIONS
+   ========================================================================== */
+
+/* Background Blobs */
+.blob-container {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.blob {
+    position: absolute;
+    width: 650px; height: 650px;
+    opacity: 0.6;
+    filter: blur(35px);
+    mix-blend-mode: multiply;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+[data-theme="dark"] .blob {
+    opacity: 0.35;
+    filter: blur(65px);
+    mix-blend-mode: screen;
+}
+
+/* GPU Acceleration for Buttery Smooth 60 FPS Mobile Performance */
+.floating-illustration, .wobble-blob, .clay-card, .reveal-on-scroll {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    will-change: transform;
+}
+
+/* Smart Mobile Performance Scaling (Low-End & High-End Smartphones) */
+@media (max-width: 768px) {
+    .blob {
+        width: 380px;
+        height: 380px;
+        filter: blur(25px);
+    }
+    
+    [data-theme="dark"] .blob {
+        filter: blur(32px);
+        opacity: 0.3;
+    }
+}
+
+.blob-1 { top: -10%; left: -10%; animation: floatBlob1 25s infinite alternate ease-in-out; }
+.blob-2 { bottom: -15%; right: -10%; animation: floatBlob2 30s infinite alternate ease-in-out; }
+.blob-3 { top: 40%; left: 50%; width: 450px; height: 450px; animation: floatBlob3 20s infinite alternate ease-in-out; }
+
+@keyframes floatBlob1 {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(100px, 80px) scale(1.1) rotate(90deg); }
+    100% { transform: translate(0, 0) scale(1) rotate(360deg); }
+}
+
+@keyframes floatBlob2 {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    50% { transform: translate(-120px, -100px) scale(1.15) rotate(-180deg); }
+    100% { transform: translate(0, 0) scale(1) rotate(-360deg); }
+}
+
+@keyframes floatBlob3 {
+    0% { transform: translate(0, 0) scale(0.9) rotate(0deg); }
+    100% { transform: translate(80px, -80px) scale(1.1) rotate(180deg); }
+}
+
+/* Scroll Reveal */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.8s var(--bouncy-ease), transform 0.8s var(--bouncy-ease);
+}
+.reveal-on-scroll.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Gentle Bobbing */
+.floating-illustration {
+    animation: gentleBob 4s ease-in-out infinite alternate;
+}
+
+@keyframes gentleBob {
+    0% { transform: translateY(0px) rotate(0deg); }
+    100% { transform: translateY(-15px) rotate(2deg); }
+}
+
+.spool-wing {
+    animation: slowSpin 12s linear infinite;
+    transform-origin: 220px 80px;
+}
+
+@keyframes slowSpin {
+    100% { transform: rotate(360deg); }
+}
+
+/* Blob Wobble */
+.wobble-blob {
+    width: 100%; height: 100%;
+    filter: drop-shadow(4px 8px 10px rgba(0,0,0,0.1));
+    cursor: pointer;
+    transition: transform 0.4s var(--bouncy-ease);
+}
+
+.wobble-blob:hover {
+    animation: gentleSquish 0.8s ease-in-out infinite alternate;
+}
+
+@keyframes gentleSquish {
+    0% { transform: scale(1) skewX(0deg); }
+    100% { transform: scale(1.08, 0.92) skewX(3deg); }
+}

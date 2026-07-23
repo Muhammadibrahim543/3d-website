@@ -1,0 +1,301 @@
+/* ============================================================
+   CUSTOMIZER V2 — Realistic Dual-Layer Nameplate Preview
+   Inspired by actual 3D printed keychains from the portfolio
+   ============================================================ */
+
+/* --- Grid Layout --- */
+.customizer-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+@media(min-width: 900px) {
+    .customizer-grid {
+        grid-template-columns: 1.4fr 1fr;
+        align-items: start;
+    }
+}
+
+/* --- Stage Card --- */
+.customizer-stage-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 420px;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+    touch-action: pan-y; /* Allows vertical scrolling on touch */
+    /* Dark studio backdrop like the photos */
+    background: radial-gradient(ellipse at 60% 30%, #3a3540 0%, #1e1c24 60%, #0d0c10 100%);
+    border: none;
+    box-shadow: inset 0 0 80px rgba(0,0,0,0.5), 0 12px 40px rgba(0,0,0,0.3);
+}
+
+/* Bokeh light circles — mimics the warm bokeh in portfolio photos */
+.bokeh-lights {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+}
+.bokeh-lights span {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(12px);
+    opacity: 0.25;
+    animation: bokehFloat 8s ease-in-out infinite alternate;
+}
+.bokeh-lights span:nth-child(1) { width:80px; height:80px; background:#ffd89b; top:10%; left:55%; animation-delay:0s; }
+.bokeh-lights span:nth-child(2) { width:60px; height:60px; background:#e8c777; top:15%; right:15%; animation-delay:1.5s; opacity:0.2; }
+.bokeh-lights span:nth-child(3) { width:50px; height:50px; background:#f5d99a; top:5%; left:30%; animation-delay:0.8s; opacity:0.18; }
+.bokeh-lights span:nth-child(4) { width:70px; height:70px; background:#ddb86b; top:20%; right:30%; animation-delay:2.2s; opacity:0.15; }
+.bokeh-lights span:nth-child(5) { width:40px; height:40px; background:#ffefc1; top:8%; left:70%; animation-delay:3s; opacity:0.22; }
+.bokeh-lights span:nth-child(6) { width:55px; height:55px; background:#c9a84c; top:25%; left:10%; animation-delay:1s; opacity:0.12; }
+
+@keyframes bokehFloat {
+    0% { transform: translateY(0) scale(1); }
+    100% { transform: translateY(-12px) scale(1.15); }
+}
+
+/* Surface reflection line */
+.stage-surface {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(to top, rgba(30,28,36,1) 0%, rgba(40,38,50,0.8) 30%, transparent 100%);
+    z-index: 0;
+    pointer-events: none;
+}
+.stage-surface::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 5%;
+    right: 5%;
+    height: 1px;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.06), transparent);
+}
+
+/* --- Nameplate Wrapper (3D perspective container) --- */
+.nameplate-scene {
+    position: relative;
+    z-index: 1;
+    perspective: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+.nameplate-3d {
+    transform-style: preserve-3d;
+    transition: transform 0.12s ease-out;
+    transform: rotateX(8deg) rotateY(-8deg);
+    position: relative;
+}
+
+/* --- The Nameplate Itself --- */
+.nameplate-body {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+    padding: 0 20px; /* Padding for the ring hole to fit */
+}
+
+/* Sizer to give the container dimensions based on text */
+.layer-sizer {
+    position: relative;
+    visibility: hidden;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* Common properties for all layers */
+.layer-base, .layer-text {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    font-size: clamp(2.5rem, 6vw, 4.5rem);
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    white-space: nowrap;
+    /* transform will be set by JS: translateZ(...) */
+    transform-origin: center center;
+}
+
+/* Base Plate Layers (The blue plastic) */
+.layer-base {
+    /* No filter needed, SVG handles stroke perfectly */
+}
+.layer-base-bottom {
+    filter: drop-shadow(0 15px 15px rgba(0,0,0,0.5));
+}
+
+/* White Raised Text Layers */
+.layer-text {
+    /* No color needed here, SVG fill will be set in JS */
+}
+.layer-text-top {
+    filter: drop-shadow(0 0 3px rgba(255,255,255,0.2));
+}
+
+
+/* --- Stage Hint --- */
+.stage-hint {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.35);
+    background: rgba(0,0,0,0.3);
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+    z-index: 2;
+}
+
+/* --- Color Swatch Buttons --- */
+.color-swatches {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+}
+.color-swatch {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15), inset 0 -2px 3px rgba(0,0,0,0.15);
+    position: relative;
+}
+.color-swatch:hover {
+    transform: scale(1.15);
+}
+.color-swatch.active {
+    border-color: var(--c-accent);
+    box-shadow: 0 0 0 3px rgba(255,126,103,0.3), 0 2px 6px rgba(0,0,0,0.15);
+}
+.color-swatch::after {
+    content: '✓';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+.color-swatch.active::after {
+    opacity: 1;
+}
+
+/* --- Font Preview Cards --- */
+.font-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 0.6rem;
+}
+.font-option {
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: var(--c-bg-page);
+    border: 2px solid transparent;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    font-size: 1.1rem;
+}
+.font-option:hover {
+    border-color: var(--c-text-muted);
+    background: var(--c-bg-card);
+}
+.font-option.active {
+    border-color: var(--c-accent);
+    background: var(--c-bg-card);
+    box-shadow: 0 0 0 2px rgba(255,126,103,0.2);
+}
+.font-option small {
+    display: block;
+    font-size: 0.65rem;
+    color: var(--c-text-muted);
+    margin-top: 2px;
+    font-family: var(--f-body) !important;
+}
+
+/* --- Pricing Panel --- */
+.pricing-panel {
+    background: var(--c-bg-page);
+    padding: 1.5rem;
+    border-radius: 16px;
+    margin-top: 2rem;
+    border: 1px solid rgba(0,0,0,0.05);
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+.pricing-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(to right, var(--c-accent), var(--c-primary));
+}
+[data-theme="dark"] .pricing-panel {
+    border-color: rgba(255,255,255,0.05);
+}
+
+/* --- Controls Card --- */
+.customizer-controls {
+    position: sticky;
+    top: 100px;
+}
+.customizer-controls h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+@media (max-width: 768px) {
+    .customizer-stage-card {
+        min-height: 280px;
+        padding: 1.5rem 0.5rem;
+    }
+    .customizer-controls {
+        position: relative;
+        top: 0;
+    }
+    .font-options {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+@media (max-width: 480px) {
+    .customizer-stage-card {
+        min-height: 240px;
+    }
+    .font-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

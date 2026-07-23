@@ -1,0 +1,113 @@
+/* ==========================================================================
+   SHAPEY - CLAYMORPHISM BASE STYLES
+   ========================================================================== */
+
+:root {
+    /* Soft Warm Palette */
+    --c-bg: #F6F2E9;
+    --c-bg-card: #FFFFFF;
+    --c-primary: #FF7E67;       /* Soft Coral */
+    --c-secondary: #9B99E2;     /* Muted Lavender */
+    --c-accent: #88A47C;        /* Sage / Mint */
+    --c-yellow: #F9D976;        /* Warm Gold */
+    --c-text: #4E463E;          /* Soft Charcoal */
+    --c-text-muted: #8E8478;
+    
+    /* Premium Font Families with High-End Bengali Typography (Hind Siliguri & Anek Bangla) */
+    --f-head: 'Quicksand', 'Hind Siliguri', 'Anek Bangla', system-ui, -apple-system, sans-serif;
+    --f-body: 'Nunito', 'Hind Siliguri', system-ui, -apple-system, sans-serif;
+
+    /* Claymorphism Shadow Presets */
+    --clay-shadow-card: 
+        inset 4px 4px 8px rgba(255, 255, 255, 0.9), 
+        inset -4px -4px 8px rgba(142, 132, 120, 0.12),
+        10px 16px 32px rgba(142, 132, 120, 0.15);
+        
+    --clay-shadow-card-hover: 
+        inset 6px 6px 12px rgba(255, 255, 255, 0.9), 
+        inset -6px -6px 12px rgba(142, 132, 120, 0.15),
+        12px 20px 40px rgba(142, 132, 120, 0.22);
+
+    --bouncy-ease: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+[data-theme="dark"] {
+    --c-bg: #181621;
+    --c-bg-card: #242130;
+    --c-primary: #FF8A75;
+    --c-secondary: #AAA8F0;
+    --c-accent: #9BB88F;
+    --c-yellow: #FDE08B;
+    --c-text: #F3EFE6;
+    --c-text-muted: #BDB3A6;
+
+    --clay-shadow-card: 
+        inset 3px 3px 6px rgba(255, 255, 255, 0.07), 
+        inset -4px -4px 8px rgba(0, 0, 0, 0.4),
+        8px 14px 28px rgba(0, 0, 0, 0.35);
+        
+    --clay-shadow-card-hover: 
+        inset 5px 5px 10px rgba(255, 255, 255, 0.1), 
+        inset -5px -5px 10px rgba(0, 0, 0, 0.5),
+        10px 18px 36px rgba(0, 0, 0, 0.45);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+}
+
+body {
+    background-color: var(--c-bg);
+    color: var(--c-text);
+    font-family: var(--f-body);
+    overflow-x: hidden;
+    line-height: 1.6;
+    transition: background-color 0.35s ease, color 0.35s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: var(--f-head);
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.text-center { text-align: center; }
+
+.section-block {
+    padding: 8.8rem 2rem 5rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.section-heading {
+    margin-bottom: 3.5rem;
+}
+
+.section-heading h2 {
+    font-size: 2.8rem;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+}
+
+.section-sub {
+    font-family: var(--f-head);
+    color: var(--c-primary);
+    font-weight: 700;
+    letter-spacing: 1px;
+}
