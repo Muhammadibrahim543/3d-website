@@ -209,3 +209,13 @@
     .faq-header { padding: 1.4rem 1.5rem; font-size: 1.05rem; }
     .faq-body p { padding: 0 1.5rem 1.4rem; }
 }
+
+/* Dark Mode Overrides for Layout Components */
+[data-theme="dark"] .gallery-frame {
+    background: #1D1A29;
+    box-shadow: inset 2px 2px 8px rgba(0,0,0,0.5);
+}
+
+[data-theme="dark"] .price-bubble {
+    background: #181523;
+}
