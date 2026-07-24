@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const printingCount = orders.filter(o => o.status === 'Printing').length;
         let revSum = 0;
         orders.forEach(o => {
-            const val = parseFloat((o.estimatedPrice || '$0').replace(/[^0-9.]/g, '')) || 0;
+            const val = parseFloat(String(o.estimatedPrice || '$0').replace(/[^0-9.]/g, '')) || 0;
             revSum += val;
         });
 
@@ -324,8 +324,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>"']/g, function(m) {
+        if (str === null || str === undefined) return '';
+        return String(str).replace(/[&<>"']/g, function(m) {
             return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
         });
     }
