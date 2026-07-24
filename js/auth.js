@@ -1,0 +1,379 @@
+/* ==========================================================================
+   KIRA'S CREATION - USER AUTHENTICATION & PROFILE MANAGER (js/auth.js)
+   ========================================================================== */
+
+(function() {
+    // 1. Initial Storage Setup & Pre-seeded Demo User
+    const DEMO_USER = {
+        id: 'usr_demo_01',
+        name: 'Sidratul Muntaha',
+        email: 'user@kira.com',
+        password: '123456',
+        phone: '+880 1793-500131',
+        address: '58 Lower Jessore Road, Khulna Sadar, Khulna',
+        presets: [
+            {
+                id: 'pst_1',
+                name: 'Kira Skyblue Plate',
+                text: 'KIRA',
+                font: 'Fredoka',
+                fontCss: "'Fredoka', cursive",
+                color: 'Ocean Blue',
+                colorHex: '#2979FF',
+                colorRate: 5.0,
+                thickness: 6,
+                price: '৳484',
+                date: 'Jul 24, 2026',
+                snapshot: 'data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22340%22%20height%3D%22160%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23181621%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20text-anchor%3D%22middle%22%20fill%3D%22%232979FF%22%20font-size%3D%2240%22%20font-family%3D%22sans-serif%22%3EKIRA%3C%2Ftext%3E%3C%2Fsvg%3E'
+            }
+        ]
+    };
+
+    function initUsers() {
+        let users = [];
+        try {
+            users = JSON.parse(localStorage.getItem('kiras_users')) || [];
+        } catch(e) {}
+
+        if (users.length === 0) {
+            users.push(DEMO_USER);
+            localStorage.setItem('kiras_users', JSON.stringify(users));
+        }
+
+        // Set demo user logged in by default if no active session
+        if (!localStorage.getItem('kiras_active_user')) {
+            localStorage.setItem('kiras_active_user', JSON.stringify(DEMO_USER));
+        }
+    }
+    initUsers();
+
+    // 2. Auth State Helpers
+    window.KiraAuth = {
+        getCurrentUser: function() {
+            try {
+                return JSON.parse(localStorage.getItem('kiras_active_user'));
+            } catch(e) {
+                return null;
+            }
+        },
+
+        setCurrentUser: function(user) {
+            if (user) {
+                localStorage.setItem('kiras_active_user', JSON.stringify(user));
+                // Update in all users array
+                let users = JSON.parse(localStorage.getItem('kiras_users')) || [];
+                const idx = users.findIndex(u => u.email.toLowerCase() === user.email.toLowerCase());
+                if (idx !== -1) {
+                    users[idx] = user;
+                } else {
+                    users.push(user);
+                }
+                localStorage.setItem('kiras_users', JSON.stringify(users));
+            } else {
+                localStorage.removeItem('kiras_active_user');
+            }
+            this.updateUI();
+        },
+
+        login: function(email, password) {
+            const users = JSON.parse(localStorage.getItem('kiras_users')) || [];
+            const found = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password);
+            if (found) {
+                this.setCurrentUser(found);
+                return { success: true, user: found };
+            }
+            return { success: false, message: 'Invalid email or password.' };
+        },
+
+        register: function(name, email, password, phone, address) {
+            let users = JSON.parse(localStorage.getItem('kiras_users')) || [];
+            const exists = users.some(u => u.email.toLowerCase() === email.trim().toLowerCase());
+            if (exists) {
+                return { success: false, message: 'An account with this email already exists.' };
+            }
+
+            const newUser = {
+                id: 'usr_' + Date.now().toString(36),
+                name: name.trim(),
+                email: email.trim(),
+                password: password,
+                phone: phone.trim() || '',
+                address: address.trim() || '',
+                presets: []
+            };
+
+            users.push(newUser);
+            localStorage.setItem('kiras_users', JSON.stringify(users));
+            this.setCurrentUser(newUser);
+            return { success: true, user: newUser };
+        },
+
+        logout: function() {
+            this.setCurrentUser(null);
+            showToast('Logged out successfully');
+            if (window.location.pathname.includes('account.html')) {
+                window.location.href = 'index.html';
+            }
+        },
+
+        // Saved Presets Manager
+        savePreset: function(preset) {
+            let user = this.getCurrentUser();
+            if (!user) {
+                this.openModal('login');
+                showToast('Please sign in to save your design preset!');
+                return false;
+            }
+
+            if (!user.presets) user.presets = [];
+            
+            const newPreset = {
+                id: 'pst_' + Date.now().toString(36),
+                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                ...preset
+            };
+
+            user.presets.unshift(newPreset);
+            this.setCurrentUser(user);
+            showToast('⭐ Preset saved to your account!');
+            return true;
+        },
+
+        deletePreset: function(presetId) {
+            let user = this.getCurrentUser();
+            if (!user || !user.presets) return;
+            user.presets = user.presets.filter(p => p.id !== presetId);
+            this.setCurrentUser(user);
+            showToast('Preset deleted.');
+        },
+
+        // Get Orders for Logged In User
+        getUserOrders: function() {
+            const user = this.getCurrentUser();
+            if (!user) return [];
+            
+            let allOrders = [];
+            try {
+                allOrders = JSON.parse(localStorage.getItem('kiras_orders')) || [];
+            } catch(e) {}
+
+            return allOrders.filter(o => o.email && o.email.toLowerCase() === user.email.toLowerCase());
+        },
+
+        // UI Renderer
+        updateUI: function() {
+            const user = this.getCurrentUser();
+            const lang = localStorage.getItem('shapey_lang') || 'en';
+            
+            document.querySelectorAll('.header-user-slot').forEach(slot => {
+                if (user) {
+                    const firstName = user.name.split(' ')[0];
+                    slot.innerHTML = `
+                        <div class="user-dropdown-container">
+                            <button class="header-user-btn" aria-label="User Account">
+                                👤 <span>${firstName}</span> ▾
+                            </button>
+                            <div class="user-dropdown-menu">
+                                <div style="padding:0.5rem 1rem; border-bottom:1px solid rgba(0,0,0,0.08); margin-bottom:0.2rem;">
+                                    <div style="font-weight:700; font-size:0.95rem;">${user.name}</div>
+                                    <div style="font-size:0.75rem; color:var(--c-text-muted);">${user.email}</div>
+                                </div>
+                                <a href="account.html" class="user-dropdown-item">👤 ${lang === 'en' ? 'My Account' : 'আমার অ্যাকাউন্ট'}</a>
+                                <a href="account.html#presets" class="user-dropdown-item">⭐ ${lang === 'en' ? 'Saved Presets' : 'সেভ করা প্রিসেট'}</a>
+                                <a href="account.html#orders" class="user-dropdown-item">📦 ${lang === 'en' ? 'Order History' : 'অর্ডার হিস্ট্রি'}</a>
+                                <div class="user-dropdown-item" style="color:#FF5E5E;" onclick="KiraAuth.logout()">🚪 ${lang === 'en' ? 'Log Out' : 'লগআউট'}</div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    slot.innerHTML = `
+                        <button class="header-user-btn" onclick="KiraAuth.openModal('login')">
+                            👤 <span>${lang === 'en' ? 'Sign In' : 'লগইন'}</span>
+                        </button>
+                    `;
+                }
+            });
+
+            // Toggle Dropdown Menu Click Listener
+            document.querySelectorAll('.header-user-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const container = btn.closest('.user-dropdown-container');
+                    if (container) {
+                        container.classList.toggle('open');
+                    }
+                });
+            });
+        },
+
+        openModal: function(tab = 'login') {
+            let modal = document.getElementById('auth-modal-overlay');
+            if (!modal) {
+                this.injectAuthModal();
+                modal = document.getElementById('auth-modal-overlay');
+            }
+            modal.classList.add('open');
+            this.switchTab(tab);
+        },
+
+        closeModal: function() {
+            const modal = document.getElementById('auth-modal-overlay');
+            if (modal) modal.classList.remove('open');
+        },
+
+        switchTab: function(tab) {
+            const loginForm = document.getElementById('auth-login-form');
+            const signupForm = document.getElementById('auth-signup-form');
+            const tabLoginBtn = document.getElementById('tab-btn-login');
+            const tabSignupBtn = document.getElementById('tab-btn-signup');
+
+            if (tab === 'login') {
+                if (loginForm) loginForm.style.display = 'block';
+                if (signupForm) signupForm.style.display = 'none';
+                if (tabLoginBtn) tabLoginBtn.classList.add('active');
+                if (tabSignupBtn) tabSignupBtn.classList.remove('active');
+            } else {
+                if (loginForm) loginForm.style.display = 'none';
+                if (signupForm) signupForm.style.display = 'block';
+                if (tabLoginBtn) tabLoginBtn.classList.remove('active');
+                if (tabSignupBtn) tabSignupBtn.classList.add('active');
+            }
+        },
+
+        injectAuthModal: function() {
+            if (document.getElementById('auth-modal-overlay')) return;
+            const lang = localStorage.getItem('shapey_lang') || 'en';
+
+            const modalHTML = `
+                <div id="auth-modal-overlay" class="modal-overlay">
+                    <div class="modal-content clay-card">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.2rem;">
+                            <h3 style="margin:0; font-family:var(--f-head); color:var(--c-primary);" data-i18n="auth_modal_title">
+                                ${lang === 'en' ? "Welcome to Kira's Creation" : "কিরাস ক্রিয়েশনে স্বাগতম"}
+                            </h3>
+                            <button onclick="KiraAuth.closeModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--c-text-muted);">✕</button>
+                        </div>
+
+                        <div class="auth-tabs">
+                            <button id="tab-btn-login" class="auth-tab-btn active" onclick="KiraAuth.switchTab('login')" data-i18n="auth_login_tab">
+                                ${lang === 'en' ? 'Sign In' : 'লগইন'}
+                            </button>
+                            <button id="tab-btn-signup" class="auth-tab-btn" onclick="KiraAuth.switchTab('signup')" data-i18n="auth_signup_tab">
+                                ${lang === 'en' ? 'Create Account' : 'অ্যাকাউন্ট খুলুন'}
+                            </button>
+                        </div>
+
+                        <!-- LOGIN FORM -->
+                        <form id="auth-login-form" onsubmit="KiraAuth.handleLoginSubmit(event)">
+                            <div class="auth-input-group">
+                                <label data-i18n="label_email">Email Address</label>
+                                <input type="email" id="login-email" required value="user@kira.com">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="auth_pass">Password</label>
+                                <input type="password" id="login-pass" required value="123456">
+                            </div>
+                            <div id="login-error" style="color:#FF5E5E; font-size:0.85rem; margin-bottom:0.8rem; display:none;"></div>
+                            <button type="submit" class="clay-btn btn-coral btn-block" style="margin-top:0.5rem;" data-i18n="auth_login_tab">
+                                Sign In
+                            </button>
+                            <div style="font-size:0.8rem; text-align:center; margin-top:1rem; color:var(--c-text-muted);">
+                                💡 Demo Account: <strong>user@kira.com</strong> | Pass: <strong>123456</strong>
+                            </div>
+                        </form>
+
+                        <!-- SIGNUP FORM -->
+                        <form id="auth-signup-form" style="display:none;" onsubmit="KiraAuth.handleSignupSubmit(event)">
+                            <div class="auth-input-group">
+                                <label data-i18n="label_name">Full Name</label>
+                                <input type="text" id="signup-name" required placeholder="e.g. Sidratul">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="label_email">Email Address</label>
+                                <input type="email" id="signup-email" required placeholder="name@example.com">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="auth_pass">Password</label>
+                                <input type="password" id="signup-pass" required placeholder="••••••••">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="auth_phone">Phone Number</label>
+                                <input type="tel" id="signup-phone" placeholder="+880 17...">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="auth_address">Shipping Address</label>
+                                <input type="text" id="signup-address" placeholder="Khulna, Bangladesh">
+                            </div>
+                            <div id="signup-error" style="color:#FF5E5E; font-size:0.85rem; margin-bottom:0.8rem; display:none;"></div>
+                            <button type="submit" class="clay-btn btn-coral btn-block" style="margin-top:0.5rem;" data-i18n="auth_signup_tab">
+                                Create Account
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+        },
+
+        handleLoginSubmit: function(e) {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const res = this.login(email, pass);
+            if (res.success) {
+                this.closeModal();
+                showToast(`Welcome back, ${res.user.name.split(' ')[0]}! 👋`);
+            } else {
+                const err = document.getElementById('login-error');
+                err.textContent = res.message;
+                err.style.display = 'block';
+            }
+        },
+
+        handleSignupSubmit: function(e) {
+            e.preventDefault();
+            const name = document.getElementById('signup-name').value;
+            const email = document.getElementById('signup-email').value;
+            const pass = document.getElementById('signup-pass').value;
+            const phone = document.getElementById('signup-phone').value;
+            const address = document.getElementById('signup-address').value;
+
+            const res = this.register(name, email, pass, phone, address);
+            if (res.success) {
+                this.closeModal();
+                showToast(`Account created! Welcome, ${res.user.name.split(' ')[0]}! 🎉`);
+            } else {
+                const err = document.getElementById('signup-error');
+                err.textContent = res.message;
+                err.style.display = 'block';
+            }
+        }
+    };
+
+    // Close user dropdown when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.user-dropdown-container')) {
+            document.querySelectorAll('.user-dropdown-container').forEach(el => el.classList.remove('open'));
+        }
+    });
+
+    // Toast helper
+    function showToast(msg) {
+        let toast = document.querySelector('.toast-notification');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            document.body.appendChild(toast);
+        }
+        toast.innerHTML = `<span>${msg}</span>`;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+    window.showToast = showToast;
+
+    // Init on DOM ready
+    document.addEventListener('DOMContentLoaded', () => {
+        KiraAuth.injectAuthModal();
+        KiraAuth.updateUI();
+    });
+})();

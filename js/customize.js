@@ -297,6 +297,87 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- Add to Cart Button ---
+    const btnAddCart = document.getElementById('btn-add-cart-custom');
+    if (btnAddCart) {
+        btnAddCart.addEventListener('click', () => {
+            const text = inputName.value.trim() || 'Custom Name';
+            const thickness = inputThickness.value;
+            const price = displayPrice.textContent;
+            const snapData = generateSnapshotSVG();
+
+            const cartItem = {
+                title: `Custom 3D Nameplate: "${text}"`,
+                specs: `${currentColorName} PLA • ${thickness}mm • ${snapData.fontDisplayName}`,
+                price: price,
+                quantity: 1,
+                image: snapData.snapshotUrl
+            };
+
+            if (window.KiraCart) {
+                KiraCart.addItem(cartItem);
+            }
+        });
+    }
+
+    // --- Save Preset Button ---
+    const btnSavePreset = document.getElementById('btn-save-preset-custom');
+    if (btnSavePreset) {
+        btnSavePreset.addEventListener('click', () => {
+            const text = inputName.value.trim() || 'Custom Name';
+            const thickness = inputThickness.value;
+            const price = displayPrice.textContent;
+            const snapData = generateSnapshotSVG();
+
+            const presetData = {
+                text: text,
+                font: snapData.fontDisplayName,
+                fontCss: currentFont,
+                color: currentColorName,
+                colorHex: currentColor,
+                colorRate: currentRate,
+                thickness: thickness,
+                price: price,
+                snapshot: snapData.snapshotUrl
+            };
+
+            if (window.KiraAuth) {
+                KiraAuth.savePreset(presetData);
+            }
+        });
+    }
+
+    // --- Hydrate from URL Parameters (Preset loading) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('text')) {
+        inputName.value = urlParams.get('text');
+    }
+    if (urlParams.has('thickness')) {
+        inputThickness.value = urlParams.get('thickness');
+    }
+    if (urlParams.has('font') && fontOptions) {
+        const fontName = urlParams.get('font').toLowerCase();
+        fontOptions.querySelectorAll('.font-option').forEach(opt => {
+            if (opt.textContent.toLowerCase().includes(fontName)) {
+                fontOptions.querySelectorAll('.font-option').forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                currentFont = opt.getAttribute('data-font');
+            }
+        });
+    }
+    if (urlParams.has('color') && colorSwatches) {
+        const colorName = urlParams.get('color').toLowerCase();
+        colorSwatches.querySelectorAll('.color-swatch').forEach(swatch => {
+            if (swatch.getAttribute('data-name').toLowerCase() === colorName) {
+                colorSwatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                currentColor = swatch.getAttribute('data-color');
+                currentColorName = swatch.getAttribute('data-name');
+                currentRate = parseFloat(swatch.getAttribute('data-rate'));
+            }
+        });
+    }
+
     // Initialize
     updatePreview();
     if (document.fonts) {

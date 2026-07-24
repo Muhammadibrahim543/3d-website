@@ -96,5 +96,27 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    const btnAddCartEstimate = document.getElementById('btn-add-cart-estimate');
+    if (btnAddCartEstimate) {
+        btnAddCartEstimate.addEventListener('click', (e) => {
+            e.preventDefault();
+            const matName = calcMaterial.options[calcMaterial.selectedIndex].text;
+            const weight = calcWeight.value;
+            const infill = calcInfill.value;
+            const qty = parseInt(calcQty.value, 10) || 1;
+            const price = displayPrice.textContent;
+
+            if (window.KiraCart) {
+                KiraCart.addItem({
+                    title: `Calculated 3D Print (${matName})`,
+                    specs: `${weight}g • ${infill}% Infill • ${qty} Unit(s)`,
+                    price: price,
+                    quantity: qty,
+                    image: 'images/torii_gate_lamp.webp'
+                });
+            }
+        });
+    }
+
     calculate();
 });

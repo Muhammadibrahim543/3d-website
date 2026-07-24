@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var m = localStorage.getItem('kiras_theme') || 'system';
+            if (m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Account // Kira's Creation</title>
+    <meta name="description" content="Manage your 3D printing orders, saved presets, and profile at Kira's Creation.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700&family=Hind+Siliguri:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/pages.css">
+</head>
+<body>
+
+    <div class="site-wrapper">
+        <header class="main-header">
+            <div class="nav-pill">
+                <a href="index.html" class="brand-logo">
+                    <span class="brand-text">Kira's Creation</span>
+                </a>
+                
+                <nav class="desktop-nav">
+                    <a href="index.html" data-i18n="nav_home">Home</a>
+                    <a href="services.html" data-i18n="nav_services">Services</a>
+                    <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                    <a href="portfolio.html" data-i18n="nav_gallery">Gallery</a>
+                    <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+                    <a href="customize.html" data-i18n="nav_customize">Customize</a>
+                    <a href="about.html" data-i18n="nav_about">About</a>
+                    <a href="contact.html" data-i18n="nav_contact">Contact</a>
+                </nav>
+                
+                <div class="header-cta">
+                    <button class="theme-toggle-btn" aria-label="Toggle Theme">🌙</button>
+                    <button class="lang-toggle-btn">🌐 EN</button>
+                    <button class="header-cart-btn" onclick="KiraCart.openDrawer()">
+                        🛒 <span class="cart-count-badge" style="display:none;">0</span>
+                    </button>
+                    <div class="header-user-slot"></div>
+                </div>
+
+                <button class="mobile-toggle" aria-label="Toggle Menu">
+                    <span class="toggle-icon"></span>
+                </button>
+            </div>
+            
+            <div class="mobile-menu-dropdown clay-card">
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                    <button class="theme-toggle-btn" aria-label="Toggle Theme">🌙</button>
+                    <button class="lang-toggle-btn">🌐 EN</button>
+                    <button class="header-cart-btn" onclick="KiraCart.openDrawer()">🛒 Cart</button>
+                    <div class="header-user-slot"></div>
+                </div>
+                <a href="index.html" data-i18n="nav_home">Home</a>
+                <a href="services.html" data-i18n="nav_services">Services</a>
+                <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                <a href="portfolio.html" data-i18n="nav_gallery">Gallery</a>
+                <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+                <a href="customize.html" data-i18n="nav_customize">Customize</a>
+                <a href="about.html" data-i18n="nav_about">About</a>
+                <a href="contact.html" data-i18n="nav_contact">Contact</a>
+            </div>
+        </header>
+
+        <main style="padding-top: 100px; padding-bottom: 80px;">
+            <div class="container" style="max-width:1100px; margin:0 auto; padding:0 1.5rem;">
+                
+                <!-- Account Header Banner -->
+                <div class="clay-card" style="background:linear-gradient(135deg, var(--c-primary) 0%, #FF9E80 100%); color:#FFF; padding:2rem 2.5rem; margin-bottom:2rem; border-radius:32px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <span style="text-transform:uppercase; letter-spacing:2px; font-weight:700; font-size:0.85rem; opacity:0.9;">Customer Dashboard</span>
+                            <h1 id="user-display-name" style="margin:0.2rem 0; font-family:var(--f-head); font-size:2.2rem; text-shadow:0 2px 4px rgba(0,0,0,0.15);">
+                                Welcome Back!
+                            </h1>
+                            <p id="user-display-email" style="margin:0; opacity:0.9; font-size:1.05rem;">
+                                Sidratul Muntaha (user@kira.com)
+                            </p>
+                        </div>
+                        <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                            <a href="customize.html" class="clay-btn btn-cream btn-sm" style="color:#181621;">🎨 New 3D Print</a>
+                            <button onclick="KiraAuth.logout()" class="clay-btn btn-cream btn-sm" style="color:#FF5E5E; border-color:#FF5E5E;">🚪 Log Out</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Account Navigation Tabs -->
+                <div class="auth-tabs" style="max-width:600px; margin:0 auto 2rem auto;">
+                    <button id="acc-tab-btn-orders" class="auth-tab-btn active" onclick="switchAccountTab('orders')" data-i18n="my_orders">
+                        📦 Order History
+                    </button>
+                    <button id="acc-tab-btn-presets" class="auth-tab-btn" onclick="switchAccountTab('presets')" data-i18n="my_presets">
+                        ⭐ Saved 3D Presets
+                    </button>
+                    <button id="acc-tab-btn-profile" class="auth-tab-btn" onclick="switchAccountTab('profile')" data-i18n="nav_account">
+                        👤 Profile Details
+                    </button>
+                </div>
+
+                <!-- TAB 1: ORDER HISTORY -->
+                <div id="acc-sec-orders" class="account-sec">
+                    <h2 style="font-family:var(--f-head); color:var(--c-primary); margin-bottom:1.5rem;" data-i18n="my_orders">
+                        📦 Order History & Status
+                    </h2>
+                    <div id="user-orders-container">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 2: SAVED PRESETS -->
+                <div id="acc-sec-presets" class="account-sec" style="display:none;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap;">
+                        <h2 style="font-family:var(--f-head); color:var(--c-primary); margin:0;" data-i18n="my_presets">
+                            ⭐ Saved 3D Presets
+                        </h2>
+                        <a href="customize.html" class="clay-btn btn-coral btn-sm">➕ Create New Preset</a>
+                    </div>
+                    <div id="user-presets-container" class="preset-grid">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: PROFILE DETAILS -->
+                <div id="acc-sec-profile" class="account-sec" style="display:none;">
+                    <div class="clay-card" style="max-width:650px; margin:0 auto;">
+                        <h2 style="font-family:var(--f-head); color:var(--c-primary); margin-bottom:1.5rem;">
+                            👤 Personal Information
+                        </h2>
+                        <form onsubmit="handleUpdateProfile(event)">
+                            <div class="auth-input-group">
+                                <label data-i18n="label_name">Full Name</label>
+                                <input type="text" id="prof-name" required>
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="label_email">Email Address</label>
+                                <input type="email" id="prof-email" readonly style="opacity:0.75; cursor:not-allowed;">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="auth_phone">Phone Number</label>
+                                <input type="tel" id="prof-phone" placeholder="+880 17...">
+                            </div>
+                            <div class="auth-input-group">
+                                <label data-i18n="auth_address">Shipping Address</label>
+                                <input type="text" id="prof-address" placeholder="Khulna Sadar, Khulna">
+                            </div>
+                            <button type="submit" class="clay-btn btn-coral btn-block" style="margin-top:1.2rem;">
+                                💾 Save Profile Changes
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <footer class="main-footer">
+            <div class="footer-container">
+                <div class="footer-col brand-col">
+                    <span class="brand-text">Kira's Creation</span>
+                    <p class="footer-desc" data-i18n="footer_subtitle">Approachable soft 3D manufacturing. Made with heart and organic plastics.</p>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer_explore">Explore</h4>
+                    <a href="services.html" data-i18n="nav_services">Services</a>
+                    <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                    <a href="portfolio.html" data-i18n="nav_gallery">Gallery</a>
+                    <a href="customize.html" data-i18n="nav_customize">Customize</a>
+                </div>
+                <div class="footer-col">
+                    <h4 data-i18n="footer_location">Location</h4>
+                    <p class="footer-address" data-i18n="footer_address">58 Lower Jessore Road, Khulna Sadar, Khulna, Bangladesh</p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p data-i18n="footer_copyright">© 2026 Kira's Creation. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/translations.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+
+    <script>
+        function switchAccountTab(tab) {
+            document.querySelectorAll('.account-sec').forEach(sec => sec.style.display = 'none');
+            document.querySelectorAll('.auth-tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            const sec = document.getElementById('acc-sec-' + tab);
+            const btn = document.getElementById('acc-tab-btn-' + tab);
+            if (sec) sec.style.display = 'block';
+            if (btn) btn.classList.add('active');
+        }
+
+        function renderAccountPage() {
+            const user = KiraAuth.getCurrentUser();
+            if (!user) {
+                KiraAuth.openModal('login');
+                document.querySelector('main').innerHTML = `
+                    <div style="text-align:center; padding:4rem 1rem;">
+                        <h2 style="color:var(--c-primary);">Please Sign In</h2>
+                        <p>You need to be logged in to view your account dashboard.</p>
+                        <button onclick="KiraAuth.openModal('login')" class="clay-btn btn-coral" style="margin-top:1rem;">Sign In / Register</button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Header Banner
+            document.getElementById('user-display-name').textContent = `Welcome, ${user.name}!`;
+            document.getElementById('user-display-email').textContent = `${user.email} ${user.phone ? '• ' + user.phone : ''}`;
+
+            // Profile Form
+            document.getElementById('prof-name').value = user.name || '';
+            document.getElementById('prof-email').value = user.email || '';
+            document.getElementById('prof-phone').value = user.phone || '';
+            document.getElementById('prof-address').value = user.address || '';
+
+            // Render Presets
+            const presetsContainer = document.getElementById('user-presets-container');
+            const presets = user.presets || [];
+            if (presets.length === 0) {
+                presetsContainer.innerHTML = `
+                    <div class="clay-card" style="grid-column: 1 / -1; text-align:center; padding:3rem 1rem;">
+                        <div style="font-size:3rem; margin-bottom:0.8rem;">⭐</div>
+                        <h3>No Saved Presets Yet</h3>
+                        <p style="color:var(--c-text-muted);">Customize a 3D nameplate and click "⭐ Save Preset" to store it here.</p>
+                        <a href="customize.html" class="clay-btn btn-coral btn-sm" style="margin-top:1rem; display:inline-flex;">🎨 Go to 3D Customizer</a>
+                    </div>
+                `;
+            } else {
+                presetsContainer.innerHTML = presets.map(p => `
+                    <div class="preset-card">
+                        <img src="${p.snapshot}" alt="${p.name || p.text}" class="preset-thumb">
+                        <div class="preset-title">${p.text}</div>
+                        <div class="preset-specs">
+                            🎨 ${p.color} • ${p.font} • ${p.thickness}mm<br>
+                            📅 Saved: ${p.date} • Price: <strong>${p.price}</strong>
+                        </div>
+                        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+                            <button onclick="applyPresetToCustomizer('${encodeURIComponent(JSON.stringify(p))}')" class="clay-btn btn-coral btn-sm" style="flex:1;">
+                                🎨 Apply Preset
+                            </button>
+                            <button onclick="KiraAuth.deletePreset('${p.id}'); renderAccountPage();" class="clay-btn btn-cream btn-sm" style="color:#FF5E5E;" title="Delete">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // Render Orders
+            const ordersContainer = document.getElementById('user-orders-container');
+            const orders = KiraAuth.getUserOrders();
+            if (orders.length === 0) {
+                ordersContainer.innerHTML = `
+                    <div class="clay-card" style="text-align:center; padding:3rem 1rem;">
+                        <div style="font-size:3rem; margin-bottom:0.8rem;">📦</div>
+                        <h3>No Orders Found</h3>
+                        <p style="color:var(--c-text-muted);">You haven't placed any 3D print orders yet.</p>
+                        <a href="pricing.html" class="clay-btn btn-coral btn-sm" style="margin-top:1rem; display:inline-flex;">💡 Estimate & Order</a>
+                    </div>
+                `;
+            } else {
+                ordersContainer.innerHTML = orders.map(o => {
+                    let statusClass = 'status-pending';
+                    if (o.status === 'In Production') statusClass = 'status-progress';
+                    if (o.status === 'Completed' || o.status === 'Delivered') statusClass = 'status-completed';
+
+                    const waMsg = `Hi Studio Kira's Creation! Inquiry about Order ${o.id} (${o.date}):\n\nItems:\n${o.details}\nTotal: ${o.estimatedPrice}\n\nStatus check please!`;
+
+                    return `
+                        <div class="order-card">
+                            <div class="order-header">
+                                <div>
+                                    <span style="font-weight:800; font-size:1.1rem; color:var(--c-primary);">Order #${o.id}</span>
+                                    <span style="font-size:0.85rem; color:var(--c-text-muted); margin-left:0.8rem;">📅 ${o.date} ${o.time ? 'at ' + o.time : ''}</span>
+                                </div>
+                                <span class="order-status-badge ${statusClass}">${o.status || 'Pending'}</span>
+                            </div>
+                            
+                            <div style="display:flex; gap:1.2rem; flex-wrap:wrap; align-items:center; margin-bottom:1rem;">
+                                ${o.snapshot ? `<img src="${o.snapshot}" alt="Preview" style="max-width:120px; border-radius:14px; background:#181621; border:1px solid rgba(255,255,255,0.2);">` : ''}
+                                <div style="flex:1;">
+                                    <div style="font-weight:700; margin-bottom:0.4rem; font-size:0.95rem;">Order Details:</div>
+                                    <pre style="font-family:var(--f-body); white-space:pre-wrap; background:rgba(0,0,0,0.03); padding:0.8rem; border-radius:12px; font-size:0.85rem; margin:0; color:var(--c-text);">${o.details || '3D Print Order'}</pre>
+                                </div>
+                            </div>
+
+                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; background:rgba(0,0,0,0.03); padding:0.8rem 1.2rem; border-radius:16px;">
+                                <div>
+                                    <span style="font-size:0.88rem; color:var(--c-text-muted);">Total Quoted Amount:</span>
+                                    <span style="font-size:1.2rem; font-weight:800; color:var(--c-primary); margin-left:0.4rem;">${o.estimatedPrice}</span>
+                                </div>
+                                <a href="https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}" target="_blank" class="clay-btn btn-coral btn-sm" style="background:#25D366; color:#FFF; font-size:0.85rem;">
+                                    💬 Contact Studio via WhatsApp
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function handleUpdateProfile(e) {
+            e.preventDefault();
+            let user = KiraAuth.getCurrentUser();
+            if (!user) return;
+
+            user.name = document.getElementById('prof-name').value;
+            user.phone = document.getElementById('prof-phone').value;
+            user.address = document.getElementById('prof-address').value;
+
+            KiraAuth.setCurrentUser(user);
+            showToast('✅ Profile updated successfully!');
+            renderAccountPage();
+        }
+
+        function applyPresetToCustomizer(encodedPreset) {
+            try {
+                const preset = JSON.parse(decodeURIComponent(encodedPreset));
+                const url = `customize.html?text=${encodeURIComponent(preset.text)}&font=${encodeURIComponent(preset.font)}&color=${encodeURIComponent(preset.color)}&thickness=${preset.thickness}`;
+                window.location.href = url;
+            } catch(e) {
+                window.location.href = 'customize.html';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAccountPage();
+            // Handle URL Hash tabs
+            const hash = window.location.hash.replace('#', '');
+            if (hash === 'presets' || hash === 'orders' || hash === 'profile') {
+                switchAccountTab(hash);
+            }
+        });
+    </script>
+</body>
+</html>
