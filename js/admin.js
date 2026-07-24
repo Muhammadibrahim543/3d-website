@@ -105,12 +105,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchCloudOrders() {
+        const tbody = document.getElementById('admin-orders-tbody');
+        if (tbody) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="7" style="text-align:center; padding: 1rem; color:var(--c-primary); font-weight:600;">⏳ Loading latest orders from cloud...</td>';
+            tbody.insertBefore(tr, tbody.firstChild);
+        }
         try {
             const res = await fetch(GOOGLE_SHEET_URL + '?action=getOrders');
             const text = await res.text();
             // Only parse if it looks like a JSON array
             if (!text.trim().startsWith('[')) {
                 console.log('Cloud orders: unexpected response, keeping local data.');
+                renderOrders(); // Re-render to clear the loading row
                 return;
             }
             const cloudOrders = JSON.parse(text);
@@ -124,10 +131,26 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 const merged = Array.from(map.values());
                 localStorage.setItem('kiras_orders', JSON.stringify(merged));
+                
+                // Update Last Sync
+                localStorage.setItem('kiras_last_sync_orders', new Date().toLocaleString('en-US'));
+                updateLastSyncUI();
+                
                 renderOrders();
+            } else {
+                renderOrders(); // clear loading row if no orders
             }
         } catch(err) {
             console.log('Cloud sync notice:', err);
+            renderOrders(); // clear loading row on error
+        }
+    }
+
+    function updateLastSyncUI() {
+        const span = document.getElementById('last-sync-time');
+        if (span) {
+            const last = localStorage.getItem('kiras_last_sync_orders');
+            span.textContent = 'Last Synced: ' + (last ? last : 'Never');
         }
     }
 
@@ -140,6 +163,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadOrders() {
         renderOrders();
+        updateLastSyncUI();
         fetchCloudOrders();
     }
 
