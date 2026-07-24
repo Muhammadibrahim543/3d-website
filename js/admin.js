@@ -266,6 +266,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetOrder.status = newStatus;
                     saveOrders(allOrders);
                     showToast(`Order ${id} status updated to ${newStatus}`);
+                    
+                    // Sync this specific update to Google Sheets
+                    const params = new URLSearchParams({
+                        id: targetOrder.id || '',
+                        date: targetOrder.date || '',
+                        name: targetOrder.name || '',
+                        email: targetOrder.email || '',
+                        material: targetOrder.material || '',
+                        details: targetOrder.details || '',
+                        estimatedPrice: targetOrder.estimatedPrice || '',
+                        status: targetOrder.status || 'Pending'
+                    });
+                    try {
+                        fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
+                    } catch(err) {}
                 }
             });
         });
@@ -327,6 +342,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnSyncSheets = document.getElementById('btn-sync-sheets');
     if (btnSyncSheets) {
         btnSyncSheets.addEventListener('click', () => {
+            // First fetch the latest from cloud
+            fetchCloudOrders();
+            
+            // Then sync local status updates to cloud (only pushing, Apps Script handles Upsert)
             const orders = getOrders();
             orders.forEach(order => {
                 const params = new URLSearchParams({
@@ -339,17 +358,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     estimatedPrice: order.estimatedPrice || '',
                     status: order.status || 'Pending'
                 });
-
-                const getUrl = GOOGLE_SHEET_URL + '?' + params.toString();
-                
                 try {
-                    fetch(getUrl, { mode: 'no-cors' });
-                } catch(e) {
-                    const b = new Image();
-                    b.src = getUrl;
-                }
+                    fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
+                } catch(e) {}
             });
-            showToast(`✓ Synced ${orders.length} order records live to Google Sheets!`);
+            showToast(`✓ Synced cloud data successfully!`);
         });
     }
 
