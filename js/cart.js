@@ -211,6 +211,25 @@
             orders.unshift(newOrder);
             localStorage.setItem('kiras_orders', JSON.stringify(orders));
 
+            // Send to Google Sheets Cloud
+            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
+            const params = new URLSearchParams({
+                id: newOrder.id,
+                date: newOrder.date,
+                name: newOrder.name,
+                email: newOrder.email,
+                material: 'Custom 3D Product Cart',
+                details: newOrder.details,
+                estimatedPrice: newOrder.estimatedPrice,
+                status: newOrder.status
+            });
+            try {
+                fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
+            } catch (err) {
+                const beacon = new Image();
+                beacon.src = GOOGLE_SHEET_URL + '?' + params.toString();
+            }
+
             // Clear cart
             this.clear();
             this.closeDrawer();
