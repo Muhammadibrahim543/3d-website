@@ -326,28 +326,40 @@
 
 @media (max-width: 992px) {
     .main-header { top: 12px; padding: 0 1rem; }
-    .nav-pill { padding: 0.45rem 1rem; border-radius: 35px; }
-    .brand-text { font-size: 1.15rem; white-space: nowrap; }
-    .desktop-nav, 
+    .nav-pill { padding: 0.45rem 1rem; border-radius: 35px; gap: 0; }
+    .brand-text { font-size: 1.1rem; white-space: nowrap; }
+    /* Hide full desktop nav and the CTA link only */
+    .desktop-nav,
     .header-cta .clay-btn,
+    .header-cta .header-user-slot { display: none !important; }
+    /* Keep utility icons visible but compact */
+    .header-cta { display: flex; align-items: center; gap: 0.2rem; }
     .header-cta .theme-toggle-btn,
     .header-cta .lang-toggle-btn,
-    .header-cta .header-user-slot { display: none !important; }
-    .mobile-toggle { display: flex !important; width: 40px; height: 40px; border-radius: 14px; flex-shrink: 0; }
+    .header-cta .header-cart-btn { display: inline-flex !important; }
+    .theme-toggle-btn { font-size: 1rem; padding: 0.35rem 0.4rem; }
+    .lang-toggle-btn  { font-size: 0.78rem; padding: 0.35rem 0.5rem; }
+    .header-cart-btn  { font-size: 1rem; padding: 0.35rem 0.4rem; }
+    .mobile-toggle { display: flex !important; width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; margin-left: 0.2rem; }
 }
 
 /* Mobile Media Queries */
 @media (max-width: 768px) {
     .main-header { top: 8px; padding: 0 0.5rem; }
-    .nav-pill { padding: 0.4rem 0.85rem; border-radius: 30px; }
-    .brand-text { font-size: 1.05rem; white-space: nowrap; }
-    .desktop-nav, 
+    .nav-pill { padding: 0.35rem 0.75rem; border-radius: 28px; }
+    .brand-text { font-size: 1rem; white-space: nowrap; }
+    .desktop-nav,
     .header-cta .clay-btn,
+    .header-cta .header-user-slot { display: none !important; }
+    /* Keep utility icons on mobile top bar — fills the space usefully */
+    .header-cta { display: flex; align-items: center; gap: 0.15rem; }
     .header-cta .theme-toggle-btn,
     .header-cta .lang-toggle-btn,
-    .header-cta .header-user-slot { display: none !important; }
-    .header-cta { display: flex; align-items: center; gap: 0.35rem; }
-    .mobile-toggle { display: flex !important; width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; }
+    .header-cta .header-cart-btn { display: inline-flex !important; }
+    .theme-toggle-btn { font-size: 1rem; padding: 0.3rem 0.35rem; }
+    .lang-toggle-btn  { font-size: 0.75rem; padding: 0.3rem 0.45rem; }
+    .header-cart-btn  { font-size: 1rem; padding: 0.3rem 0.35rem; }
+    .mobile-toggle { display: flex !important; width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; margin-left: 0.1rem; }
     .clay-card { padding: 1.5rem; border-radius: 22px; }
     .main-footer { padding: 3rem 1.5rem 2rem; border-top-left-radius: 40px; border-top-right-radius: 40px; }
     .footer-grid { grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2.5rem; }
