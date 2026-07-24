@@ -3,6 +3,20 @@
    ========================================================================== */
 
 (function() {
+    // Game & 3D Character Avatar Presets
+    window.KiraAvatars = [
+        { id: 'av_robo', name: 'Cyber Bot', icon: '🤖', bg: 'linear-gradient(135deg, #FF6B6B, #FFE66D)', border: '#FF6B6B', title: 'AI 3D Maker' },
+        { id: 'av_pilot', name: 'Sci-Fi Pilot', icon: '🚀', bg: 'linear-gradient(135deg, #4E54C8, #8F94FB)', border: '#8F94FB', title: 'Space Crafter' },
+        { id: 'av_fox', name: 'Cyber Fox', icon: '🦊', bg: 'linear-gradient(135deg, #FF9F43, #FF5252)', border: '#FF9F43', title: 'Speedy Modeler' },
+        { id: 'av_wizard', name: 'Print Wizard', icon: '🧙‍♂️', bg: 'linear-gradient(135deg, #8E2DE2, #4A00E0)', border: '#8E2DE2', title: 'Magic Architect' },
+        { id: 'av_king', name: 'Crown King', icon: '👑', bg: 'linear-gradient(135deg, #F7971E, #FFD200)', border: '#F7971E', title: 'Pro Designer' },
+        { id: 'av_cat', name: 'Cosmic Meow', icon: '🐱', bg: 'linear-gradient(135deg, #00B4DB, #0083B0)', border: '#00B4DB', title: 'Cute Sculpter' },
+        { id: 'av_dragon', name: 'Neon Dragon', icon: '🐲', bg: 'linear-gradient(135deg, #11998E, #38EF7D)', border: '#38EF7D', title: 'Beast Producer' },
+        { id: 'av_gamer', name: 'Pixel Gamer', icon: '🎮', bg: 'linear-gradient(135deg, #FC466B, #3F5EFB)', border: '#FC466B', title: 'Hero Builder' },
+        { id: 'av_ninja', name: 'Shadow Ninja', icon: '🥷', bg: 'linear-gradient(135deg, #3A3D40, #181719)', border: '#666666', title: 'Stealth Cutter' },
+        { id: 'av_alien', name: 'Galaxy Alien', icon: '👾', bg: 'linear-gradient(135deg, #D4145A, #FBB03B)', border: '#D4145A', title: 'Alien Engineer' }
+    ];
+
     // 1. Initial Storage Setup & Pre-seeded Demo User
     const DEMO_USER = {
         id: 'usr_demo_01',
@@ -11,6 +25,7 @@
         password: '123456',
         phone: '+880 1793-500131',
         address: '58 Lower Jessore Road, Khulna Sadar, Khulna',
+        avatar: 'av_robo',
         presets: [
             {
                 id: 'pst_1',
@@ -160,6 +175,98 @@
             return allOrders.filter(o => o.email && o.email.toLowerCase() === user.email.toLowerCase());
         },
 
+        getAvatar: function(avatarId) {
+            return window.KiraAvatars.find(a => a.id === avatarId) || window.KiraAvatars[0];
+        },
+
+        openAvatarModal: function() {
+            let modal = document.getElementById('avatar-modal-overlay');
+            if (!modal) {
+                this.injectAvatarModal();
+                modal = document.getElementById('avatar-modal-overlay');
+            }
+            modal.classList.add('open');
+            this.renderAvatarGrid();
+        },
+
+        closeAvatarModal: function() {
+            const modal = document.getElementById('avatar-modal-overlay');
+            if (modal) modal.classList.remove('open');
+        },
+
+        selectAvatar: function(avatarId) {
+            let user = this.getCurrentUser();
+            if (!user) return;
+
+            user.avatar = avatarId;
+            this.setCurrentUser(user);
+
+            const av = this.getAvatar(avatarId);
+            showToast(`${av.icon} Character avatar set to ${av.name}! 🎉`);
+
+            this.closeAvatarModal();
+            this.updateUI();
+
+            if (typeof renderAccountPage === 'function') {
+                renderAccountPage();
+            }
+        },
+
+        renderAvatarGrid: function() {
+            const user = this.getCurrentUser();
+            const currentAvId = user ? (user.avatar || 'av_robo') : 'av_robo';
+            const container = document.getElementById('avatar-grid-container');
+            if (!container) return;
+
+            container.innerHTML = window.KiraAvatars.map(av => {
+                const isActive = av.id === currentAvId;
+                return `
+                    <div class="avatar-card ${isActive ? 'active' : ''}" onclick="KiraAuth.selectAvatar('${av.id}')">
+                        <div class="avatar-icon-bubble" style="background:${av.bg}; border: 2px solid ${av.border};">
+                            ${av.icon}
+                        </div>
+                        <div style="font-weight:700; font-size:0.88rem; color:var(--c-text);">${av.name}</div>
+                        <div style="font-size:0.72rem; color:var(--c-text-muted); margin-top:0.1rem;">${av.title}</div>
+                        ${isActive ? '<div style="margin-top:0.4rem; font-size:0.75rem; font-weight:800; color:var(--c-primary);">✓ Active</div>' : ''}
+                    </div>
+                `;
+            }).join('');
+        },
+
+        injectAvatarModal: function() {
+            if (document.getElementById('avatar-modal-overlay')) return;
+            const lang = localStorage.getItem('shapey_lang') || 'en';
+
+            const modalHTML = `
+                <div id="avatar-modal-overlay" class="modal-overlay">
+                    <div class="modal-content clay-card" style="max-width:560px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                            <div>
+                                <h2 style="font-family:var(--f-head); color:var(--c-primary); margin:0;">
+                                    🎭 ${lang === 'en' ? 'Choose Character Avatar' : 'ক্যারেক্টার প্রিসেট ছবি বেছে নিন'}
+                                </h2>
+                                <p style="margin:0.2rem 0 0 0; font-size:0.85rem; color:var(--c-text-muted);">
+                                    ${lang === 'en' ? 'Select a cool 3D gaming avatar character for your profile!' : 'আপনার প্রোফাইলের জন্য একটি দুর্দান্ত থ্রিডি গেম প্রিসেট ছবি সিলেক্ট করুন!'}
+                                </p>
+                            </div>
+                            <button onclick="KiraAuth.closeAvatarModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--c-text);">✕</button>
+                        </div>
+                        
+                        <div id="avatar-grid-container" class="avatar-grid">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            document.getElementById('avatar-modal-overlay').addEventListener('click', (e) => {
+                if (e.target.id === 'avatar-modal-overlay') {
+                    this.closeAvatarModal();
+                }
+            });
+        },
+
         // UI Renderer
         updateUI: function() {
             const user = this.getCurrentUser();
@@ -168,15 +275,25 @@
             document.querySelectorAll('.header-user-slot').forEach(slot => {
                 if (user) {
                     const firstName = user.name.split(' ')[0];
+                    const av = this.getAvatar(user.avatar);
                     slot.innerHTML = `
                         <div class="user-dropdown-container">
                             <button class="header-user-btn" aria-label="User Account">
-                                👤 <span>${firstName}</span> ▾
+                                <span class="auth-avatar" style="background:${av.bg}; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.95rem; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.2);">${av.icon}</span>
+                                <span>${firstName}</span> ▾
                             </button>
                             <div class="user-dropdown-menu">
-                                <div style="padding:0.5rem 1rem; border-bottom:1px solid rgba(0,0,0,0.08); margin-bottom:0.2rem;">
-                                    <div style="font-weight:700; font-size:0.95rem;">${user.name}</div>
-                                    <div style="font-size:0.75rem; color:var(--c-text-muted);">${user.email}</div>
+                                <div style="display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0.8rem; border-bottom:1px solid rgba(0,0,0,0.08); margin-bottom:0.3rem;">
+                                    <div onclick="KiraAuth.openAvatarModal()" style="width:42px; height:42px; border-radius:50%; background:${av.bg}; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex-shrink:0; cursor:pointer;" title="Change Avatar Character">
+                                        ${av.icon}
+                                    </div>
+                                    <div style="flex:1; overflow:hidden;">
+                                        <div style="font-weight:700; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${user.name}</div>
+                                        <div style="font-size:0.75rem; color:var(--c-text-muted);">${av.name} • ${user.email}</div>
+                                    </div>
+                                </div>
+                                <div class="user-dropdown-item" onclick="KiraAuth.openAvatarModal()" style="color:var(--c-primary); font-weight:700;">
+                                    🎭 ${lang === 'en' ? 'Change Character Avatar' : 'ক্যারেক্টার পিকচার পরিবর্তন'}
                                 </div>
                                 <a href="account.html" class="user-dropdown-item">👤 ${lang === 'en' ? 'My Account' : 'আমার অ্যাকাউন্ট'}</a>
                                 <a href="account.html#presets" class="user-dropdown-item">⭐ ${lang === 'en' ? 'Saved Presets' : 'সেভ করা প্রিসেট'}</a>

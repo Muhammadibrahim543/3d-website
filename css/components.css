@@ -1108,4 +1108,54 @@ input[type="range"]::-moz-range-thumb:hover {
 .status-progress { background: #81D4FA; color: #01579B; }
 .status-completed { background: #A5D6A7; color: #1B5E20; }
 
+/* Character Avatar Picker Styles */
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: 0.8rem;
+    margin-top: 1rem;
+    max-height: 420px;
+    overflow-y: auto;
+    padding-right: 0.3rem;
+}
+.avatar-card {
+    background: rgba(0, 0, 0, 0.03);
+    border: 2px solid transparent;
+    border-radius: 20px;
+    padding: 0.9rem 0.4rem;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.25s var(--bouncy-ease), border-color 0.25s, background 0.25s;
+}
+.avatar-card:hover {
+    transform: translateY(-4px) scale(1.03);
+    background: rgba(255, 126, 103, 0.08);
+}
+.avatar-card.active {
+    border-color: var(--c-primary);
+    background: rgba(255, 126, 103, 0.12);
+}
+.avatar-icon-bubble {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    margin: 0 auto 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.75rem;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+    transition: transform 0.3s var(--bouncy-ease);
+}
+.avatar-card:hover .avatar-icon-bubble {
+    transform: scale(1.12) rotate(6deg);
+}
+
+[data-theme="dark"] .avatar-card {
+    background: rgba(255, 255, 255, 0.05);
+}
+[data-theme="dark"] .avatar-card:hover {
+    background: rgba(255, 126, 103, 0.18);
+}
+
 

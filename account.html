@@ -80,17 +80,28 @@
                 
                 <!-- Account Header Banner -->
                 <div class="clay-card" style="background:linear-gradient(135deg, var(--c-primary) 0%, #FF9E80 100%); color:#FFF; padding:2rem 2.5rem; margin-bottom:2rem; border-radius:32px;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem;">
-                        <div>
-                            <span style="text-transform:uppercase; letter-spacing:2px; font-weight:700; font-size:0.85rem; opacity:0.9;">Customer Dashboard</span>
-                            <h1 id="user-display-name" style="margin:0.2rem 0; font-family:var(--f-head); font-size:2.2rem; text-shadow:0 2px 4px rgba(0,0,0,0.15);">
-                                Welcome Back!
-                            </h1>
-                            <p id="user-display-email" style="margin:0; opacity:0.9; font-size:1.05rem;">
-                                Sidratul Muntaha (user@kira.com)
-                            </p>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem;">
+                        <div style="display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;">
+                            <div onclick="KiraAuth.openAvatarModal()" style="position:relative; cursor:pointer;" title="Click to change character avatar">
+                                <div id="user-display-avatar" style="width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2.4rem; box-shadow:0 8px 24px rgba(0,0,0,0.25); border:3px solid #FFF; transition:transform 0.3s var(--bouncy-ease);">
+                                    🤖
+                                </div>
+                                <span style="position:absolute; bottom:0; right:-4px; background:#181621; color:#FFF; font-size:0.75rem; padding:3px 7px; border-radius:12px; border:2px solid #FFF; font-weight:700;">✏️</span>
+                            </div>
+                            <div>
+                                <div style="display:inline-flex; align-items:center; gap:0.4rem; background:rgba(255,255,255,0.2); padding:0.2rem 0.7rem; border-radius:10px; font-weight:700; font-size:0.8rem; letter-spacing:1px; text-transform:uppercase; margin-bottom:0.2rem;">
+                                    <span id="user-display-avatar-title">Cyber Bot • AI 3D Maker</span>
+                                </div>
+                                <h1 id="user-display-name" style="margin:0.1rem 0; font-family:var(--f-head); font-size:2rem; text-shadow:0 2px 4px rgba(0,0,0,0.15);">
+                                    Welcome Back!
+                                </h1>
+                                <p id="user-display-email" style="margin:0; opacity:0.9; font-size:0.95rem;">
+                                    Sidratul Muntaha (user@kira.com)
+                                </p>
+                            </div>
                         </div>
                         <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
+                            <button onclick="KiraAuth.openAvatarModal()" class="clay-btn btn-cream btn-sm" style="color:#181621;">🎭 Change Avatar</button>
                             <a href="customize.html" class="clay-btn btn-cream btn-sm" style="color:#181621;">🎨 New 3D Print</a>
                             <button onclick="KiraAuth.logout()" class="clay-btn btn-cream btn-sm" style="color:#FF5E5E; border-color:#FF5E5E;">🚪 Log Out</button>
                         </div>
@@ -139,6 +150,23 @@
                         <h2 style="font-family:var(--f-head); color:var(--c-primary); margin-bottom:1.5rem;">
                             👤 Personal Information
                         </h2>
+                        
+                        <!-- Avatar Selection Box inside Profile tab -->
+                        <div style="background:rgba(0,0,0,0.03); padding:1.2rem; border-radius:20px; margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                            <div style="display:flex; align-items:center; gap:1rem;">
+                                <div id="prof-avatar-bubble" style="width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 6px 16px rgba(0,0,0,0.15);">
+                                    🤖
+                                </div>
+                                <div>
+                                    <div style="font-weight:800; font-size:1rem; color:var(--c-primary);" id="prof-avatar-name">Cyber Bot</div>
+                                    <div style="font-size:0.8rem; color:var(--c-text-muted);" id="prof-avatar-title">AI 3D Maker • Profile Avatar Character</div>
+                                </div>
+                            </div>
+                            <button type="button" onclick="KiraAuth.openAvatarModal()" class="clay-btn btn-coral btn-sm">
+                                🎭 Choose Character Preset
+                            </button>
+                        </div>
+
                         <form onsubmit="handleUpdateProfile(event)">
                             <div class="auth-input-group">
                                 <label data-i18n="label_name">Full Name</label>
@@ -221,11 +249,32 @@
                 return;
             }
 
-            // Header Banner
+            // Render Avatar & Header Banner
+            const av = KiraAuth.getAvatar(user.avatar);
+            const avatarEl = document.getElementById('user-display-avatar');
+            if (avatarEl) {
+                avatarEl.style.background = av.bg;
+                avatarEl.innerHTML = av.icon;
+            }
+            const titleEl = document.getElementById('user-display-avatar-title');
+            if (titleEl) {
+                titleEl.textContent = `${av.name} • ${av.title}`;
+            }
+
             document.getElementById('user-display-name').textContent = `Welcome, ${user.name}!`;
             document.getElementById('user-display-email').textContent = `${user.email} ${user.phone ? '• ' + user.phone : ''}`;
 
-            // Profile Form
+            // Profile Form & Avatar Card
+            const profBubble = document.getElementById('prof-avatar-bubble');
+            if (profBubble) {
+                profBubble.style.background = av.bg;
+                profBubble.innerHTML = av.icon;
+            }
+            const profName = document.getElementById('prof-avatar-name');
+            if (profName) profName.textContent = av.name;
+            const profTitle = document.getElementById('prof-avatar-title');
+            if (profTitle) profTitle.textContent = `${av.title} • Profile Avatar Character`;
+
             document.getElementById('prof-name').value = user.name || '';
             document.getElementById('prof-email').value = user.email || '';
             document.getElementById('prof-phone').value = user.phone || '';
