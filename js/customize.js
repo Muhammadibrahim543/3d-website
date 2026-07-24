@@ -273,27 +273,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Order Button ---
     if (btnOrder) {
-        btnOrder.addEventListener('click', () => {
+        btnOrder.addEventListener('click', async () => {
             const text = inputName.value.trim() || 'Custom Name';
             const thickness = inputThickness.value;
             const price = displayPrice.textContent;
             
             const snapData = generateSnapshotSVG();
+            const user = window.KiraAuth ? window.KiraAuth.getCurrentUser() : null;
 
-            const pendingCustomOrder = {
-                text: text,
-                font: snapData.fontDisplayName,
-                color: currentColorName,
-                thickness: thickness,
-                price: price,
-                snapshot: snapData.snapshotUrl
-            };
+            if (user) {
+                // Instant One-Click Checkout for Logged In Users
+                const orderId = 'KC-' + Date.now().toString(36).toUpperCase();
+                const orderDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const orderTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const specsStr = `${currentColorName} PLA • ${thickness}mm • ${snapData.fontDisplayName}`;
+                
+                const newOrder = {
+                    id: orderId,
+                    date: orderDate,
+                    time: orderTime,
+                    name: user.name,
+                    email: user.email,
+                    items: [], 
+                    details: `Live Customizer Order:\n- Name/Text: ${text}\n- Font Style: ${snapData.fontDisplayName}\n- Base Color: ${currentColorName}\n- Thickness: ${thickness}mm\n- Quoted Price: ${price}`,
+                    status: 'Pending',
+                    estimatedPrice: price,
+                    snapshot: snapData.snapshotUrl,
+                    material: specsStr
+                };
 
-            localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingCustomOrder));
+                let orders = [];
+                try {
+                    orders = JSON.parse(localStorage.getItem('kiras_orders')) || [];
+                } catch(e) {}
+                orders.unshift(newOrder);
+                localStorage.setItem('kiras_orders', JSON.stringify(orders));
 
-            const details = `Live Customizer Order:\n- Name/Text: ${text}\n- Font Style: ${snapData.fontDisplayName}\n- Base Color: ${currentColorName}\n- Thickness: ${thickness}mm\n- Quoted Price: ${price}`;
+                const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
+                const params = new URLSearchParams({
+                    id: newOrder.id,
+                    date: newOrder.date,
+                    name: newOrder.name,
+                    email: newOrder.email,
+                    material: newOrder.material,
+                    details: newOrder.details,
+                    estimatedPrice: newOrder.estimatedPrice,
+                    status: newOrder.status
+                });
+                
+                const originalText = btnOrder.innerHTML;
+                btnOrder.innerHTML = '⏳ Processing...';
+                btnOrder.disabled = true;
 
-            window.location.href = `contact.html?from=customizer&material=${encodeURIComponent(currentColorName + ' PLA')}&details=${encodeURIComponent(details)}`;
+                try {
+                    await fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
+                } catch(err) {
+                    const beacon = new Image();
+                    beacon.src = GOOGLE_SHEET_URL + '?' + params.toString();
+                }
+
+                if (window.showToast) showToast(`🎉 Order ${orderId} placed successfully!`);
+                
+                const waMsg = `Hi Studio Kira's Creation! I have placed an INSTANT order (${orderId}):\n\nCustomer: ${user.name} (${user.email})\n\nOrder Details:\n${newOrder.details}\n\nPlease confirm my order!`;
+                
+                setTimeout(() => {
+                    window.location.href = `account.html#orders`;
+                    window.open(`https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}`, '_blank');
+                }, 1000);
+
+            } else {
+                // Not logged in -> Go to Contact form
+                const pendingCustomOrder = {
+                    text: text,
+                    font: snapData.fontDisplayName,
+                    color: currentColorName,
+                    thickness: thickness,
+                    price: price,
+                    snapshot: snapData.snapshotUrl
+                };
+
+                localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingCustomOrder));
+
+                const details = `Live Customizer Order:\n- Name/Text: ${text}\n- Font Style: ${snapData.fontDisplayName}\n- Base Color: ${currentColorName}\n- Thickness: ${thickness}mm\n- Quoted Price: ${price}`;
+
+                window.location.href = `contact.html?from=customizer&material=${encodeURIComponent(currentColorName + ' PLA')}&details=${encodeURIComponent(details)}`;
+            }
         });
     }
 
