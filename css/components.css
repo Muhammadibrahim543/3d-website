@@ -328,8 +328,12 @@
     .main-header { top: 12px; padding: 0 1rem; }
     .nav-pill { padding: 0.45rem 1rem; border-radius: 35px; }
     .brand-text { font-size: 1.15rem; white-space: nowrap; }
-    .desktop-nav, .header-cta .clay-btn { display: none; }
-    .mobile-toggle { display: flex; width: 40px; height: 40px; border-radius: 14px; flex-shrink: 0; }
+    .desktop-nav, 
+    .header-cta .clay-btn,
+    .header-cta .theme-toggle-btn,
+    .header-cta .lang-toggle-btn,
+    .header-cta .header-user-slot { display: none !important; }
+    .mobile-toggle { display: flex !important; width: 40px; height: 40px; border-radius: 14px; flex-shrink: 0; }
 }
 
 /* Mobile Media Queries */
@@ -337,15 +341,30 @@
     .main-header { top: 8px; padding: 0 0.5rem; }
     .nav-pill { padding: 0.4rem 0.85rem; border-radius: 30px; }
     .brand-text { font-size: 1.05rem; white-space: nowrap; }
-    .desktop-nav, .header-cta .clay-btn { display: none; }
+    .desktop-nav, 
+    .header-cta .clay-btn,
+    .header-cta .theme-toggle-btn,
+    .header-cta .lang-toggle-btn,
+    .header-cta .header-user-slot { display: none !important; }
     .header-cta { display: flex; align-items: center; gap: 0.35rem; }
-    .lang-toggle-btn { padding: 0.3rem 0.55rem; font-size: 0.78rem; border-radius: 14px; }
-    .theme-toggle-btn { padding: 0.3rem 0.5rem; font-size: 0.8rem; }
-    .mobile-toggle { display: flex; width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; }
+    .mobile-toggle { display: flex !important; width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0; }
     .clay-card { padding: 1.5rem; border-radius: 22px; }
     .main-footer { padding: 3rem 1.5rem 2rem; border-top-left-radius: 40px; border-top-right-radius: 40px; }
     .footer-grid { grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2.5rem; }
     .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
+
+    /* Dropdown controls styling */
+    .mobile-menu-dropdown .theme-toggle-btn,
+    .mobile-menu-dropdown .lang-toggle-btn,
+    .mobile-menu-dropdown .header-user-btn {
+        display: inline-flex !important;
+        background: rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        padding: 0.4rem 0.8rem;
+        border-radius: 16px;
+        font-size: 0.88rem;
+        font-weight: 700;
+    }
 }
 
 /* ==========================================================================
