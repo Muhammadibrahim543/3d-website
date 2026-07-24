@@ -56,9 +56,10 @@
         }
 
         // Set demo user logged in by default if no active session
-        if (!localStorage.getItem('kiras_active_user')) {
-            localStorage.setItem('kiras_active_user', JSON.stringify(DEMO_USER));
-        }
+        // Removed to allow real users to register and login independently.
+        // if (!localStorage.getItem('kiras_active_user')) {
+        //     localStorage.setItem('kiras_active_user', JSON.stringify(DEMO_USER));
+        // }
     }
     initUsers();
 
@@ -108,7 +109,7 @@
             }
 
             const newUser = {
-                id: 'usr_' + Date.now().toString(36),
+                id: 'KIRA-USR-' + Math.floor(10000 + Math.random() * 90000), // Generates e.g., KIRA-USR-49215
                 name: name.trim(),
                 email: email.trim(),
                 password: password,
@@ -119,6 +120,21 @@
 
             users.push(newUser);
             localStorage.setItem('kiras_users', JSON.stringify(users));
+
+            // Sync user registration to Google Sheet
+            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
+            const params = new URLSearchParams({
+                action: 'addUser',
+                id: newUser.id,
+                name: newUser.name,
+                email: newUser.email,
+                phone: newUser.phone,
+                password: newUser.password
+            });
+            try {
+                fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
+            } catch(err) {}
+
             this.setCurrentUser(newUser);
             return { success: true, user: newUser };
         },

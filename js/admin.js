@@ -91,8 +91,15 @@ document.addEventListener('DOMContentLoaded', () => {
             return initialDemoOrders;
         }
         try {
-            return JSON.parse(stored);
+            const parsed = JSON.parse(stored);
+            // If empty array in storage, restore demo orders
+            if (Array.isArray(parsed) && parsed.length === 0) {
+                localStorage.setItem('kiras_orders', JSON.stringify(initialDemoOrders));
+                return initialDemoOrders;
+            }
+            return parsed;
         } catch(e) {
+            localStorage.setItem('kiras_orders', JSON.stringify(initialDemoOrders));
             return initialDemoOrders;
         }
     }
@@ -100,14 +107,20 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchCloudOrders() {
         try {
             const res = await fetch(GOOGLE_SHEET_URL + '?action=getOrders');
-            const cloudOrders = await res.json();
+            const text = await res.text();
+            // Only parse if it looks like a JSON array
+            if (!text.trim().startsWith('[')) {
+                console.log('Cloud orders: unexpected response, keeping local data.');
+                return;
+            }
+            const cloudOrders = JSON.parse(text);
             if (Array.isArray(cloudOrders) && cloudOrders.length > 0) {
                 const localOrders = getOrders();
                 const map = new Map();
-                // Cloud orders first
-                cloudOrders.reverse().forEach(o => map.set(o.id, o));
-                localOrders.forEach(o => {
-                    if (!map.has(o.id)) map.set(o.id, o);
+                // Local orders are master, cloud adds new ones
+                localOrders.forEach(o => map.set(o.id, o));
+                cloudOrders.forEach(o => {
+                    if (!map.has(o.id) && o.id) map.set(o.id, o);
                 });
                 const merged = Array.from(map.values());
                 localStorage.setItem('kiras_orders', JSON.stringify(merged));
@@ -353,6 +366,81 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             toast.classList.remove('show');
         }, 3500);
+    }
+
+    // Users Tab Logic
+    const tabOrders = document.getElementById('tab-orders');
+    const tabUsers = document.getElementById('tab-users');
+    const viewOrders = document.getElementById('view-orders');
+    const viewUsers = document.getElementById('view-users');
+
+    if (tabOrders && tabUsers) {
+        tabOrders.addEventListener('click', () => {
+            tabOrders.style.background = 'var(--c-primary)';
+            tabOrders.style.color = 'white';
+            tabUsers.style.background = 'transparent';
+            tabUsers.style.color = 'var(--c-text)';
+            viewOrders.style.display = 'block';
+            viewUsers.style.display = 'none';
+        });
+
+        tabUsers.addEventListener('click', () => {
+            tabUsers.style.background = 'var(--c-primary)';
+            tabUsers.style.color = 'white';
+            tabOrders.style.background = 'transparent';
+            tabOrders.style.color = 'var(--c-text)';
+            viewUsers.style.display = 'block';
+            viewOrders.style.display = 'none';
+            loadUsers();
+        });
+    }
+
+    async function loadUsers() {
+        const tbody = document.getElementById('admin-users-tbody');
+        if (!tbody) return;
+        
+        let users = JSON.parse(localStorage.getItem('kiras_users')) || [];
+        
+        // Try fetching from Google Sheet
+        try {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Loading users from cloud...</td></tr>';
+            const res = await fetch(GOOGLE_SHEET_URL + '?action=getUsers');
+            const cloudUsers = await res.json();
+            if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+                const map = new Map();
+                // We reverse the cloud users to keep newest at the top, if sheet appends to bottom
+                cloudUsers.reverse().forEach(u => map.set(u.email, u));
+                users.forEach(u => {
+                    if (!map.has(u.email)) map.set(u.email, u);
+                });
+                users = Array.from(map.values());
+                localStorage.setItem('kiras_users', JSON.stringify(users));
+            }
+        } catch (err) {
+            console.log('User cloud sync notice:', err);
+        }
+
+        tbody.innerHTML = '';
+        
+        if (users.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">No registered users found.</td></tr>';
+            return;
+        }
+
+        users.forEach(u => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="font-weight:700; color:var(--c-primary);">${u.id || '-'}</td>
+                <td style="font-weight:600;">${u.name}</td>
+                <td>${u.email}</td>
+                <td>${u.phone || '-'}</td>
+                <td>
+                    <span class="masked-pwd" data-pwd="${u.password}">••••••••</span>
+                    <button class="clay-btn btn-sm" onclick="this.previousElementSibling.textContent = this.previousElementSibling.textContent === '••••••••' ? this.previousElementSibling.dataset.pwd : '••••••••'" style="padding: 0.2rem 0.5rem; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(0,0,0,0.05); color: var(--c-text);">👁️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
     }
 
     checkAuth();

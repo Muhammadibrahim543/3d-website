@@ -113,6 +113,14 @@
                 <p class="section-sub">// LIVE_CUSTOMER_REQUESTS_&_GOOGLE_SHEETS_SYNC</p>
             </div>
 
+            <!-- Main Tabs -->
+            <div style="margin-bottom: 2rem; display: flex; gap: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 1rem; justify-content: center;">
+                <button id="tab-orders" class="clay-btn" style="background:var(--c-primary); color:white; padding: 0.8rem 2rem;">📦 Orders Database</button>
+                <button id="tab-users" class="clay-btn" style="padding: 0.8rem 2rem;">👥 Registered Users</button>
+            </div>
+
+            <div id="view-orders">
+
             <!-- Stats Overview Grid -->
             <div class="stats-grid reveal-on-scroll" style="margin-bottom:3rem;">
                 <div class="clay-card stat-card text-center">
@@ -170,6 +178,30 @@
                             <!-- Populated dynamically via admin.js -->
                         </tbody>
                     </table>
+                </div>
+            </div>
+            </div> <!-- End view-orders -->
+
+            <!-- Users View Container -->
+            <div id="view-users" style="display:none;">
+                <div class="clay-card" style="padding:1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Registered Users Database</h3>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>User ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Phone</th>
+                                    <th>Password</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-users-tbody">
+                                <!-- Populated dynamically via admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </main>
