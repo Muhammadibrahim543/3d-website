@@ -330,8 +330,7 @@
     .brand-text { font-size: 1.1rem; white-space: nowrap; }
     /* Hide full desktop nav and the CTA link only */
     .desktop-nav,
-    .header-cta .clay-btn,
-    .header-cta .header-user-slot { display: none !important; }
+    .header-cta .clay-btn { display: none !important; }
     /* Keep utility icons visible but compact */
     .header-cta { display: flex; align-items: center; gap: 0.2rem; }
     .header-cta .theme-toggle-btn,
@@ -349,23 +348,62 @@
     .nav-pill { padding: 0.35rem 0.75rem; border-radius: 28px; }
     .brand-text { font-size: 1rem; white-space: nowrap; }
     .desktop-nav,
-    .header-cta .clay-btn,
-    .header-cta .header-user-slot { display: none !important; }
+    .header-cta .clay-btn { display: none !important; }
     /* Keep utility icons on mobile top bar — fills the space usefully */
-    .header-cta { display: flex; align-items: center; gap: 0.15rem; }
+    .header-cta { display: flex; align-items: center; gap: 0.35rem; }
     .header-cta .theme-toggle-btn,
     .header-cta .lang-toggle-btn,
-    .header-cta .header-cart-btn { display: inline-flex !important; }
-    .theme-toggle-btn { font-size: 1rem; padding: 0.3rem 0.35rem; }
-    .lang-toggle-btn  { font-size: 0.75rem; padding: 0.3rem 0.45rem; }
-    .header-cart-btn  { font-size: 1rem; padding: 0.3rem 0.35rem; }
+    .header-cta .header-cart-btn,
+    .header-cta .header-user-btn { 
+        display: inline-flex !important; 
+        width: 36px;
+        height: 36px;
+        padding: 0 !important;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+        font-size: 1.05rem;
+        position: relative;
+    }
+    
+    /* Hide text spans to make buttons icon-only */
+    .header-cta .btn-text { display: none !important; }
+    
+    /* Hide the User name text, keep avatar visible */
+    .header-cta .header-user-btn {
+        color: transparent !important;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+    .header-cta .header-user-btn .auth-avatar {
+        color: #fff !important;
+        margin: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 50%;
+    }
+    
+    /* Adjust cart badge for icon-only button */
+    .header-cta .cart-count-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        transform: scale(0.75);
+    }
+
     .mobile-toggle { display: flex !important; width: 36px; height: 36px; border-radius: 11px; flex-shrink: 0; margin-left: 0.1rem; }
     .clay-card { padding: 1.5rem; border-radius: 22px; }
     .main-footer { padding: 3rem 1.5rem 2rem; border-top-left-radius: 40px; border-top-right-radius: 40px; }
     .footer-grid { grid-template-columns: 1fr; gap: 2rem; margin-bottom: 2.5rem; }
     .footer-bottom { flex-direction: column; gap: 0.5rem; text-align: center; }
 
-    /* Dropdown controls styling */
+    /* Hide the duplicated utility controls row inside mobile dropdown */
+    .mobile-menu-dropdown > div:first-child {
+        display: none !important;
+    }
     .mobile-menu-dropdown .theme-toggle-btn,
     .mobile-menu-dropdown .lang-toggle-btn,
     .mobile-menu-dropdown .header-user-btn {
@@ -377,6 +415,28 @@
         font-size: 0.88rem;
         font-weight: 700;
     }
+    
+    /* Fix user dropdown overflowing on mobile */
+    .mobile-menu-dropdown .user-dropdown-container {
+        width: 100%;
+    }
+    .mobile-menu-dropdown .header-user-btn {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    .mobile-menu-dropdown .user-dropdown-menu {
+        position: static;
+        width: 100%;
+        box-shadow: none;
+        margin-top: 0.5rem;
+        border: 1px solid rgba(0,0,0,0.05);
+        background: rgba(0,0,0,0.02);
+    }
+}
+
+[data-theme="dark"] .mobile-menu-dropdown .user-dropdown-menu {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
 }
 
 /* ==========================================================================

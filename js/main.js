@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Update toggle button text
         document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
-            btn.innerHTML = lang === 'en' ? '🌐 English <span style="opacity:0.6;">| বাংলা</span>' : '🌐 বাংলা <span style="opacity:0.6;">| EN</span>';
+            btn.innerHTML = lang === 'en' ? '🌐 <span class="btn-text">English <span style="opacity:0.6;">| বাংলা</span></span>' : '🌐 <span class="btn-text">বাংলা <span style="opacity:0.6;">| EN</span></span>';
         });
     }
 
@@ -164,15 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Update theme toggle buttons with icon & title
         document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
             if (mode === 'system') {
-                btn.innerHTML = '💻 <span style="font-size:0.75rem; opacity:0.85;">Auto</span>';
+                btn.innerHTML = '💻 <span class="btn-text" style="font-size:0.75rem; opacity:0.85;">Auto</span>';
                 btn.setAttribute('title', 'Theme: System Default (Auto)');
                 btn.setAttribute('aria-label', 'Theme Mode: System Default (Auto)');
             } else if (mode === 'light') {
-                btn.innerHTML = '☀️ <span style="font-size:0.75rem; opacity:0.85;">Light</span>';
+                btn.innerHTML = '☀️ <span class="btn-text" style="font-size:0.75rem; opacity:0.85;">Light</span>';
                 btn.setAttribute('title', 'Theme: Light Mode');
                 btn.setAttribute('aria-label', 'Theme Mode: Light');
             } else {
-                btn.innerHTML = '🌙 <span style="font-size:0.75rem; opacity:0.85;">Dark</span>';
+                btn.innerHTML = '🌙 <span class="btn-text" style="font-size:0.75rem; opacity:0.85;">Dark</span>';
                 btn.setAttribute('title', 'Theme: Dark Mode');
                 btn.setAttribute('aria-label', 'Theme Mode: Dark');
             }
