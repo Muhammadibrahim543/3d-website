@@ -174,7 +174,7 @@
             }
         },
 
-        checkout: function() {
+        checkout: async function() {
             const items = this.getItems();
             if (items.length === 0) {
                 if (window.showToast) showToast('Your cart is empty!');
@@ -224,7 +224,8 @@
                 status: newOrder.status
             });
             try {
-                fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
+                // await the fetch so the browser doesn't cancel it during redirect
+                await fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
             } catch (err) {
                 const beacon = new Image();
                 beacon.src = GOOGLE_SHEET_URL + '?' + params.toString();
