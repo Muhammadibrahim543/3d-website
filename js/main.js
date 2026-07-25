@@ -125,9 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Update toggle button text
+        // Update toggle button text with clear SVG globe & explicit bilingual labels
         document.querySelectorAll('.lang-toggle-btn').forEach(btn => {
-            btn.innerHTML = lang === 'en' ? '🌐 <span class="btn-text">English <span style="opacity:0.6;">| বাংলা</span></span>' : '🌐 <span class="btn-text">বাংলা <span style="opacity:0.6;">| EN</span></span>';
+            const globeSVG = `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"></path></svg>`;
+            btn.innerHTML = lang === 'en' 
+                ? `${globeSVG} <span class="btn-text" style="font-weight:700; margin-left:3px;">EN <span style="opacity:0.65; font-weight:600;">| বাংলা</span></span>`
+                : `${globeSVG} <span class="btn-text" style="font-weight:700; margin-left:3px;">বাংলা <span style="opacity:0.65; font-weight:600;">| EN</span></span>`;
+            btn.setAttribute('title', lang === 'en' ? 'Switch Language to Bangla / বাংলা' : 'Switch Language to English');
+            btn.setAttribute('aria-label', 'Switch Language / ভাষা পরিবর্তন');
         });
     }
 

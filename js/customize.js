@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     beacon.src = GOOGLE_SHEET_URL + '?' + params.toString();
                 }
 
-                if (window.showToast) showToast(`🎉 Order ${orderId} placed successfully!`);
+                if (window.showToast) showToast(`Order ${orderId} placed successfully!`);
                 
                 const waMsg = `Hi Studio Kira's Creation! I have placed an INSTANT order (${orderId}):\n\nCustomer: ${user.name} (${user.email})\n\nOrder Details:\n${newOrder.details}\n\nPlease confirm my order!`;
                 

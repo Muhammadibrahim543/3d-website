@@ -78,27 +78,36 @@
 .mint-bg { background-color: var(--c-accent); color: #FFF; }
 .yellow-bg { background-color: var(--c-yellow); color: var(--c-text); }
 
+/* Avatar Vector SVG */
+.avatar-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 50%;
+}
+
 /* Language Switcher */
 .lang-toggle-btn {
-    background: transparent;
-    border: none;
+    background: rgba(255, 126, 103, 0.08);
+    border: 1px solid rgba(255, 126, 103, 0.2);
     color: var(--c-primary);
     font-family: var(--f-head);
     font-weight: 700;
-    font-size: 0.9rem;
-    padding: 0.4rem 0.6rem;
-    border-radius: 12px;
+    font-size: 0.88rem;
+    padding: 0.4rem 0.75rem;
+    border-radius: 20px;
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
-    transition: transform 0.3s var(--bouncy-ease), background-color 0.3s;
+    transition: transform 0.3s var(--bouncy-ease), background-color 0.3s, border-color 0.3s;
     display: inline-flex;
     align-items: center;
-    gap: 0.3rem;
+    gap: 0.35rem;
 }
 .lang-toggle-btn:hover, .lang-toggle-btn:active {
-    transform: scale(1.05);
-    background: rgba(255, 126, 103, 0.1);
+    transform: scale(1.04);
+    background: rgba(255, 126, 103, 0.16);
+    border-color: var(--c-primary);
 }
 
 .theme-toggle-btn {

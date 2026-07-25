@@ -236,7 +236,7 @@
             this.closeDrawer();
 
             if (window.showToast) {
-                showToast(`🎉 Order ${orderId} placed successfully!`);
+                showToast(`Order ${orderId} placed successfully!`);
             }
 
             // Redirect to account page or WhatsApp confirmation

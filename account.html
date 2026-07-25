@@ -82,9 +82,8 @@
                 <div class="clay-card" style="background:linear-gradient(135deg, var(--c-primary) 0%, #FF9E80 100%); color:#FFF; padding:2rem 2.5rem; margin-bottom:2rem; border-radius:32px;">
                     <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1.5rem;">
                         <div style="display:flex; align-items:center; gap:1.2rem; flex-wrap:wrap;">
-                            <div onclick="KiraAuth.openAvatarModal()" style="position:relative; cursor:pointer;" title="Click to change character avatar">
-                                <div id="user-display-avatar" style="width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2.4rem; box-shadow:0 8px 24px rgba(0,0,0,0.25); border:3px solid #FFF; transition:transform 0.3s var(--bouncy-ease);">
-                                    🤖
+                            <div onclick="KiraAuth.openAvatarModal()" style="position:relative; cursor:pointer;" title="Click to change profile avatar">
+                                <div id="user-display-avatar" style="width:72px; height:72px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:5px; box-shadow:0 8px 24px rgba(0,0,0,0.25); border:3px solid #FFF; transition:transform 0.3s var(--bouncy-ease);">
                                 </div>
                                 <span style="position:absolute; bottom:0; right:-4px; background:#181621; color:#FFF; font-size:0.75rem; padding:3px 7px; border-radius:12px; border:2px solid #FFF; font-weight:700;">✏️</span>
                             </div>
@@ -101,9 +100,9 @@
                             </div>
                         </div>
                         <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
-                            <button onclick="KiraAuth.openAvatarModal()" class="clay-btn btn-cream btn-sm" style="color:#181621;">🎭 Change Avatar</button>
-                            <a href="customize.html" class="clay-btn btn-cream btn-sm" style="color:#181621;">🎨 New 3D Print</a>
-                            <button onclick="KiraAuth.logout()" class="clay-btn btn-cream btn-sm" style="color:#FF5E5E; border-color:#FF5E5E;">🚪 Log Out</button>
+                            <button onclick="KiraAuth.openAvatarModal()" class="clay-btn btn-cream btn-sm" style="color:#181621;">Change Avatar</button>
+                            <a href="customize.html" class="clay-btn btn-cream btn-sm" style="color:#181621;">New 3D Print</a>
+                            <button onclick="KiraAuth.logout()" class="clay-btn btn-cream btn-sm" style="color:#FF5E5E; border-color:#FF5E5E;">Log Out</button>
                         </div>
                     </div>
                 </div>
@@ -124,7 +123,7 @@
                 <!-- TAB 1: ORDER HISTORY -->
                 <div id="acc-sec-orders" class="account-sec">
                     <h2 style="font-family:var(--f-head); color:var(--c-primary); margin-bottom:1.5rem;" data-i18n="my_orders">
-                        📦 Order History & Status
+                        Order History & Status
                     </h2>
                     <div id="user-orders-container">
                         <!-- Rendered by JS -->
@@ -135,7 +134,7 @@
                 <div id="acc-sec-presets" class="account-sec" style="display:none;">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem; flex-wrap:wrap;">
                         <h2 style="font-family:var(--f-head); color:var(--c-primary); margin:0;" data-i18n="my_presets">
-                            ⭐ Saved 3D Presets
+                            Saved 3D Presets
                         </h2>
                         <a href="customize.html" class="clay-btn btn-coral btn-sm">➕ Create New Preset</a>
                     </div>
@@ -148,22 +147,21 @@
                 <div id="acc-sec-profile" class="account-sec" style="display:none;">
                     <div class="clay-card" style="max-width:650px; margin:0 auto;">
                         <h2 style="font-family:var(--f-head); color:var(--c-primary); margin-bottom:1.5rem;">
-                            👤 Personal Information
+                            Personal Information
                         </h2>
                         
                         <!-- Avatar Selection Box inside Profile tab -->
                         <div style="background:rgba(0,0,0,0.03); padding:1.2rem; border-radius:20px; margin-bottom:1.5rem; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
                             <div style="display:flex; align-items:center; gap:1rem;">
-                                <div id="prof-avatar-bubble" style="width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.8rem; box-shadow:0 6px 16px rgba(0,0,0,0.15);">
-                                    🤖
+                                <div id="prof-avatar-bubble" style="width:54px; height:54px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:4px; box-shadow:0 6px 16px rgba(0,0,0,0.15);">
                                 </div>
                                 <div>
                                     <div style="font-weight:800; font-size:1rem; color:var(--c-primary);" id="prof-avatar-name">Cyber Bot</div>
-                                    <div style="font-size:0.8rem; color:var(--c-text-muted);" id="prof-avatar-title">AI 3D Maker • Profile Avatar Character</div>
+                                    <div style="font-size:0.8rem; color:var(--c-text-muted);" id="prof-avatar-title">AI 3D Maker • Profile Avatar</div>
                                 </div>
                             </div>
                             <button type="button" onclick="KiraAuth.openAvatarModal()" class="clay-btn btn-coral btn-sm">
-                                🎭 Choose Character Preset
+                                Change Profile Avatar
                             </button>
                         </div>
 
@@ -254,7 +252,7 @@
             const avatarEl = document.getElementById('user-display-avatar');
             if (avatarEl) {
                 avatarEl.style.background = av.bg;
-                avatarEl.innerHTML = av.icon;
+                avatarEl.innerHTML = av.svg;
             }
             const titleEl = document.getElementById('user-display-avatar-title');
             if (titleEl) {
@@ -268,7 +266,7 @@
             const profBubble = document.getElementById('prof-avatar-bubble');
             if (profBubble) {
                 profBubble.style.background = av.bg;
-                profBubble.innerHTML = av.icon;
+                profBubble.innerHTML = av.svg;
             }
             const profName = document.getElementById('prof-avatar-name');
             if (profName) profName.textContent = av.name;

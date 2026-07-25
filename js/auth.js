@@ -3,19 +3,91 @@
    ========================================================================== */
 
 (function() {
-    // Game & 3D Character Avatar Presets
+    // High-End 3D & Tech Vector Avatars
     window.KiraAvatars = [
-        { id: 'av_robo', name: 'Cyber Bot', icon: '🤖', bg: 'linear-gradient(135deg, #FF6B6B, #FFE66D)', border: '#FF6B6B', title: 'AI 3D Maker' },
-        { id: 'av_pilot', name: 'Sci-Fi Pilot', icon: '🚀', bg: 'linear-gradient(135deg, #4E54C8, #8F94FB)', border: '#8F94FB', title: 'Space Crafter' },
-        { id: 'av_fox', name: 'Cyber Fox', icon: '🦊', bg: 'linear-gradient(135deg, #FF9F43, #FF5252)', border: '#FF9F43', title: 'Speedy Modeler' },
-        { id: 'av_wizard', name: 'Print Wizard', icon: '🧙‍♂️', bg: 'linear-gradient(135deg, #8E2DE2, #4A00E0)', border: '#8E2DE2', title: 'Magic Architect' },
-        { id: 'av_king', name: 'Crown King', icon: '👑', bg: 'linear-gradient(135deg, #F7971E, #FFD200)', border: '#F7971E', title: 'Pro Designer' },
-        { id: 'av_cat', name: 'Cosmic Meow', icon: '🐱', bg: 'linear-gradient(135deg, #00B4DB, #0083B0)', border: '#00B4DB', title: 'Cute Sculpter' },
-        { id: 'av_dragon', name: 'Neon Dragon', icon: '🐲', bg: 'linear-gradient(135deg, #11998E, #38EF7D)', border: '#38EF7D', title: 'Beast Producer' },
-        { id: 'av_gamer', name: 'Pixel Gamer', icon: '🎮', bg: 'linear-gradient(135deg, #FC466B, #3F5EFB)', border: '#FC466B', title: 'Hero Builder' },
-        { id: 'av_ninja', name: 'Shadow Ninja', icon: '🥷', bg: 'linear-gradient(135deg, #3A3D40, #181719)', border: '#666666', title: 'Stealth Cutter' },
-        { id: 'av_alien', name: 'Galaxy Alien', icon: '👾', bg: 'linear-gradient(135deg, #D4145A, #FBB03B)', border: '#D4145A', title: 'Alien Engineer' }
+        { 
+            id: 'av_robo', 
+            name: 'Cyber Bot', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="cb_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#1E293B"/><stop offset="100%" stop-color="#0F172A"/></linearGradient><linearGradient id="cb_vis" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#00F2FE"/><stop offset="100%" stop-color="#4FACFE"/></linearGradient><linearGradient id="cb_met" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#64748B"/><stop offset="100%" stop-color="#334155"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#cb_bg)" stroke="#00F2FE" stroke-width="2.5"/><rect x="47" y="14" width="6" height="12" rx="3" fill="url(#cb_met)"/><circle cx="50" cy="12" r="5" fill="#00F2FE"/><rect x="22" y="26" width="56" height="50" rx="16" fill="url(#cb_met)"/><rect x="27" y="34" width="46" height="24" rx="8" fill="#090B10" stroke="#00F2FE" stroke-width="1.5"/><path d="M 34 46 Q 50 50 66 46" fill="none" stroke="url(#cb_vis)" stroke-width="4" stroke-linecap="round"/><circle cx="38" cy="44" r="2.5" fill="#00F2FE"/><circle cx="62" cy="44" r="2.5" fill="#00F2FE"/><line x1="38" y1="64" x2="62" y2="64" stroke="#4FACFE" stroke-width="2" stroke-linecap="round"/><line x1="43" y1="68" x2="57" y2="68" stroke="#4FACFE" stroke-width="1.5" stroke-linecap="round"/><rect x="15" y="42" width="7" height="16" rx="3" fill="#00F2FE"/><rect x="78" y="42" width="7" height="16" rx="3" fill="#00F2FE"/></svg>`,
+            bg: 'linear-gradient(135deg, #1E293B, #0F172A)', 
+            border: '#00F2FE', 
+            title: 'AI 3D Maker' 
+        },
+        { 
+            id: 'av_pilot', 
+            name: 'Sci-Fi Pilot', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sp_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#0F172A"/><stop offset="100%" stop-color="#020617"/></linearGradient><linearGradient id="sp_vis" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#F59E0B"/><stop offset="100%" stop-color="#EF4444"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#sp_bg)" stroke="#38BDF8" stroke-width="2.5"/><circle cx="50" cy="50" r="32" fill="#1E293B" stroke="#94A3B8" stroke-width="3"/><ellipse cx="50" cy="46" rx="24" ry="16" fill="url(#sp_vis)"/><path d="M 32 40 Q 50 34 68 40" fill="none" stroke="#FFF" stroke-width="2" opacity="0.6"/><rect x="42" y="68" width="16" height="10" rx="4" fill="#64748B"/></svg>`,
+            bg: 'linear-gradient(135deg, #0F172A, #020617)', 
+            border: '#38BDF8', 
+            title: 'Space Crafter' 
+        },
+        { 
+            id: 'av_fox', 
+            name: 'Cyber Fox', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="cf_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#431407"/><stop offset="100%" stop-color="#1F0701"/></linearGradient><linearGradient id="cf_body" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FB923C"/><stop offset="100%" stop-color="#EA580C"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#cf_bg)" stroke="#F97316" stroke-width="2.5"/><polygon points="24,24 40,42 20,48" fill="#FB923C"/><polygon points="76,24 60,42 80,48" fill="#FB923C"/><polygon points="50,78 20,44 80,44" fill="url(#cf_body)"/><polygon points="50,78 35,44 65,44" fill="#FFF"/><polygon points="50,72 44,64 56,64" fill="#1E293B"/><circle cx="36" cy="50" r="3" fill="#00F2FE"/><circle cx="64" cy="50" r="3" fill="#00F2FE"/></svg>`,
+            bg: 'linear-gradient(135deg, #431407, #1F0701)', 
+            border: '#F97316', 
+            title: 'Speedy Modeler' 
+        },
+        { 
+            id: 'av_wizard', 
+            name: '3D Architect', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ar_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#311042"/><stop offset="100%" stop-color="#180524"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#ar_bg)" stroke="#A855F7" stroke-width="2.5"/><circle cx="50" cy="38" r="16" fill="#C084FC"/><path d="M 22 80 C 22 62, 34 56, 50 56 C 66 56, 78 62, 78 80 Z" fill="#9333EA"/><polygon points="44,22 56,22 60,30 40,30" fill="#F3E8FF"/><rect x="42" y="60" width="16" height="20" fill="#E9D5FF" opacity="0.7"/></svg>`,
+            bg: 'linear-gradient(135deg, #311042, #180524)', 
+            border: '#A855F7', 
+            title: 'Magic Architect' 
+        },
+        { 
+            id: 'av_king', 
+            name: 'Pro Designer', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="pd_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#451A03"/><stop offset="100%" stop-color="#1F0B02"/></linearGradient><linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#FDE047"/><stop offset="100%" stop-color="#CA8A04"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#pd_bg)" stroke="#EAB308" stroke-width="2.5"/><circle cx="50" cy="42" r="18" fill="url(#gold)"/><path d="M 20 84 C 20 64, 32 58, 50 58 C 68 58, 80 64, 80 84 Z" fill="#EAB308"/><path d="M 32 26 L 40 34 L 50 22 L 60 34 L 68 26 L 64 40 L 36 40 Z" fill="url(#gold)" stroke="#78350F" stroke-width="1"/></svg>`,
+            bg: 'linear-gradient(135deg, #451A03, #1F0B02)', 
+            border: '#EAB308', 
+            title: 'Pro Designer' 
+        },
+        { 
+            id: 'av_cat', 
+            name: 'Cosmic Sculptor', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="cs_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#064E3B"/><stop offset="100%" stop-color="#022C22"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#cs_bg)" stroke="#10B981" stroke-width="2.5"/><circle cx="50" cy="38" r="16" fill="#34D399"/><path d="M 22 80 C 22 62, 34 56, 50 56 C 66 56, 78 62, 78 80 Z" fill="#059669"/><circle cx="43" cy="36" r="2.5" fill="#064E3B"/><circle cx="57" cy="36" r="2.5" fill="#064E3B"/><path d="M 45 44 Q 50 48 55 44" stroke="#064E3B" stroke-width="2" fill="none"/></svg>`,
+            bg: 'linear-gradient(135deg, #064E3B, #022C22)', 
+            border: '#10B981', 
+            title: 'Cute Sculptor' 
+        },
+        { 
+            id: 'av_dragon', 
+            name: 'Neon Producer', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="np_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#134E4A"/><stop offset="100%" stop-color="#042F2C"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#np_bg)" stroke="#14B8A6" stroke-width="2.5"/><rect x="25" y="25" width="50" height="50" rx="12" fill="#0F766E" stroke="#2DD4BF" stroke-width="2"/><circle cx="50" cy="50" r="14" fill="#14B8A6"/><circle cx="50" cy="50" r="6" fill="#CCFBF1"/></svg>`,
+            bg: 'linear-gradient(135deg, #134E4A, #042F2C)', 
+            border: '#14B8A6', 
+            title: 'Beast Producer' 
+        },
+        { 
+            id: 'av_gamer', 
+            name: 'Hero Builder', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="hb_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#831843"/><stop offset="100%" stop-color="#4C0519"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#hb_bg)" stroke="#EC4899" stroke-width="2.5"/><polygon points="50,18 82,34 82,66 50,82 18,66 18,34" fill="#BE185D" stroke="#F472B6" stroke-width="2"/><circle cx="50" cy="50" r="14" fill="#F472B6"/></svg>`,
+            bg: 'linear-gradient(135deg, #831843, #4C0519)', 
+            border: '#EC4899', 
+            title: 'Hero Builder' 
+        },
+        { 
+            id: 'av_ninja', 
+            name: 'Shadow Cutter', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="sc_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#18181B"/><stop offset="100%" stop-color="#09090B"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#sc_bg)" stroke="#71717A" stroke-width="2.5"/><circle cx="50" cy="40" r="20" fill="#27272A"/><rect x="30" y="34" width="40" height="12" rx="6" fill="#A1A1AA"/><circle cx="42" cy="40" r="2.5" fill="#09090B"/><circle cx="58" cy="40" r="2.5" fill="#09090B"/><path d="M 22 82 C 22 64, 34 58, 50 58 C 66 58, 78 64, 78 82 Z" fill="#27272A"/></svg>`,
+            bg: 'linear-gradient(135deg, #18181B, #09090B)', 
+            border: '#71717A', 
+            title: 'Stealth Cutter' 
+        },
+        { 
+            id: 'av_alien', 
+            name: 'Galaxy Engineer', 
+            svg: `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="ge_bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#3B0764"/><stop offset="100%" stop-color="#1E0338"/></linearGradient></defs><circle cx="50" cy="50" r="48" fill="url(#ge_bg)" stroke="#C084FC" stroke-width="2.5"/><ellipse cx="50" cy="42" rx="22" ry="18" fill="#7E22CE"/><circle cx="38" cy="40" r="4" fill="#F3E8FF"/><circle cx="62" cy="40" r="4" fill="#F3E8FF"/><circle cx="50" cy="30" r="3" fill="#E9D5FF"/><path d="M 22 82 C 22 64, 34 60, 50 60 C 66 60, 78 64, 78 82 Z" fill="#6B21A8"/></svg>`,
+            bg: 'linear-gradient(135deg, #3B0764, #1E0338)', 
+            border: '#C084FC', 
+            title: 'Alien Engineer' 
+        }
     ];
+
+    const GUEST_AVATAR_SVG = `<svg viewBox="0 0 100 100" class="avatar-svg" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="48" fill="rgba(255,126,103,0.12)" stroke="var(--c-primary)" stroke-width="2"/><circle cx="50" cy="38" r="16" fill="var(--c-primary)"/><path d="M 24 80 C 24 62, 34 56, 50 56 C 66 56, 76 62, 76 80 Z" fill="var(--c-primary)"/></svg>`;
 
     // 1. Initial Storage Setup & Pre-seeded Demo User
     const DEMO_USER = {
@@ -54,12 +126,6 @@
             users.push(DEMO_USER);
             localStorage.setItem('kiras_users', JSON.stringify(users));
         }
-
-        // Set demo user logged in by default if no active session
-        // Removed to allow real users to register and login independently.
-        // if (!localStorage.getItem('kiras_active_user')) {
-        //     localStorage.setItem('kiras_active_user', JSON.stringify(DEMO_USER));
-        // }
     }
     initUsers();
 
@@ -76,7 +142,6 @@
         setCurrentUser: function(user) {
             if (user) {
                 localStorage.setItem('kiras_active_user', JSON.stringify(user));
-                // Update in all users array
                 let users = JSON.parse(localStorage.getItem('kiras_users')) || [];
                 const idx = users.findIndex(u => u.email.toLowerCase() === user.email.toLowerCase());
                 if (idx !== -1) {
@@ -109,7 +174,7 @@
             }
 
             const newUser = {
-                id: 'KIRA-USR-' + Math.floor(10000 + Math.random() * 90000), // Generates e.g., KIRA-USR-49215
+                id: 'KIRA-USR-' + Math.floor(10000 + Math.random() * 90000),
                 name: name.trim(),
                 email: email.trim(),
                 password: password,
@@ -121,7 +186,6 @@
             users.push(newUser);
             localStorage.setItem('kiras_users', JSON.stringify(users));
 
-            // Sync user registration to Google Sheet
             const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
             const params = new URLSearchParams({
                 action: 'addUser',
@@ -147,7 +211,6 @@
             }
         },
 
-        // Saved Presets Manager
         savePreset: function(preset) {
             let user = this.getCurrentUser();
             if (!user) {
@@ -166,7 +229,7 @@
 
             user.presets.unshift(newPreset);
             this.setCurrentUser(user);
-            showToast('⭐ Preset saved to your account!');
+            showToast('Preset saved to your account!');
             return true;
         },
 
@@ -178,7 +241,6 @@
             showToast('Preset deleted.');
         },
 
-        // Get Orders for Logged In User
         getUserOrders: function() {
             const user = this.getCurrentUser();
             if (!user) return [];
@@ -218,7 +280,7 @@
             this.setCurrentUser(user);
 
             const av = this.getAvatar(avatarId);
-            showToast(`${av.icon} Character avatar set to ${av.name}! 🎉`);
+            showToast(`Character avatar set to ${av.name}!`);
 
             this.closeAvatarModal();
             this.updateUI();
@@ -238,10 +300,10 @@
                 const isActive = av.id === currentAvId;
                 return `
                     <div class="avatar-card ${isActive ? 'active' : ''}" onclick="KiraAuth.selectAvatar('${av.id}')">
-                        <div class="avatar-icon-bubble" style="background:${av.bg}; border: 2px solid ${av.border};">
-                            ${av.icon}
+                        <div class="avatar-icon-bubble" style="background:${av.bg}; border: 2px solid ${av.border}; width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; padding:4px;">
+                            ${av.svg}
                         </div>
-                        <div style="font-weight:700; font-size:0.88rem; color:var(--c-text);">${av.name}</div>
+                        <div style="font-weight:700; font-size:0.88rem; color:var(--c-text); margin-top:0.4rem;">${av.name}</div>
                         <div style="font-size:0.72rem; color:var(--c-text-muted); margin-top:0.1rem;">${av.title}</div>
                         ${isActive ? '<div style="margin-top:0.4rem; font-size:0.75rem; font-weight:800; color:var(--c-primary);">✓ Active</div>' : ''}
                     </div>
@@ -255,16 +317,33 @@
 
             const modalHTML = `
                 <div id="avatar-modal-overlay" class="modal-overlay">
-                    <div class="modal-content clay-card" style="max-width:560px;">
+                    <div class="modal-content clay-card" style="max-width:580px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
                             <div>
                                 <h2 style="font-family:var(--f-head); color:var(--c-primary); margin:0;">
-                                    🎭 ${lang === 'en' ? 'Choose Character Avatar' : 'ক্যারেক্টার প্রিসেট ছবি বেছে নিন'}
+                                    ${lang === 'en' ? 'Select Profile Avatar' : 'প্রোফাইল ছবি বেছে নিন'}
                                 </h2>
                                 <p style="margin:0.2rem 0 0 0; font-size:0.85rem; color:var(--c-text-muted);">
-                                    ${lang === 'en' ? 'Select a cool 3D gaming avatar character for your profile!' : 'আপনার প্রোফাইলের জন্য একটি দুর্দান্ত থ্রিডি গেম প্রিসেট ছবি সিলেক্ট করুন!'}
+                                    ${lang === 'en' ? 'Select a high-tech 3D avatar character for your account!' : 'আপনার অ্যাকাউন্টের জন্য একটি প্রিমিয়াম থ্রিডি অবতার সিলেক্ট করুন!'}
                                 </p>
                             </div>
+                            <button onclick="KiraAuth.closeAvatarModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--c-text);">✕</button>
+                        </div>
+                        
+                        <div id="avatar-grid-container" class="avatar-grid">
+                            <!-- Rendered by JS -->
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+            document.getElementById('avatar-modal-overlay').addEventListener('click', (e) => {
+                if (e.target.id === 'avatar-modal-overlay') {
+                    this.closeAvatarModal();
+                }
+            });
+        },
                             <button onclick="KiraAuth.closeAvatarModal()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--c-text);">✕</button>
                         </div>
                         
@@ -294,14 +373,14 @@
                     const av = this.getAvatar(user.avatar);
                     slot.innerHTML = `
                         <div class="user-dropdown-container">
-                            <button class="header-user-btn" aria-label="User Account">
-                                <span class="auth-avatar" style="background:${av.bg}; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:0.95rem; flex-shrink:0; box-shadow:0 2px 6px rgba(0,0,0,0.2);">${av.icon}</span>
+                            <button class="header-user-btn" aria-label="User Account" title="${user.name}">
+                                <span class="auth-avatar" style="background:${av.bg}; width:28px; height:28px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; flex-shrink:0; padding:2px; box-shadow:0 2px 6px rgba(0,0,0,0.2);">${av.svg}</span>
                                 <span>${firstName}</span> ▾
                             </button>
                             <div class="user-dropdown-menu">
                                 <div style="display:flex; align-items:center; gap:0.8rem; padding:0.6rem 0.8rem; border-bottom:1px solid rgba(0,0,0,0.08); margin-bottom:0.3rem;">
-                                    <div onclick="KiraAuth.openAvatarModal()" style="width:42px; height:42px; border-radius:50%; background:${av.bg}; display:flex; align-items:center; justify-content:center; font-size:1.4rem; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex-shrink:0; cursor:pointer;" title="Change Avatar Character">
-                                        ${av.icon}
+                                    <div onclick="KiraAuth.openAvatarModal()" style="width:42px; height:42px; border-radius:50%; background:${av.bg}; display:flex; align-items:center; justify-content:center; padding:4px; box-shadow:0 4px 12px rgba(0,0,0,0.15); flex-shrink:0; cursor:pointer;" title="Change Profile Avatar">
+                                        ${av.svg}
                                     </div>
                                     <div style="flex:1; overflow:hidden;">
                                         <div style="font-weight:700; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${user.name}</div>
@@ -309,19 +388,33 @@
                                     </div>
                                 </div>
                                 <div class="user-dropdown-item" onclick="KiraAuth.openAvatarModal()" style="color:var(--c-primary); font-weight:700;">
-                                    🎭 ${lang === 'en' ? 'Change Character Avatar' : 'ক্যারেক্টার পিকচার পরিবর্তন'}
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                    ${lang === 'en' ? 'Change Profile Avatar' : 'প্রোফাইল ছবি পরিবর্তন'}
                                 </div>
-                                <a href="account.html" class="user-dropdown-item">👤 ${lang === 'en' ? 'My Account' : 'আমার অ্যাকাউন্ট'}</a>
-                                <a href="account.html#presets" class="user-dropdown-item">⭐ ${lang === 'en' ? 'Saved Presets' : 'সেভ করা প্রিসেট'}</a>
-                                <a href="account.html#orders" class="user-dropdown-item">📦 ${lang === 'en' ? 'Order History' : 'অর্ডার হিস্ট্রি'}</a>
-                                <div class="user-dropdown-item" style="color:#FF5E5E;" onclick="KiraAuth.logout()">🚪 ${lang === 'en' ? 'Log Out' : 'লগআউট'}</div>
+                                <a href="account.html" class="user-dropdown-item">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                                    ${lang === 'en' ? 'My Account' : 'আমার অ্যাকাউন্ট'}
+                                </a>
+                                <a href="account.html#presets" class="user-dropdown-item">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                                    ${lang === 'en' ? 'Saved Presets' : 'সেভ করা প্রিসেট'}
+                                </a>
+                                <a href="account.html#orders" class="user-dropdown-item">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                                    ${lang === 'en' ? 'Order History' : 'অর্ডার হিস্ট্রি'}
+                                </a>
+                                <div class="user-dropdown-item" style="color:#FF5E5E;" onclick="KiraAuth.logout()">
+                                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#FF5E5E" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                    ${lang === 'en' ? 'Log Out' : 'লগআউট'}
+                                </div>
                             </div>
                         </div>
                     `;
                 } else {
                     slot.innerHTML = `
-                        <button class="header-user-btn" onclick="KiraAuth.openModal('login')">
-                            👤 <span>${lang === 'en' ? 'Sign In' : 'লগইন'}</span>
+                        <button class="header-user-btn" onclick="KiraAuth.openModal('login')" aria-label="Sign In">
+                            <span class="auth-avatar" style="width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center;">${GUEST_AVATAR_SVG}</span>
+                            <span>${lang === 'en' ? 'Sign In' : 'লগইন'}</span>
                         </button>
                     `;
                 }
@@ -474,7 +567,7 @@
             const res = this.register(name, email, pass, phone, address);
             if (res.success) {
                 this.closeModal();
-                showToast(`Account created! Welcome, ${res.user.name.split(' ')[0]}! 🎉`);
+                showToast(`Account created! Welcome, ${res.user.name.split(' ')[0]}!`);
             } else {
                 const err = document.getElementById('signup-error');
                 err.textContent = res.message;
