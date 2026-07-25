@@ -411,7 +411,67 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Hydrate from URL Parameters (Preset loading) ---
+    // --- Auto-Save Draft Engine ---
+    let autoSaveTimer = null;
+    function saveDraft() {
+        const draftData = {
+            text: inputName.value,
+            thickness: inputThickness.value,
+            font: currentFont,
+            color: currentColor,
+            colorName: currentColorName,
+            colorRate: currentRate,
+            updatedAt: Date.now()
+        };
+        try {
+            localStorage.setItem('kira_customizer_draft', JSON.stringify(draftData));
+            const badge = document.getElementById('draft-autosave-badge');
+            if (badge) {
+                badge.style.opacity = '1';
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    badge.style.opacity = '0.6';
+                }, 2000);
+            }
+        } catch (e) {}
+    }
+
+    function restoreDraft() {
+        try {
+            const raw = localStorage.getItem('kira_customizer_draft');
+            if (!raw) return false;
+            const draft = JSON.parse(raw);
+            if (!draft) return false;
+
+            if (draft.text !== undefined) inputName.value = draft.text;
+            if (draft.thickness !== undefined) inputThickness.value = draft.thickness;
+            if (draft.font && fontOptions) {
+                currentFont = draft.font;
+                fontOptions.querySelectorAll('.font-option').forEach(opt => {
+                    if (opt.getAttribute('data-font') === draft.font) {
+                        fontOptions.querySelectorAll('.font-option').forEach(o => o.classList.remove('active'));
+                        opt.classList.add('active');
+                    }
+                });
+            }
+            if (draft.color && colorSwatches) {
+                currentColor = draft.color;
+                currentColorName = draft.colorName || currentColorName;
+                currentRate = draft.colorRate || currentRate;
+                colorSwatches.querySelectorAll('.color-swatch').forEach(swatch => {
+                    if (swatch.getAttribute('data-color') === draft.color) {
+                        colorSwatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                        swatch.classList.add('active');
+                    }
+                });
+            }
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    // --- Hydrate from URL Parameters or Auto-Saved Draft ---
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has('text')) {
         inputName.value = urlParams.get('text');
@@ -440,7 +500,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentRate = parseFloat(swatch.getAttribute('data-rate'));
             }
         });
+    } else if (!urlParams.has('text')) {
+        // Restore from auto-saved local draft if no URL params
+        restoreDraft();
     }
+
+    // Wrap updatePreview to auto-save on any modification
+    const originalUpdatePreview = updatePreview;
+    updatePreview = function() {
+        originalUpdatePreview();
+        saveDraft();
+    };
 
     // Initialize
     updatePreview();
