@@ -422,6 +422,31 @@
                     portfolioGrid.appendChild(div);
                 });
             }
+
+            // Portfolio Filter Logic
+            const filterPills = document.querySelectorAll('.filter-pill');
+            const portfolioItems = document.querySelectorAll('.portfolio-item');
+
+            filterPills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    // Update active class
+                    filterPills.forEach(p => p.classList.remove('active'));
+                    pill.classList.add('active');
+
+                    // Filter items
+                    const filter = pill.getAttribute('data-filter');
+                    
+                    // Since items might be generated dynamically, query again to be safe
+                    const currentItems = document.querySelectorAll('.portfolio-item');
+                    currentItems.forEach(item => {
+                        if (filter === 'all' || item.getAttribute('data-category') === filter) {
+                            item.style.display = 'block';
+                        } else {
+                            item.style.display = 'none';
+                        }
+                    });
+                });
+            });
         });
     </script>
 </body>
