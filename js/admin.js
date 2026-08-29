@@ -405,29 +405,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 3500);
     }
 
-    // Users Tab Logic
+    // Tabs Logic
     const tabOrders = document.getElementById('tab-orders');
+    const tabProducts = document.getElementById('tab-products');
     const tabUsers = document.getElementById('tab-users');
     const viewOrders = document.getElementById('view-orders');
+    const viewProducts = document.getElementById('view-products');
     const viewUsers = document.getElementById('view-users');
 
-    if (tabOrders && tabUsers) {
+    function resetTabs() {
+        if(tabOrders) { tabOrders.style.background = 'transparent'; tabOrders.style.color = 'var(--c-text)'; }
+        if(tabProducts) { tabProducts.style.background = 'transparent'; tabProducts.style.color = 'var(--c-text)'; }
+        if(tabUsers) { tabUsers.style.background = 'transparent'; tabUsers.style.color = 'var(--c-text)'; }
+        if(viewOrders) viewOrders.style.display = 'none';
+        if(viewProducts) viewProducts.style.display = 'none';
+        if(viewUsers) viewUsers.style.display = 'none';
+    }
+
+    if (tabOrders) {
         tabOrders.addEventListener('click', () => {
+            resetTabs();
             tabOrders.style.background = 'var(--c-primary)';
             tabOrders.style.color = 'white';
-            tabUsers.style.background = 'transparent';
-            tabUsers.style.color = 'var(--c-text)';
             viewOrders.style.display = 'block';
-            viewUsers.style.display = 'none';
         });
+    }
 
+    if (tabProducts) {
+        tabProducts.addEventListener('click', () => {
+            resetTabs();
+            tabProducts.style.background = 'var(--c-primary)';
+            tabProducts.style.color = 'white';
+            viewProducts.style.display = 'block';
+            loadProducts();
+        });
+    }
+
+    if (tabUsers) {
         tabUsers.addEventListener('click', () => {
+            resetTabs();
             tabUsers.style.background = 'var(--c-primary)';
             tabUsers.style.color = 'white';
-            tabOrders.style.background = 'transparent';
-            tabOrders.style.color = 'var(--c-text)';
             viewUsers.style.display = 'block';
-            viewOrders.style.display = 'none';
             loadUsers();
         });
     }
@@ -477,6 +496,167 @@ document.addEventListener('DOMContentLoaded', () => {
                 </td>
             `;
             tbody.appendChild(tr);
+        });
+    }
+
+    // --- Products Logic ---
+    function getProducts() {
+        let products = JSON.parse(localStorage.getItem('kiras_products'));
+        if (!products || products.length === 0) {
+            products = (typeof defaultProducts !== 'undefined') ? defaultProducts : [];
+            localStorage.setItem('kiras_products', JSON.stringify(products));
+        }
+        return products;
+    }
+
+    function saveProducts(products) {
+        localStorage.setItem('kiras_products', JSON.stringify(products));
+        loadProducts();
+    }
+
+    function loadProducts() {
+        const tbody = document.getElementById('admin-products-tbody');
+        if (!tbody) return;
+        const products = getProducts();
+        tbody.innerHTML = '';
+        if (products.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No products found. Add some!</td></tr>';
+            return;
+        }
+
+        products.forEach((p, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><img src="${escapeHtml(p.image || 'images/placeholder.webp')}" alt="product" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;"></td>
+                <td style="font-weight:700;">${escapeHtml(p.name)}</td>
+                <td><span style="background: rgba(0,0,0,0.05); padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem;">${escapeHtml(p.categoryLabel || p.category)}</span></td>
+                <td style="color:var(--c-primary); font-weight:700;">${escapeHtml(p.price || 'Contact for Quote')}</td>
+                <td>${escapeHtml(p.delivery || '3-5 Days')}</td>
+                <td>
+                    <button class="clay-btn btn-sm btn-edit-product" data-index="${index}" style="padding:0.3rem 0.6rem; background:#FFA500; color:#FFF; font-size:0.8rem; margin-right: 0.5rem;">Edit</button>
+                    <button class="clay-btn btn-sm btn-delete-product" data-index="${index}" style="padding:0.3rem 0.6rem; background:#FF5E5E; color:#FFF; font-size:0.8rem;">Delete</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = e.target.getAttribute('data-index');
+                if (confirm('Delete this product?')) {
+                    const allP = getProducts();
+                    allP.splice(index, 1);
+                    saveProducts(allP);
+                    showToast('Product deleted');
+                }
+            });
+        });
+
+        tbody.querySelectorAll('.btn-edit-product').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const index = e.target.getAttribute('data-index');
+                const p = getProducts()[index];
+                
+                document.getElementById('edit-prod-id').value = index;
+                document.getElementById('edit-prod-name').value = p.name || '';
+                document.getElementById('edit-prod-price').value = p.price || '';
+                document.getElementById('edit-prod-delivery').value = p.delivery || '';
+                document.getElementById('edit-prod-category').value = p.category || 'lamps';
+                document.getElementById('edit-prod-image').value = p.image || '';
+                document.getElementById('edit-prod-badge').value = p.badge || '';
+                document.getElementById('edit-prod-desc').value = p.desc || '';
+                
+                document.getElementById('edit-prod-spec1').value = (p.specs && p.specs.length > 0) ? p.specs[0].text : '';
+                document.getElementById('edit-prod-spec2').value = (p.specs && p.specs.length > 1) ? p.specs[1].text : '';
+                document.getElementById('edit-prod-spec3').value = (p.specs && p.specs.length > 2) ? p.specs[2].text : '';
+                
+                document.getElementById('editProductModal').classList.add('open');
+            });
+        });
+    }
+
+    const editProductClose = document.getElementById('editProductClose');
+    if (editProductClose) {
+        editProductClose.addEventListener('click', () => {
+            document.getElementById('editProductModal').classList.remove('open');
+        });
+    }
+
+    const editProductForm = document.getElementById('edit-product-form');
+    if (editProductForm) {
+        editProductForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const index = document.getElementById('edit-prod-id').value;
+            const allP = getProducts();
+            
+            let specs = [];
+            if (document.getElementById('edit-prod-spec1').value) specs.push({ text: document.getElementById('edit-prod-spec1').value });
+            if (document.getElementById('edit-prod-spec2').value) specs.push({ text: document.getElementById('edit-prod-spec2').value });
+            if (document.getElementById('edit-prod-spec3').value) specs.push({ text: document.getElementById('edit-prod-spec3').value });
+
+            const category = document.getElementById('edit-prod-category').value;
+            let catLabel = category;
+            if(category === 'lamps') catLabel = 'Lighting & Lamps';
+            else if(category === 'art') catLabel = 'Artistic & Decor';
+            else if(category === 'custom') catLabel = 'Custom & Keychains';
+            else if(category === 'functional') catLabel = 'Functional & Accessories';
+
+            allP[index] = {
+                ...allP[index],
+                name: document.getElementById('edit-prod-name').value.trim(),
+                price: document.getElementById('edit-prod-price').value.trim(),
+                delivery: document.getElementById('edit-prod-delivery').value.trim(),
+                category: category,
+                categoryLabel: catLabel,
+                image: document.getElementById('edit-prod-image').value.trim(),
+                badge: document.getElementById('edit-prod-badge').value.trim(),
+                desc: document.getElementById('edit-prod-desc').value.trim(),
+                specs: specs
+            };
+            
+            saveProducts(allP);
+            showToast('Product updated successfully!');
+            document.getElementById('editProductModal').classList.remove('open');
+        });
+    }
+
+    const addProductForm = document.getElementById('add-product-form');
+    if (addProductForm) {
+        addProductForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            let specs = [];
+            if (document.getElementById('prod-spec1').value) specs.push({ text: document.getElementById('prod-spec1').value });
+            if (document.getElementById('prod-spec2').value) specs.push({ text: document.getElementById('prod-spec2').value });
+            if (document.getElementById('prod-spec3').value) specs.push({ text: document.getElementById('prod-spec3').value });
+
+            const category = document.getElementById('prod-category').value;
+            let catLabel = category;
+            if(category === 'lamps') catLabel = 'Lighting & Lamps';
+            else if(category === 'art') catLabel = 'Artistic & Decor';
+            else if(category === 'custom') catLabel = 'Custom & Keychains';
+            else if(category === 'functional') catLabel = 'Functional & Accessories';
+
+            const name = document.getElementById('prod-name').value.trim();
+            
+            if (!name || !category) return;
+
+            const allP = getProducts();
+            allP.unshift({ // Add to top
+                id: 'PROD-NEW-' + Date.now(),
+                name,
+                price: document.getElementById('prod-price').value.trim() || 'Contact for Quote',
+                delivery: document.getElementById('prod-delivery').value.trim() || '3-5 Days',
+                category: category,
+                categoryLabel: catLabel,
+                image: document.getElementById('prod-image').value.trim(),
+                badge: document.getElementById('prod-badge').value.trim(),
+                desc: document.getElementById('prod-desc').value.trim(),
+                specs: specs
+            });
+            saveProducts(allP);
+            showToast('Product added successfully!');
+            addProductForm.reset();
         });
     }
 

@@ -127,9 +127,10 @@
             </div>
 
             <!-- Main Tabs -->
-            <div style="margin-bottom: 2rem; display: flex; gap: 1rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 1rem; justify-content: center;">
-                <button id="tab-orders" class="clay-btn" style="background:var(--c-primary); color:white; padding: 0.8rem 2rem;">📦 Orders Database</button>
-                <button id="tab-users" class="clay-btn" style="padding: 0.8rem 2rem;">👥 Registered Users</button>
+            <div style="margin-bottom: 2rem; display: flex; gap: 1rem; flex-wrap: wrap; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 1rem; justify-content: center;">
+                <button id="tab-orders" class="clay-btn" style="background:var(--c-primary); color:white; padding: 0.8rem 2rem;">📦 Orders</button>
+                <button id="tab-products" class="clay-btn" style="padding: 0.8rem 2rem;">🛍️ Products</button>
+                <button id="tab-users" class="clay-btn" style="padding: 0.8rem 2rem;">👥 Users</button>
             </div>
 
             <div id="view-orders">
@@ -218,7 +219,81 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Products View Container -->
+            <div id="view-products" style="display:none;">
+                <div class="clay-card" style="padding:1.5rem; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Add New Product</h3>
+                    <form id="add-product-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                        <input type="text" id="prod-name" class="clay-input" placeholder="Product Name" required>
+                        <input type="text" id="prod-price" class="clay-input" placeholder="Price (e.g. ৳500)">
+                        <input type="text" id="prod-delivery" class="clay-input" placeholder="Delivery Date (e.g. 3-5 Days)">
+                        <select id="prod-category" class="clay-select" required>
+                            <option value="lamps">Lighting & Lamps</option>
+                            <option value="art">Artistic & Decor</option>
+                            <option value="custom">Custom & Keychains</option>
+                            <option value="functional">Functional & Accessories</option>
+                        </select>
+                        <input type="url" id="prod-image" class="clay-input" placeholder="Image URL (e.g. images/lamp.webp)">
+                        <input type="text" id="prod-badge" class="clay-input" placeholder="Badge (e.g. ✨ Best Seller)">
+                        <textarea id="prod-desc" class="clay-input" placeholder="Description" style="grid-column: 1 / -1;"></textarea>
+                        <input type="text" id="prod-spec1" class="clay-input" placeholder="Spec 1 (e.g. PLA Plastic)">
+                        <input type="text" id="prod-spec2" class="clay-input" placeholder="Spec 2 (e.g. 0.16mm Layer)">
+                        <input type="text" id="prod-spec3" class="clay-input" placeholder="Spec 3 (e.g. Custom Text)">
+                        <button type="submit" class="clay-btn btn-coral" style="grid-column: 1 / -1;">Add Product</button>
+                    </form>
+                </div>
+                
+                <div class="clay-card" style="padding:1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Products Database</h3>
+                    <div class="admin-table-wrapper">
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Image</th>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Delivery Date</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-products-tbody">
+                                <!-- Populated dynamically via admin.js -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </main>
+
+        
+        <!-- Edit Product Modal -->
+        <div class="lightbox-modal" id="editProductModal">
+            <div class="lightbox-content" style="max-width: 600px; padding: 2rem; background: var(--c-surface); border-radius: 12px; max-height: 90vh; overflow-y: auto;">
+                <button class="lightbox-close" id="editProductClose">&times;</button>
+                <h3 style="margin-bottom: 1rem; color: var(--c-text);">Edit Product</h3>
+                <form id="edit-product-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                    <input type="hidden" id="edit-prod-id">
+                    <input type="text" id="edit-prod-name" class="clay-input" placeholder="Product Name" required>
+                    <input type="text" id="edit-prod-price" class="clay-input" placeholder="Price (e.g. ৳500)">
+                    <input type="text" id="edit-prod-delivery" class="clay-input" placeholder="Delivery Date (e.g. 3-5 Days)">
+                    <select id="edit-prod-category" class="clay-select" required>
+                        <option value="lamps">Lighting & Lamps</option>
+                        <option value="art">Artistic & Decor</option>
+                        <option value="custom">Custom & Keychains</option>
+                        <option value="functional">Functional & Accessories</option>
+                    </select>
+                    <input type="url" id="edit-prod-image" class="clay-input" placeholder="Image URL (e.g. images/lamp.webp)">
+                    <input type="text" id="edit-prod-badge" class="clay-input" placeholder="Badge (e.g. ✨ Best Seller)">
+                    <textarea id="edit-prod-desc" class="clay-input" placeholder="Description" style="grid-column: 1 / -1;"></textarea>
+                    <input type="text" id="edit-prod-spec1" class="clay-input" placeholder="Spec 1 (e.g. PLA Plastic)">
+                    <input type="text" id="edit-prod-spec2" class="clay-input" placeholder="Spec 2 (e.g. 0.16mm Layer)">
+                    <input type="text" id="edit-prod-spec3" class="clay-input" placeholder="Spec 3 (e.g. Custom Text)">
+                    <button type="submit" class="clay-btn btn-coral" style="grid-column: 1 / -1;">Save Changes</button>
+                </form>
+            </div>
+        </div>
 
         <!-- Footer -->
         <footer class="main-footer">
@@ -261,6 +336,7 @@
     <script src="js/main.js?v=4"></script>
     <script src="js/auth.js?v=4"></script>
     <script src="js/cart.js?v=6"></script>
+    <script src="js/defaultProducts.js"></script>
     <script src="js/admin.js?v=4"></script>
 </body>
 </html>
