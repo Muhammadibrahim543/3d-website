@@ -222,30 +222,72 @@
 
             <!-- Products View Container -->
             <div id="view-products" style="display:none;">
-                <div class="clay-card" style="padding:1.5rem; margin-bottom: 2rem;">
-                    <h3 style="margin-bottom: 1rem;">Add New Product</h3>
-                    <form id="add-product-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                        <input type="text" id="prod-name" class="clay-input" placeholder="Product Name" required>
-                        <input type="text" id="prod-price" class="clay-input" placeholder="Price (e.g. ৳500)">
-                        <input type="text" id="prod-delivery" class="clay-input" placeholder="Delivery Date (e.g. 3-5 Days)">
-                        <select id="prod-category" class="clay-select" required>
-                            <option value="lamps">Lighting & Lamps</option>
-                            <option value="art">Artistic & Decor</option>
-                            <option value="custom">Custom & Keychains</option>
-                            <option value="functional">Functional & Accessories</option>
-                        </select>
-                        <input type="url" id="prod-image" class="clay-input" placeholder="Image URL (e.g. images/lamp.webp)">
-                        <input type="text" id="prod-badge" class="clay-input" placeholder="Badge (e.g. ✨ Best Seller)">
-                        <textarea id="prod-desc" class="clay-input" placeholder="Description" style="grid-column: 1 / -1;"></textarea>
-                        <input type="text" id="prod-spec1" class="clay-input" placeholder="Spec 1 (e.g. PLA Plastic)">
-                        <input type="text" id="prod-spec2" class="clay-input" placeholder="Spec 2 (e.g. 0.16mm Layer)">
-                        <input type="text" id="prod-spec3" class="clay-input" placeholder="Spec 3 (e.g. Custom Text)">
-                        <button type="submit" class="clay-btn btn-coral" style="grid-column: 1 / -1;">Add Product</button>
+                <div class="clay-card" style="padding:2rem; margin-bottom: 2rem;">
+                    <h3 style="margin-bottom: 1.2rem;">Add New Product</h3>
+                    <form id="add-product-form" class="admin-form-grid">
+                        <div class="form-group">
+                            <label class="form-label">Product Name *</label>
+                            <input type="text" id="prod-name" class="clay-input" placeholder="e.g. Torii Gate Ambient Lightbox" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Price</label>
+                            <input type="text" id="prod-price" class="clay-input" placeholder="e.g. ৳1,200 or Contact for Quote">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Delivery Date</label>
+                            <input type="text" id="prod-delivery" class="clay-input" placeholder="e.g. 3-5 Days">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Category *</label>
+                            <select id="prod-category" class="clay-select" required>
+                                <option value="lamps">Lighting & Lamps</option>
+                                <option value="art">Artistic & Decor</option>
+                                <option value="custom">Custom & Keychains</option>
+                                <option value="functional">Functional & Accessories</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Image URL</label>
+                            <input type="url" id="prod-image" class="clay-input" placeholder="e.g. images/torii_gate_lamp.webp">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Badge Tag</label>
+                            <input type="text" id="prod-badge" class="clay-input" placeholder="e.g. ✨ Best Seller">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Description</label>
+                            <textarea id="prod-desc" class="clay-input" rows="3" placeholder="Product details..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Specification 1</label>
+                            <input type="text" id="prod-spec1" class="clay-input" placeholder="e.g. PLA Plastic">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Specification 2</label>
+                            <input type="text" id="prod-spec2" class="clay-input" placeholder="e.g. 0.16mm Layer">
+                        </div>
+                        <div class="form-group full-width">
+                            <label class="form-label">Specification 3</label>
+                            <input type="text" id="prod-spec3" class="clay-input" placeholder="e.g. LED Backlit">
+                        </div>
+                        <button type="submit" class="clay-btn btn-coral full-width" style="margin-top: 0.5rem; padding: 0.85rem; font-size: 1rem;">➕ Add Product</button>
                     </form>
                 </div>
                 
-                <div class="clay-card" style="padding:1.5rem;">
-                    <h3 style="margin-bottom: 1rem;">Products Database</h3>
+                <div class="clay-card" style="padding:2rem;">
+                    <div class="admin-toolbar">
+                        <h3>Products Database</h3>
+                        <div class="admin-search-box">
+                            <input type="text" id="admin-prod-search" class="clay-input" placeholder="🔍 Search products by name..." style="padding: 0.55rem 1rem; font-size: 0.9rem;">
+                            <select id="admin-prod-filter" class="clay-select" style="padding: 0.55rem 1rem; font-size: 0.9rem; width: auto; min-width: 160px;">
+                                <option value="all">All Categories</option>
+                                <option value="lamps">Lighting & Lamps</option>
+                                <option value="art">Artistic & Decor</option>
+                                <option value="custom">Custom & Keychains</option>
+                                <option value="functional">Functional & Accessories</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="admin-table-wrapper">
                         <table class="admin-table">
                             <thead>
@@ -263,6 +305,10 @@
                             </tbody>
                         </table>
                     </div>
+                    <!-- Pagination Controls -->
+                    <div id="admin-products-pagination" class="admin-pagination-container">
+                        <!-- Populated dynamically via admin.js -->
+                    </div>
                 </div>
             </div>
         </main>
@@ -270,27 +316,57 @@
         
         <!-- Edit Product Modal -->
         <div class="lightbox-modal" id="editProductModal">
-            <div class="lightbox-content" style="max-width: 600px; padding: 2rem; background: var(--c-surface); border-radius: 12px; max-height: 90vh; overflow-y: auto;">
+            <div class="lightbox-content admin-modal-card" style="max-width: 720px; width: 100%; padding: 2.2rem; background: var(--c-bg-card); border-radius: 28px; border: 1px solid rgba(255, 255, 255, 0.15); max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.4);">
                 <button class="lightbox-close" id="editProductClose">&times;</button>
-                <h3 style="margin-bottom: 1rem; color: var(--c-text);">Edit Product</h3>
-                <form id="edit-product-form" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <h3 style="margin-bottom: 1.5rem; color: var(--c-text); font-size: 1.5rem;">Edit Product</h3>
+                <form id="edit-product-form" class="admin-form-grid">
                     <input type="hidden" id="edit-prod-id">
-                    <input type="text" id="edit-prod-name" class="clay-input" placeholder="Product Name" required>
-                    <input type="text" id="edit-prod-price" class="clay-input" placeholder="Price (e.g. ৳500)">
-                    <input type="text" id="edit-prod-delivery" class="clay-input" placeholder="Delivery Date (e.g. 3-5 Days)">
-                    <select id="edit-prod-category" class="clay-select" required>
-                        <option value="lamps">Lighting & Lamps</option>
-                        <option value="art">Artistic & Decor</option>
-                        <option value="custom">Custom & Keychains</option>
-                        <option value="functional">Functional & Accessories</option>
-                    </select>
-                    <input type="url" id="edit-prod-image" class="clay-input" placeholder="Image URL (e.g. images/lamp.webp)">
-                    <input type="text" id="edit-prod-badge" class="clay-input" placeholder="Badge (e.g. ✨ Best Seller)">
-                    <textarea id="edit-prod-desc" class="clay-input" placeholder="Description" style="grid-column: 1 / -1;"></textarea>
-                    <input type="text" id="edit-prod-spec1" class="clay-input" placeholder="Spec 1 (e.g. PLA Plastic)">
-                    <input type="text" id="edit-prod-spec2" class="clay-input" placeholder="Spec 2 (e.g. 0.16mm Layer)">
-                    <input type="text" id="edit-prod-spec3" class="clay-input" placeholder="Spec 3 (e.g. Custom Text)">
-                    <button type="submit" class="clay-btn btn-coral" style="grid-column: 1 / -1;">Save Changes</button>
+                    <div class="form-group">
+                        <label class="form-label">Product Name *</label>
+                        <input type="text" id="edit-prod-name" class="clay-input" placeholder="Product Name" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price</label>
+                        <input type="text" id="edit-prod-price" class="clay-input" placeholder="Price (e.g. ৳500)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Delivery Date</label>
+                        <input type="text" id="edit-prod-delivery" class="clay-input" placeholder="Delivery Date (e.g. 3-5 Days)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category *</label>
+                        <select id="edit-prod-category" class="clay-select" required>
+                            <option value="lamps">Lighting & Lamps</option>
+                            <option value="art">Artistic & Decor</option>
+                            <option value="custom">Custom & Keychains</option>
+                            <option value="functional">Functional & Accessories</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Image URL</label>
+                        <input type="url" id="edit-prod-image" class="clay-input" placeholder="Image URL (e.g. images/lamp.webp)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Badge Tag</label>
+                        <input type="text" id="edit-prod-badge" class="clay-input" placeholder="Badge (e.g. ✨ Best Seller)">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Description</label>
+                        <textarea id="edit-prod-desc" class="clay-input" rows="3" placeholder="Description"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Specification 1</label>
+                        <input type="text" id="edit-prod-spec1" class="clay-input" placeholder="Spec 1 (e.g. PLA Plastic)">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Specification 2</label>
+                        <input type="text" id="edit-prod-spec2" class="clay-input" placeholder="Spec 2 (e.g. 0.16mm Layer)">
+                    </div>
+                    <div class="form-group full-width">
+                        <label class="form-label">Specification 3</label>
+                        <input type="text" id="edit-prod-spec3" class="clay-input" placeholder="Spec 3 (e.g. Custom Text)">
+                    </div>
+                    <button type="submit" class="clay-btn btn-coral full-width" style="margin-top: 0.5rem; padding: 0.85rem; font-size: 1rem;">💾 Save Changes</button>
                 </form>
             </div>
         </div>

@@ -509,6 +509,9 @@ document.addEventListener('DOMContentLoaded', () => {
         return products;
     }
 
+    let adminCurrentPage = 1;
+    const adminItemsPerPage = 8;
+
     function saveProducts(products) {
         localStorage.setItem('kiras_products', JSON.stringify(products));
         loadProducts();
@@ -516,44 +519,86 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadProducts() {
         const tbody = document.getElementById('admin-products-tbody');
+        const paginationContainer = document.getElementById('admin-products-pagination');
         if (!tbody) return;
-        const products = getProducts();
+
+        const allProducts = getProducts();
+        const searchInput = document.getElementById('admin-prod-search');
+        const filterSelect = document.getElementById('admin-prod-filter');
+
+        const searchQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+        const categoryFilter = filterSelect ? filterSelect.value : 'all';
+
+        if (searchInput && !searchInput.dataset.hasListener) {
+            searchInput.dataset.hasListener = 'true';
+            searchInput.addEventListener('input', () => {
+                adminCurrentPage = 1;
+                loadProducts();
+            });
+        }
+        if (filterSelect && !filterSelect.dataset.hasListener) {
+            filterSelect.dataset.hasListener = 'true';
+            filterSelect.addEventListener('change', () => {
+                adminCurrentPage = 1;
+                loadProducts();
+            });
+        }
+
+        const filteredProducts = allProducts.map((p, originalIndex) => ({ ...p, originalIndex }))
+            .filter(p => {
+                const matchesSearch = !searchQuery || (p.name && p.name.toLowerCase().includes(searchQuery)) || (p.desc && p.desc.toLowerCase().includes(searchQuery));
+                const matchesCategory = categoryFilter === 'all' || p.category === categoryFilter;
+                return matchesSearch && matchesCategory;
+            });
+
         tbody.innerHTML = '';
-        if (products.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No products found. Add some!</td></tr>';
+
+        if (filteredProducts.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 2.5rem; color:var(--c-text-muted);">No products found matching your filter.</td></tr>';
+            if (paginationContainer) paginationContainer.innerHTML = '';
             return;
         }
 
-        products.forEach((p, index) => {
+        const totalItems = filteredProducts.length;
+        const totalPages = Math.ceil(totalItems / adminItemsPerPage);
+
+        if (adminCurrentPage > totalPages) adminCurrentPage = totalPages;
+        if (adminCurrentPage < 1) adminCurrentPage = 1;
+
+        const startIndex = (adminCurrentPage - 1) * adminItemsPerPage;
+        const endIndex = Math.min(startIndex + adminItemsPerPage, totalItems);
+        const pageItems = filteredProducts.slice(startIndex, endIndex);
+
+        pageItems.forEach((p) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><img src="${escapeHtml(p.image || 'images/placeholder.webp')}" alt="product" style="width: 50px; height: 50px; border-radius: 8px; object-fit: cover;"></td>
+                <td><img src="${escapeHtml(p.image || 'images/placeholder.webp')}" alt="product" style="width: 48px; height: 48px; border-radius: 10px; object-fit: cover;"></td>
                 <td style="font-weight:700;">${escapeHtml(p.name)}</td>
-                <td><span style="background: rgba(0,0,0,0.05); padding: 0.2rem 0.5rem; border-radius: 8px; font-size: 0.8rem;">${escapeHtml(p.categoryLabel || p.category)}</span></td>
+                <td><span style="background: rgba(142, 132, 120, 0.12); padding: 0.25rem 0.6rem; border-radius: 8px; font-size: 0.8rem; font-weight:600;">${escapeHtml(p.categoryLabel || p.category)}</span></td>
                 <td style="color:var(--c-primary); font-weight:700;">${escapeHtml(p.price || 'Contact for Quote')}</td>
                 <td>${escapeHtml(p.delivery || '3-5 Days')}</td>
                 <td>
-                    <button class="clay-btn btn-sm btn-edit-product" data-index="${index}" style="padding:0.3rem 0.6rem; background:#FFA500; color:#FFF; font-size:0.8rem; margin-right: 0.5rem;">Edit</button>
-                    <button class="clay-btn btn-sm btn-delete-product" data-index="${index}" style="padding:0.3rem 0.6rem; background:#FF5E5E; color:#FFF; font-size:0.8rem;">Delete</button>
+                    <button class="clay-btn btn-sm btn-edit-product" data-index="${p.originalIndex}" style="padding:0.35rem 0.75rem; background:#FFA500; color:#FFF; font-size:0.8rem; margin-right: 0.4rem; border-radius:10px;">✏️ Edit</button>
+                    <button class="clay-btn btn-sm btn-delete-product" data-index="${p.originalIndex}" style="padding:0.35rem 0.75rem; background:#FF5E5E; color:#FFF; font-size:0.8rem; border-radius:10px;">🗑️ Delete</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
 
         tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 const index = btn.getAttribute('data-index');
                 if (confirm('Delete this product?')) {
                     const allP = getProducts();
                     allP.splice(index, 1);
                     saveProducts(allP);
-                    showToast('Product deleted');
+                    showToast('Product deleted successfully');
                 }
             });
         });
 
         tbody.querySelectorAll('.btn-edit-product').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', () => {
                 const index = btn.getAttribute('data-index');
                 const products = getProducts();
                 const p = products[index];
@@ -576,6 +621,48 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (modal) modal.classList.add('open');
             });
         });
+
+        if (paginationContainer) {
+            let paginationHtml = `
+                <div style="font-size: 0.88rem; color: var(--c-text-muted); font-weight: 600;">
+                    Showing ${startIndex + 1}–${endIndex} of ${totalItems} Products
+                </div>
+                <div class="admin-pagination-controls">
+                    <button class="page-btn btn-prev" ${adminCurrentPage === 1 ? 'disabled' : ''}>← Prev</button>
+            `;
+
+            for (let i = 1; i <= totalPages; i++) {
+                paginationHtml += `<button class="page-btn page-num ${i === adminCurrentPage ? 'active' : ''}" data-page="${i}">${i}</button>`;
+            }
+
+            paginationHtml += `
+                    <button class="page-btn btn-next" ${adminCurrentPage === totalPages ? 'disabled' : ''}>Next →</button>
+                </div>
+            `;
+
+            paginationContainer.innerHTML = paginationHtml;
+
+            paginationContainer.querySelector('.btn-prev')?.addEventListener('click', () => {
+                if (adminCurrentPage > 1) {
+                    adminCurrentPage--;
+                    loadProducts();
+                }
+            });
+
+            paginationContainer.querySelector('.btn-next')?.addEventListener('click', () => {
+                if (adminCurrentPage < totalPages) {
+                    adminCurrentPage++;
+                    loadProducts();
+                }
+            });
+
+            paginationContainer.querySelectorAll('.page-num').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    adminCurrentPage = parseInt(btn.getAttribute('data-page'));
+                    loadProducts();
+                });
+            });
+        }
     }
 
     const editProductModal = document.getElementById('editProductModal');

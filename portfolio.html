@@ -288,9 +288,15 @@
                     <div>
                         <span id="lightboxCategory" style="font-size:0.85rem; color:var(--c-primary); font-family:var(--f-head); font-weight:700;">Category</span>
                         <h3 id="lightboxTitle" style="margin-top:0.5rem; font-size:1.6rem; color:var(--c-text);">Title</h3>
+                        
+                        <div class="lightbox-price-card" style="margin-top: 0.8rem; display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.5rem 1.2rem; background: rgba(255, 126, 103, 0.12); border-radius: 16px; border: 1px solid rgba(255, 126, 103, 0.3);">
+                            <span style="font-size: 0.85rem; color: var(--c-text-muted); font-weight: 600;">Price:</span>
+                            <span id="lightboxPrice" style="font-size: 1.35rem; font-weight: 800; color: var(--c-primary); font-family: var(--f-head);">Contact for Quote</span>
+                        </div>
+
                         <p id="lightboxDesc" style="color:var(--c-text-muted); margin-top:1rem; font-size:0.95rem; line-height:1.6;">Description</p>
                         <div style="margin-top:1.5rem;">
-                            <button id="btn-lightbox-add-cart" class="clay-btn btn-coral btn-block btn-sm" data-i18n="cart_add">🛒 Add Model to Cart (৳1,200)</button>
+                            <button id="btn-lightbox-add-cart" class="clay-btn btn-coral btn-block btn-sm" data-i18n="cart_add">🛒 Add Model to Cart (Contact for Quote)</button>
                         </div>
                     </div>
                 </div>
@@ -337,6 +343,7 @@
             const lightboxTitle = document.getElementById('lightboxTitle');
             const lightboxCategory = document.getElementById('lightboxCategory');
             const lightboxDesc = document.getElementById('lightboxDesc');
+            const lightboxPrice = document.getElementById('lightboxPrice');
             const lightboxClose = document.getElementById('lightboxClose');
             const btnAddCart = document.getElementById('btn-lightbox-add-cart');
 
@@ -394,6 +401,10 @@
                         lightboxTitle.textContent = p.name;
                         lightboxCategory.textContent = p.categoryLabel || p.category;
                         
+                        if (lightboxPrice) {
+                            lightboxPrice.textContent = p.price || 'Contact for Quote';
+                        }
+                        
                         let descText = p.desc || '';
                         if (dict && p.descKey && dict[p.descKey]) {
                             descText = dict[p.descKey];
@@ -401,6 +412,11 @@
                         
                         lightboxDesc.textContent = descText;
                         lightboxImg.src = p.image || 'images/placeholder.webp';
+                        
+                        if (btnAddCart) {
+                            btnAddCart.textContent = `🛒 Add Model to Cart (${p.price || 'Contact for Quote'})`;
+                        }
+
                         lightbox.classList.add('open');
                         
                         if (btnAddCart) {
