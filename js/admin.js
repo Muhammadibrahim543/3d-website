@@ -542,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const index = e.target.getAttribute('data-index');
+                const index = btn.getAttribute('data-index');
                 if (confirm('Delete this product?')) {
                     const allP = getProducts();
                     allP.splice(index, 1);
@@ -554,8 +554,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         tbody.querySelectorAll('.btn-edit-product').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const index = e.target.getAttribute('data-index');
-                const p = getProducts()[index];
+                const index = btn.getAttribute('data-index');
+                const products = getProducts();
+                const p = products[index];
+                if (!p) return;
                 
                 document.getElementById('edit-prod-id').value = index;
                 document.getElementById('edit-prod-name').value = p.name || '';
@@ -570,8 +572,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('edit-prod-spec2').value = (p.specs && p.specs.length > 1) ? p.specs[1].text : '';
                 document.getElementById('edit-prod-spec3').value = (p.specs && p.specs.length > 2) ? p.specs[2].text : '';
                 
-                document.getElementById('editProductModal').classList.add('open');
+                const modal = document.getElementById('editProductModal');
+                if (modal) modal.classList.add('open');
             });
+        });
+    }
+
+    const editProductModal = document.getElementById('editProductModal');
+    if (editProductModal) {
+        editProductModal.addEventListener('click', (e) => {
+            if (e.target === editProductModal) {
+                editProductModal.classList.remove('open');
+            }
         });
     }
 
