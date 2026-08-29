@@ -34,7 +34,7 @@
 /* Services Grid */
 .services-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
     gap: 2rem;
 }
 
@@ -65,7 +65,7 @@
 /* Materials Blobs */
 .materials-blobs {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr));
     gap: 2rem;
 }
 .material-blob-card { text-align: center; display: flex; flex-direction: column; align-items: center; }
@@ -114,7 +114,7 @@
 
 .portfolio-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     gap: 2rem;
 }
 
@@ -402,3 +402,6 @@ img { max-width: 100%; height: auto; }
 [data-theme="dark"] .price-bubble {
     background: #181523;
 }
+
+.nested-grid-2 { display: grid; grid-template-columns: 1fr 1fr; }
+@media (max-width: 768px) { .nested-grid-2 { grid-template-columns: 1fr; } }
