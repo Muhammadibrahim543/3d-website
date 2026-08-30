@@ -290,7 +290,7 @@
                         <h3 id="lightboxTitle" style="margin-top:0.5rem; font-size:1.6rem; color:var(--c-text);">Title</h3>
                         
                         <div class="lightbox-price-card" style="margin-top: 0.8rem; display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.5rem 1.2rem; background: rgba(255, 126, 103, 0.12); border-radius: 16px; border: 1px solid rgba(255, 126, 103, 0.3);">
-                            <span style="font-size: 0.85rem; color: var(--c-text-muted); font-weight: 600;">Price:</span>
+                            <span id="lightboxPriceLabel" style="font-size: 0.85rem; color: var(--c-text-muted); font-weight: 600;" data-i18n="lightbox_price">Price:</span>
                             <span id="lightboxPrice" style="font-size: 1.35rem; font-weight: 800; color: var(--c-primary); font-family: var(--f-head);">Contact for Quote</span>
                         </div>
 
@@ -359,8 +359,33 @@
 
             // Load dynamic products
             let dynamicProducts = JSON.parse(localStorage.getItem('kiras_products'));
+            let needsSave = false;
             if (!dynamicProducts || dynamicProducts.length === 0) {
                 dynamicProducts = (typeof defaultProducts !== 'undefined') ? defaultProducts : [];
+                needsSave = true;
+            } else if (typeof defaultProducts !== 'undefined') {
+                // Force sync prices and missing i18n keys
+                dynamicProducts.forEach(dp => {
+                    const defP = defaultProducts.find(x => x.id === dp.id);
+                    if (defP) {
+                        if (!dp.price || dp.price === 'Contact for Quote' || dp.price.includes('Contact')) {
+                            if (defP.price !== 'Contact for Quote') {
+                                dp.price = defP.price;
+                                needsSave = true;
+                            }
+                        }
+                        if (!dp.descKey && defP.descKey) {
+                            dp.descKey = defP.descKey;
+                            needsSave = true;
+                        }
+                        if (!dp.badgeI18n && defP.badgeI18n) {
+                            dp.badgeI18n = defP.badgeI18n;
+                            needsSave = true;
+                        }
+                    }
+                });
+            }
+            if (needsSave) {
                 localStorage.setItem('kiras_products', JSON.stringify(dynamicProducts));
             }
             
@@ -398,11 +423,22 @@
                         const currentLang = localStorage.getItem('shapey_lang') || 'en';
                         const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
 
-                        lightboxTitle.textContent = p.name;
-                        lightboxCategory.textContent = p.categoryLabel || p.category;
+                        lightboxTitle.textContent = (dict && p.titleI18n && dict[p.titleI18n]) ? dict[p.titleI18n] : p.name;
+                        lightboxCategory.textContent = (dict && p.categoryI18n && dict[p.categoryI18n]) ? dict[p.categoryI18n] : (p.categoryLabel || p.category);
                         
+                        // Price formatting
+                        let priceText = p.price;
+                        if (!priceText || priceText === 'Contact for Quote') {
+                             priceText = (dict && dict['btn_send_quote']) ? (currentLang === 'bn' ? 'কোটেশনের জন্য যোগাযোগ করুন' : 'Contact for Quote') : 'Contact for Quote';
+                        }
+
                         if (lightboxPrice) {
-                            lightboxPrice.textContent = p.price || 'Contact for Quote';
+                            lightboxPrice.textContent = priceText;
+                        }
+                        
+                        const lblPrice = document.getElementById('lightboxPriceLabel');
+                        if (lblPrice) {
+                            lblPrice.textContent = (dict && dict['lightbox_price']) ? dict['lightbox_price'] : 'Price:';
                         }
                         
                         let descText = p.desc || '';
@@ -414,7 +450,8 @@
                         lightboxImg.src = p.image || 'images/placeholder.webp';
                         
                         if (btnAddCart) {
-                            btnAddCart.textContent = `🛒 Add Model to Cart (${p.price || 'Contact for Quote'})`;
+                            let cartBtnText = (dict && dict['cart_add']) ? dict['cart_add'] : 'Add Model to Cart';
+                            btnAddCart.textContent = `🛒 ${cartBtnText} (${priceText})`;
                         }
 
                         lightbox.classList.add('open');

@@ -3,10 +3,10 @@ const defaultProducts = [
         "id": "PROD-OLD-1",
         "category": "lamps",
         "desc": "Layered bamboo PLA structure with internal diffused warm white LED illumination.",
-        "descKey": "",
+        "descKey": "cs2_desc",
         "image": "images/torii_gate_lamp.webp",
         "badge": "✨ Lightbox",
-        "badgeI18n": "",
+        "badgeI18n": "cs2_badge",
         "categoryLabel": "Lighting & Lamps",
         "categoryI18n": "filter_lamps",
         "name": "Japanese Torii Gate Ambient Lightbox",
@@ -25,7 +25,7 @@ const defaultProducts = [
                 "i18n": ""
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1200",
         "delivery": "3-5 Days"
     },
     {
@@ -54,7 +54,7 @@ const defaultProducts = [
                 "i18n": ""
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2250",
         "delivery": "3-5 Days"
     },
     {
@@ -83,7 +83,7 @@ const defaultProducts = [
                 "i18n": "g1_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2450",
         "delivery": "3-5 Days"
     },
     {
@@ -112,7 +112,7 @@ const defaultProducts = [
                 "i18n": "g2_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1200",
         "delivery": "3-5 Days"
     },
     {
@@ -141,7 +141,7 @@ const defaultProducts = [
                 "i18n": "g3_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1700",
         "delivery": "3-5 Days"
     },
     {
@@ -170,7 +170,7 @@ const defaultProducts = [
                 "i18n": "g4_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2300",
         "delivery": "3-5 Days"
     },
     {
@@ -199,7 +199,7 @@ const defaultProducts = [
                 "i18n": "g5_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳750",
         "delivery": "3-5 Days"
     },
     {
@@ -228,7 +228,7 @@ const defaultProducts = [
                 "i18n": "g6_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1000",
         "delivery": "3-5 Days"
     },
     {
@@ -257,7 +257,7 @@ const defaultProducts = [
                 "i18n": "g7_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1800",
         "delivery": "3-5 Days"
     },
     {
@@ -286,7 +286,7 @@ const defaultProducts = [
                 "i18n": "g8_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1950",
         "delivery": "3-5 Days"
     },
     {
@@ -315,7 +315,7 @@ const defaultProducts = [
                 "i18n": "g9_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1700",
         "delivery": "3-5 Days"
     },
     {
@@ -344,7 +344,7 @@ const defaultProducts = [
                 "i18n": "g10_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1750",
         "delivery": "3-5 Days"
     },
     {
@@ -373,7 +373,7 @@ const defaultProducts = [
                 "i18n": "g11_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2500",
         "delivery": "3-5 Days"
     },
     {
@@ -402,7 +402,7 @@ const defaultProducts = [
                 "i18n": "g12_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1650",
         "delivery": "3-5 Days"
     },
     {
@@ -431,7 +431,7 @@ const defaultProducts = [
                 "i18n": "g13_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2100",
         "delivery": "3-5 Days"
     },
     {
@@ -460,7 +460,7 @@ const defaultProducts = [
                 "i18n": "g14_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1350",
         "delivery": "3-5 Days"
     },
     {
@@ -489,7 +489,7 @@ const defaultProducts = [
                 "i18n": "g15_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1500",
         "delivery": "3-5 Days"
     },
     {
@@ -518,7 +518,7 @@ const defaultProducts = [
                 "i18n": "g16_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳750",
         "delivery": "3-5 Days"
     },
     {
@@ -547,7 +547,7 @@ const defaultProducts = [
                 "i18n": "g17_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2200",
         "delivery": "3-5 Days"
     },
     {
@@ -576,7 +576,7 @@ const defaultProducts = [
                 "i18n": "g18_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1250",
         "delivery": "3-5 Days"
     },
     {
@@ -605,7 +605,7 @@ const defaultProducts = [
                 "i18n": "g19_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1650",
         "delivery": "3-5 Days"
     },
     {
@@ -634,7 +634,7 @@ const defaultProducts = [
                 "i18n": "g20_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2150",
         "delivery": "3-5 Days"
     },
     {
@@ -663,7 +663,7 @@ const defaultProducts = [
                 "i18n": "g21_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳800",
         "delivery": "3-5 Days"
     },
     {
@@ -692,7 +692,7 @@ const defaultProducts = [
                 "i18n": "g22_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1350",
         "delivery": "3-5 Days"
     },
     {
@@ -721,7 +721,7 @@ const defaultProducts = [
                 "i18n": "g23_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1100",
         "delivery": "3-5 Days"
     },
     {
@@ -750,7 +750,7 @@ const defaultProducts = [
                 "i18n": "g24_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳900",
         "delivery": "3-5 Days"
     },
     {
@@ -779,7 +779,7 @@ const defaultProducts = [
                 "i18n": "g25_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳300",
         "delivery": "3-5 Days"
     },
     {
@@ -808,7 +808,7 @@ const defaultProducts = [
                 "i18n": "g26_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1450",
         "delivery": "3-5 Days"
     },
     {
@@ -837,7 +837,7 @@ const defaultProducts = [
                 "i18n": "g27_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳2050",
         "delivery": "3-5 Days"
     }
 ];

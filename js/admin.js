@@ -502,8 +502,32 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Products Logic ---
     function getProducts() {
         let products = JSON.parse(localStorage.getItem('kiras_products'));
+        let needsSave = false;
         if (!products || products.length === 0) {
             products = (typeof defaultProducts !== 'undefined') ? defaultProducts : [];
+            needsSave = true;
+        } else if (typeof defaultProducts !== 'undefined') {
+            products.forEach(dp => {
+                const defP = defaultProducts.find(x => x.id === dp.id);
+                if (defP) {
+                    if (!dp.price || dp.price === 'Contact for Quote' || dp.price.includes('Contact')) {
+                        if (defP.price !== 'Contact for Quote') {
+                            dp.price = defP.price;
+                            needsSave = true;
+                        }
+                    }
+                    if (!dp.descKey && defP.descKey) {
+                        dp.descKey = defP.descKey;
+                        needsSave = true;
+                    }
+                    if (!dp.badgeI18n && defP.badgeI18n) {
+                        dp.badgeI18n = defP.badgeI18n;
+                        needsSave = true;
+                    }
+                }
+            });
+        }
+        if (needsSave) {
             localStorage.setItem('kiras_products', JSON.stringify(products));
         }
         return products;
