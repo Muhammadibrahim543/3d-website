@@ -510,11 +510,9 @@ document.addEventListener('DOMContentLoaded', () => {
             products.forEach(dp => {
                 const defP = defaultProducts.find(x => x.id === dp.id);
                 if (defP) {
-                    if (!dp.price || dp.price === 'Contact for Quote' || dp.price.includes('Contact')) {
-                        if (defP.price !== 'Contact for Quote') {
-                            dp.price = defP.price;
-                            needsSave = true;
-                        }
+                    if (defP.price && dp.price !== defP.price) {
+                        dp.price = defP.price;
+                        needsSave = true;
                     }
                     if (!dp.descKey && defP.descKey) {
                         dp.descKey = defP.descKey;
