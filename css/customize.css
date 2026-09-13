@@ -267,35 +267,211 @@
     border-color: rgba(255,255,255,0.05);
 }
 
-/* --- Controls Card --- */
-.customizer-controls {
-    position: sticky;
-    top: 100px;
+/* --- Stage Toolbar Overlay --- */
+.stage-toolbar {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    display: flex;
+    gap: 8px;
+    z-index: 10;
 }
-.customizer-controls h3 {
+.stage-toggle-btn {
+    background: rgba(24, 22, 33, 0.7);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.stage-toggle-btn:hover, .stage-toggle-btn.active {
+    background: var(--c-accent);
+    color: #fff;
+    border-color: var(--c-accent);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255, 126, 103, 0.4);
+}
+
+/* --- 3D Print Bed / Build Plate Grid --- */
+.build-plate-grid {
+    position: absolute;
+    inset: 20px;
+    border-radius: 16px;
+    perspective: 1000px;
+    pointer-events: none;
+    z-index: 0;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    justify-content: center;
+}
+.bed-surface {
+    width: 85%;
+    height: 80%;
+    background-color: #1a1822;
+    background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+        linear-gradient(rgba(255, 126, 103, 0.2) 2px, transparent 2px),
+        linear-gradient(90deg, rgba(255, 126, 103, 0.2) 2px, transparent 2px);
+    background-size: 20px 20px, 20px 20px, 100px 100px, 100px 100px;
+    border: 2px solid rgba(255, 126, 103, 0.4);
+    border-radius: 12px;
+    transform: rotateX(55deg) rotateZ(-10deg) translateZ(-40px);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.8), inset 0 0 30px rgba(0,0,0,0.9);
+    position: relative;
+}
+.bed-logo {
+    position: absolute;
+    bottom: 12px;
+    right: 16px;
+    font-size: 0.65rem;
+    font-weight: 900;
+    color: rgba(255, 255, 255, 0.25);
+    letter-spacing: 2px;
+}
+.bed-ruler-top {
+    position: absolute;
+    top: -20px;
+    left: 0; right: 0;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: monospace;
+}
+.bed-ruler-left {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: -28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.3);
+    font-family: monospace;
+}
+
+/* --- Template Options Selector Cards --- */
+.template-options {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    margin-top: 0.6rem;
+}
+.template-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 6px;
+    border-radius: 12px;
+    background: var(--c-bg-page);
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+.template-option:hover {
+    border-color: var(--c-text-muted);
+    background: var(--c-bg-card);
+}
+.template-option.active {
+    border-color: var(--c-accent);
+    background: var(--c-bg-card);
+    box-shadow: 0 0 0 2px rgba(255,126,103,0.25);
+}
+.tpl-icon {
+    font-size: 1.3rem;
+    margin-bottom: 2px;
+}
+.tpl-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--c-text);
+}
+
+/* --- Finish Option Pills --- */
+.finish-options {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+}
+.finish-option {
+    flex: 1;
+    min-width: 70px;
+    padding: 8px 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    background: var(--c-bg-page);
+    color: var(--c-text);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+.finish-option:hover {
+    background: var(--c-bg-card);
+}
+.finish-option.active {
+    border-color: var(--c-accent);
+    background: var(--c-bg-card);
+    color: var(--c-accent);
+    box-shadow: 0 0 0 2px rgba(255,126,103,0.2);
+}
+
+/* --- Finish Surface Effects on 3D Preview --- */
+.finish-silk .layer-base-top {
+    filter: brightness(1.15) contrast(1.1) drop-shadow(0 4px 8px rgba(255,215,0,0.3)) !important;
+}
+.finish-satin .layer-text-top {
+    filter: drop-shadow(0 0 6px rgba(255,255,255,0.8)) !important;
+}
+.finish-neon .layer-base-bottom {
+    filter: drop-shadow(0 0 20px var(--c-accent)) drop-shadow(0 10px 20px rgba(0,0,0,0.6)) !important;
+}
+
+/* --- Touch Mobile Enhancements --- */
+.customizer-stage-card {
+    touch-action: none; /* Full touch gesture control for 3D viewer */
+    user-select: none;
+    -webkit-user-select: none;
+}
+.customizer-stage-card.grabbing {
+    cursor: grabbing !important;
 }
 
 @media (max-width: 768px) {
     .customizer-stage-card {
-        min-height: 280px;
-        padding: 1.5rem 0.5rem;
+        min-height: 320px;
+        padding: 1rem 0.5rem;
+        touch-action: none;
     }
     .customizer-controls {
         position: relative;
         top: 0;
     }
+    .template-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
     .font-options {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(3, 1fr);
     }
 }
 @media (max-width: 480px) {
     .customizer-stage-card {
-        min-height: 240px;
+        min-height: 280px;
     }
     .font-options {
         grid-template-columns: repeat(2, 1fr);
     }
 }
+

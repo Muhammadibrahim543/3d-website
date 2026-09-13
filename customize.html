@@ -18,14 +18,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700&family=Hind+Siliguri:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     
-    <!-- Customizer Fonts — Rounded, bubbly, playful, brush & handwritten (matching real prints) -->
-    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Bubblegum+Sans&family=Chewy&family=Comic+Neue:ital,wght@0,700;1,700&family=Crafty+Girls&family=Fredoka:wght@600;700&family=Lilita+One&family=Righteous&family=Bungee+Shade&family=Pacifico&family=Lobster&display=swap" rel="stylesheet">
+    <!-- Customizer Fonts — Popular styles including Lobster, Pacifico, Orbitron, Fredoka, Chewy -->
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Bubblegum+Sans&family=Chewy&family=Comic+Neue:ital,wght@0,700;1,700&family=Crafty+Girls&family=Fredoka:wght@600;700&family=Lilita+One&family=Lobster&family=Montserrat:wght@800;900&family=Orbitron:wght@800;900&family=Pacifico&family=Righteous&display=swap" rel="stylesheet">
 
     <link rel="stylesheet" href="css/base.css?v=3.0">
     <link rel="stylesheet" href="css/components.css?v=3.3">
     <link rel="stylesheet" href="css/animations.css?v=3.0">
     <link rel="stylesheet" href="css/pages.css?v=3.0">
-    <link rel="stylesheet" href="css/customize.css?v=3.0">
+    <link rel="stylesheet" href="css/customize.css?v=4.0">
 </head>
 <body>
     <div class="site-wrapper">
@@ -88,60 +88,101 @@
 
         <main class="section-block">
             <div class="section-heading text-center reveal-on-scroll">
-                <h2>Live 3D Nameplate Customizer</h2>
-                <p class="section-sub">// DESIGN_YOUR_OWN_KEYRING</p>
+                <h2>MakerLab Live 3D Customizer</h2>
+                <p class="section-sub">// PARAMETRIC_3D_STUDIO_GENERATOR</p>
             </div>
 
             <div class="customizer-grid">
                 <!-- Left: Live Preview Stage -->
-                <div class="clay-card customizer-stage-card reveal-on-scroll">
+                <div class="clay-card customizer-stage-card reveal-on-scroll" id="customizer-stage-card">
+                    <!-- Stage Overlay Actions -->
+                    <div class="stage-toolbar">
+                        <button id="btn-toggle-bed" class="stage-toggle-btn" title="Toggle 3D Print Bed Grid">🏁 Build Plate</button>
+                        <button id="btn-reset-view" class="stage-toggle-btn" title="Reset 3D Camera Angle">🔄 Reset View</button>
+                    </div>
+
                     <!-- Bokeh Light Background -->
                     <div class="bokeh-lights">
                         <span></span><span></span><span></span>
                         <span></span><span></span><span></span>
                     </div>
-                    <!-- Dark Surface Reflection -->
-                    <div class="stage-surface"></div>
-
-                    <!-- 3D Nameplate -->
-                    <div class="nameplate-scene">
-                        <div class="nameplate-3d" id="nameplate-3d">
-                            <!-- JS will inject .layer-base and .layer-text spans here -->
+                    
+                    <!-- 3D Print Bed Grid (Togglable) -->
+                    <div class="build-plate-grid" id="build-plate-grid" style="display:none;">
+                        <div class="bed-surface">
+                            <div class="bed-ruler-top"><span>0</span><span>50</span><span>100</span><span>150</span><span>200mm</span></div>
+                            <div class="bed-ruler-left"><span>200</span><span>150</span><span>100</span><span>50</span><span>0</span></div>
+                            <div class="bed-logo">BAMBU PEI 256x256</div>
                         </div>
                     </div>
 
-                    <div class="stage-hint">🖱️ Move your mouse to rotate the nameplate</div>
+                    <!-- Dark Studio Reflection -->
+                    <div class="stage-surface" id="stage-surface"></div>
+
+                    <!-- 3D Nameplate Scene Container -->
+                    <div class="nameplate-scene">
+                        <div class="nameplate-3d" id="nameplate-3d">
+                            <!-- JS will inject layers here -->
+                        </div>
+                    </div>
+
+                    <div class="stage-hint">🖐️ Swipe or Drag to Rotate 3D Model</div>
                 </div>
 
                 <!-- Right: Controls -->
                 <div class="clay-card customizer-controls reveal-on-scroll">
-                    <h3 style="margin-bottom:1.5rem; color:var(--c-primary);">🎨 Design Your Nameplate</h3>
+                    <h3 style="margin-bottom:1.2rem; color:var(--c-primary);">🎨 3D Model Parameters</h3>
+
+                    <!-- 3D Template Variant Cards -->
+                    <div class="form-group">
+                        <label>3D Model Template</label>
+                        <div class="template-options" id="template-options">
+                            <div class="template-option active" data-template="keyring">
+                                <span class="tpl-icon">🔑</span>
+                                <span class="tpl-title">Keyring</span>
+                            </div>
+                            <div class="template-option" data-template="deskstand">
+                                <span class="tpl-icon">🏆</span>
+                                <span class="tpl-title">Desk Stand</span>
+                            </div>
+                            <div class="template-option" data-template="pettag">
+                                <span class="tpl-icon">🏷️</span>
+                                <span class="tpl-title">Pet Tag</span>
+                            </div>
+                            <div class="template-option" data-template="badge">
+                                <span class="tpl-icon">🛡️</span>
+                                <span class="tpl-title">Badge Plaque</span>
+                            </div>
+                        </div>
+                    </div>
                     
                     <!-- Name Input -->
                     <div class="form-group">
                         <label for="cust-text">Your Name / Text</label>
                         <input type="text" id="cust-text" class="clay-input" value="Ibrahim" maxlength="14" style="font-size:1.2rem; font-weight:700; letter-spacing:1px;">
-                        <small style="color:var(--c-text-muted);">Maximum 14 characters for best results</small>
+                        <small style="color:var(--c-text-muted);">Maximum 14 characters for best 3D output</small>
                     </div>
 
-                    <!-- Font Selector (Visual Cards) -->
+                    <!-- Font Selector (Includes Lobster) -->
                     <div class="form-group">
                         <label>Font Style</label>
                         <div class="font-options" id="font-options">
-                            <div class="font-option active" data-font="'Chewy', cursive" style="font-family:'Chewy',cursive;">Abc<small>Chewy (Ahkio Style)</small></div>
+                            <div class="font-option active" data-font="'Lobster', cursive" style="font-family:'Lobster',cursive;">Abc<small>Lobster (Popular)</small></div>
+                            <div class="font-option" data-font="'Chewy', cursive" style="font-family:'Chewy',cursive;">Abc<small>Chewy</small></div>
                             <div class="font-option" data-font="'Fredoka', sans-serif" style="font-family:'Fredoka',sans-serif;">Abc<small>Fredoka</small></div>
                             <div class="font-option" data-font="'Baloo 2', cursive" style="font-family:'Baloo 2',cursive;">Abc<small>Baloo 2</small></div>
-                            <div class="font-option" data-font="'Bubblegum Sans', cursive" style="font-family:'Bubblegum Sans',cursive;">Abc<small>Bubblegum</small></div>
-                            <div class="font-option" data-font="'Crafty Girls', cursive" style="font-family:'Crafty Girls',cursive;">Abc<small>Crafty</small></div>
-                            <div class="font-option" data-font="'Lilita One', sans-serif" style="font-family:'Lilita One',sans-serif;">Abc<small>Lilita One</small></div>
-                            <div class="font-option" data-font="'Righteous', cursive" style="font-family:'Righteous',cursive;">Abc<small>Righteous</small></div>
                             <div class="font-option" data-font="'Pacifico', cursive" style="font-family:'Pacifico',cursive;">Abc<small>Pacifico</small></div>
+                            <div class="font-option" data-font="'Righteous', cursive" style="font-family:'Righteous',cursive;">Abc<small>Righteous</small></div>
+                            <div class="font-option" data-font="'Lilita One', sans-serif" style="font-family:'Lilita One',sans-serif;">Abc<small>Lilita One</small></div>
+                            <div class="font-option" data-font="'Orbitron', sans-serif" style="font-family:'Orbitron',sans-serif;">Abc<small>Orbitron (Sci-Fi)</small></div>
+                            <div class="font-option" data-font="'Montserrat', sans-serif" style="font-family:'Montserrat',sans-serif;">Abc<small>Montserrat</small></div>
+                            <div class="font-option" data-font="'Crafty Girls', cursive" style="font-family:'Crafty Girls',cursive;">Abc<small>Crafty</small></div>
                         </div>
                     </div>
 
                     <!-- Base Color (Visual Swatches) -->
                     <div class="form-group">
-                        <label>Base Plate Color</label>
+                        <label>Base Material Color</label>
                         <div class="color-swatches" id="color-swatches">
                             <button class="color-swatch active" data-color="#2979FF" data-name="Ocean Blue" data-rate="5.0" style="background:#2979FF;" title="Ocean Blue PLA"></button>
                             <button class="color-swatch" data-color="#00BCD4" data-name="Cyan Blue" data-rate="5.0" style="background:#00BCD4;" title="Cyan Blue PLA"></button>
@@ -154,9 +195,20 @@
                         </div>
                     </div>
 
+                    <!-- Material Finish Swatches -->
+                    <div class="form-group">
+                        <label>Surface Finish</label>
+                        <div class="finish-options" id="finish-options">
+                            <button class="finish-option active" data-finish="standard">Matte PLA</button>
+                            <button class="finish-option" data-finish="silk">Silk Metallic</button>
+                            <button class="finish-option" data-finish="satin">Glossy Satin</button>
+                            <button class="finish-option" data-finish="neon">Neon Glow</button>
+                        </div>
+                    </div>
+
                     <!-- Thickness Slider -->
                     <div class="form-group">
-                        <label for="cust-thickness">Thickness: <strong id="val-thickness">5mm</strong></label>
+                        <label for="cust-thickness">Extrusion Depth: <strong id="val-thickness">5mm</strong></label>
                         <input type="range" id="cust-thickness" class="clay-slider" min="3" max="10" value="5">
                     </div>
 
@@ -164,7 +216,7 @@
                     <div class="pricing-panel">
                         <div style="font-size:0.85rem; color:var(--c-text-muted); margin-bottom:0.3rem;">Estimated Price</div>
                         <div id="cust-price" style="font-size:2.4rem; font-weight:800; color:var(--c-accent); font-family:var(--f-head);">৳350</div>
-                        <div id="cust-specs" style="font-size:0.78rem; color:var(--c-text-muted); margin-top:0.4rem;">Ocean Blue PLA • 5mm Thick • 7 Letters</div>
+                        <div id="cust-specs" style="font-size:0.78rem; color:var(--c-text-muted); margin-top:0.4rem;">Keyring • Ocean Blue PLA • 5mm Thick • 7 Letters</div>
                     </div>
 
                     <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:1.5rem;">
