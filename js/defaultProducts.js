@@ -1129,5 +1129,382 @@ const defaultProducts = [
         ],
         "price": "Contact for Quote",
         "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-40",
+        "category": "art",
+        "desc": "High-detail 3D printed miniature dollhouse interior set featuring master double beds with white bedding, tufted armchairs in pink and black, wardrobe cabinet, and bathroom fixtures.",
+        "descKey": "g38_desc",
+        "image": "images/miniature_dollhouse_master_suite.webp",
+        "badge": "🛋️ Mini Master Suite",
+        "badgeI18n": "g38_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Miniature Dollhouse Furniture & Master Bedroom Suite Set",
+        "titleI18n": "g38_title",
+        "specs": [
+            {
+                "text": "Complete Master Bedroom Suite",
+                "i18n": "g38_spec1"
+            },
+            {
+                "text": "Multi-Color PLA Filament",
+                "i18n": "g38_spec2"
+            },
+            {
+                "text": "Beds, Chairs & Wardrobe",
+                "i18n": "g38_spec3"
+            }
+        ],
+        "price": "৳1,200",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-41",
+        "category": "art",
+        "desc": "Ultra-precise micro 3D printed pair of black Chesterfield armchairs showcasing intricate button-tufted upholstery texture and cushion curves, shown next to a 5 Taka coin for scale comparison.",
+        "descKey": "g39_desc",
+        "image": "images/micro_tufted_armchairs_pair.webp",
+        "badge": "🪑 Micro Armchairs",
+        "badgeI18n": "g39_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Micro 3D Printed Tufted Chesterfield Armchairs Pair (Scale Edition)",
+        "titleI18n": "g39_title",
+        "specs": [
+            {
+                "text": "High Detail Chesterfield Texture",
+                "i18n": "g39_spec1"
+            },
+            {
+                "text": "Mat Black Eco PLA",
+                "i18n": "g39_spec2"
+            },
+            {
+                "text": "5-Taka Coin Scale Reference",
+                "i18n": "g39_spec3"
+            }
+        ],
+        "price": "৳350",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-42",
+        "category": "func",
+        "desc": "Functional multi-part mechanical storage container featuring an interlocking aperture iris mechanism that opens smoothly by twisting the top gear ring.",
+        "descKey": "g40_desc",
+        "image": "images/mechanical_iris_aperture_container.webp",
+        "badge": "⚙️ Mechanical Iris",
+        "badgeI18n": "g40_badge",
+        "categoryLabel": "Functional & Organizers",
+        "categoryI18n": "filter_functional",
+        "name": "Print-in-Place Mechanical Iris Aperture Storage Container",
+        "titleI18n": "g40_title",
+        "specs": [
+            {
+                "text": "Print-in-Place Iris Mechanism",
+                "i18n": "g40_spec1"
+            },
+            {
+                "text": "Pink Grid Body & Black Ring",
+                "i18n": "g40_spec2"
+            },
+            {
+                "text": "Interlocking Shutter Blades",
+                "i18n": "g40_spec3"
+            }
+        ],
+        "price": "৳850",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-43",
+        "category": "custom",
+        "desc": "Elegant 3D printed custom nameplate with brown cursive script lettering over a cloud-shaped white backdrop, decorated with a vibrant coral pink flower accent.",
+        "descKey": "g41_desc",
+        "image": "images/adita_floral_nameplate_keychain.webp",
+        "badge": "🌸 Floral Script Name",
+        "badgeI18n": "g41_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "\"Adita\" Floral Cursive Script Custom Desk Nameplate / Keychain",
+        "titleI18n": "g41_title",
+        "specs": [
+            {
+                "text": "Custom Cursive Typography",
+                "i18n": "g41_spec1"
+            },
+            {
+                "text": "Coral Pink Flower Motif",
+                "i18n": "g41_spec2"
+            },
+            {
+                "text": "White Cloud Base Plate",
+                "i18n": "g41_spec3"
+            }
+        ],
+        "price": "৳180",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-44",
+        "category": "art",
+        "desc": "Trio collection of traditional oriental lighting featuring a Bonsai Shoji lantern, a Chinese Pagoda lantern with Kanji calligraphy, and a modern spiral geometric column light.",
+        "descKey": "g42_desc",
+        "image": "images/oriental_led_lantern_trio.webp",
+        "badge": "🏮 Oriental Lamp Trio",
+        "badgeI18n": "g42_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Oriental Ambient LED Illuminated Lamp Trio Collection",
+        "titleI18n": "g42_title",
+        "specs": [
+            {
+                "text": "3 Distinct Asian Lamp Designs",
+                "i18n": "g42_spec1"
+            },
+            {
+                "text": "Built-in Warm LED Illumination",
+                "i18n": "g42_spec2"
+            },
+            {
+                "text": "Bonsai, Pagoda & Spiral Column",
+                "i18n": "g42_spec3"
+            }
+        ],
+        "price": "৳2,400",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-45",
+        "category": "art",
+        "desc": "Architectural display set comprising three mini house models: a dark Japanese temple pagoda, a cheerful red-roofed suburban house, and a white stone fantasy cottage.",
+        "descKey": "g43_desc",
+        "image": "images/architectural_cottage_miniature_trio.webp",
+        "badge": "🏠 Mini House Trio",
+        "badgeI18n": "g43_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Architectural Cottage & Fantasy House Miniature Trio",
+        "titleI18n": "g43_title",
+        "specs": [
+            {
+                "text": "3 Architectural Styles",
+                "i18n": "g43_spec1"
+            },
+            {
+                "text": "Pagoda, Suburban & Stone Cottage",
+                "i18n": "g43_spec2"
+            },
+            {
+                "text": "Multi-Material & FDM Details",
+                "i18n": "g43_spec3"
+            }
+        ],
+        "price": "৳1,500",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-46",
+        "category": "art",
+        "desc": "Deluxe 3D printed mini villa setup combining a red-roofed house model with complete living room seating circle, bedroom suite, wardrobe, and bathroom elements.",
+        "descKey": "g44_desc",
+        "image": "images/miniature_villa_interior_living_set.webp",
+        "badge": "🏡 Deluxe Villa Set",
+        "badgeI18n": "g44_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Complete Miniature Villa House & Living Room Interior Set",
+        "titleI18n": "g44_title",
+        "specs": [
+            {
+                "text": "Villa Model with Full Furnishings",
+                "i18n": "g44_spec1"
+            },
+            {
+                "text": "Armchair Circle & Coffee Table",
+                "i18n": "g44_spec2"
+            },
+            {
+                "text": "Bed, Wardrobe & Toilet Accessories",
+                "i18n": "g44_spec3"
+            }
+        ],
+        "price": "৳1,800",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-47",
+        "category": "art",
+        "desc": "Premium wooden-finish 3D printed Japanese Shoji table lamp featuring 3D cutouts of Hokusai's Great Wave off Kanagawa and a Bonsai tree with Kanji calligraphy, USB rechargeable.",
+        "descKey": "g45_desc",
+        "image": "images/japanese_wave_bonsai_shoji_lamp.webp",
+        "badge": "🌊 Great Wave Lamp",
+        "badgeI18n": "g45_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Japanese Great Wave & Bonsai Shoji Ambient Desk Lamp (Rechargeable)",
+        "titleI18n": "g45_title",
+        "specs": [
+            {
+                "text": "Great Wave & Bonsai Silhouette Panels",
+                "i18n": "g45_spec1"
+            },
+            {
+                "text": "Built-in USB Charge & Toggle Switch",
+                "i18n": "g45_spec2"
+            },
+            {
+                "text": "Warm LED Backlit Glow",
+                "i18n": "g45_spec3"
+            }
+        ],
+        "price": "৳1,650",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-48",
+        "category": "art",
+        "desc": "Detailed mini furniture accent pack featuring a brown double-door wardrobe with realistic wood layer lines, paired with two black tufted armchairs and wooden dining chairs.",
+        "descKey": "g46_desc",
+        "image": "images/miniature_wardrobe_armchairs_accent_set.webp",
+        "badge": "🚪 Wardrobe Set",
+        "badgeI18n": "g46_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Miniature Wooden Wardrobe & Armchairs Accent Set",
+        "titleI18n": "g46_title",
+        "specs": [
+            {
+                "text": "Wood-Texture Wardrobe Cabinet",
+                "i18n": "g46_spec1"
+            },
+            {
+                "text": "2 Tufted Armchairs & Dining Chairs",
+                "i18n": "g46_spec2"
+            },
+            {
+                "text": "Multi-Piece Scale Diorama",
+                "i18n": "g46_spec3"
+            }
+        ],
+        "price": "৳550",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-49",
+        "category": "custom",
+        "desc": "Custom 3D printed official BLACKPINK logo desk plaque / keychain featuring black \"BLAƆK\" and pink \"PIИK\" stylized embossed typography within a black border frame over a white base.",
+        "descKey": "g47_desc",
+        "image": "images/blackpink_kpop_logo_plaque.webp",
+        "badge": "🖤💗 K-Pop Custom",
+        "badgeI18n": "g47_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "BLACKPINK K-Pop Fan Club 3D Printed Logo Plaque / Keychain",
+        "titleI18n": "g47_title",
+        "specs": [
+            {
+                "text": "Official Stylized Typography",
+                "i18n": "g47_spec1"
+            },
+            {
+                "text": "Black & Pink Dual Filament",
+                "i18n": "g47_spec2"
+            },
+            {
+                "text": "Raised Border Frame",
+                "i18n": "g47_spec3"
+            }
+        ],
+        "price": "৳220",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-50",
+        "category": "art",
+        "desc": "Intricately printed oriental pagoda night lamp featuring removable black tile roof, wooden lattice frame, warm inner LED lighting, and side panels displaying Kanji characters for Prosperity (繁榮) and Love (愛).",
+        "descKey": "g48_desc",
+        "image": "images/chinese_pagoda_kanji_led_lamp.webp",
+        "badge": "⛩️ Pagoda Lamp",
+        "badgeI18n": "g48_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Traditional Chinese Pagoda LED Night Lamp with Kanji Panels",
+        "titleI18n": "g48_title",
+        "specs": [
+            {
+                "text": "Chinese Pagoda Architecture",
+                "i18n": "g48_spec1"
+            },
+            {
+                "text": "Kanji Characters \"Prosperity\" & \"Love\"",
+                "i18n": "g48_spec2"
+            },
+            {
+                "text": "Removable Roof Lid & Inner LED",
+                "i18n": "g48_spec3"
+            }
+        ],
+        "price": "৳1,850",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-51",
+        "category": "art",
+        "desc": "Charming 3D printed miniature storybook house featuring a scalloped pink shingle roof with chimney, brown wood-paneled walls, crisp white trim, and arched front door.",
+        "descKey": "g49_desc",
+        "image": "images/pink_roof_storybook_cottage.webp",
+        "badge": "🏡 Storybook Cottage",
+        "badgeI18n": "g49_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Pink-Roofed Storybook Cottage Miniature Model",
+        "titleI18n": "g49_title",
+        "specs": [
+            {
+                "text": "Bright Pink Tiled Gable Roof",
+                "i18n": "g49_spec1"
+            },
+            {
+                "text": "Timber Frame & Window Detailing",
+                "i18n": "g49_spec2"
+            },
+            {
+                "text": "Compact Desktop Decor",
+                "i18n": "g49_spec3"
+            }
+        ],
+        "price": "৳650",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-52",
+        "category": "art",
+        "desc": "Detailed architectural mini set featuring three iconic structures: an Asian black pagoda, a colorful suburban cottage, and a medieval white stone cottage, ideal for tabletop gaming and display.",
+        "descKey": "g50_desc",
+        "image": "images/village_architecture_mini_models.webp",
+        "badge": "🏘️ Village Set",
+        "badgeI18n": "g50_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Village Architecture Mini Models Set (Pagoda, Cottage & Stone House)",
+        "titleI18n": "g50_title",
+        "specs": [
+            {
+                "text": "3 Architectural Scale Models",
+                "i18n": "g50_spec1"
+            },
+            {
+                "text": "Black, Multi-Color & White Stone",
+                "i18n": "g50_spec2"
+            },
+            {
+                "text": "Display Stand Ready",
+                "i18n": "g50_spec3"
+            }
+        ],
+        "price": "৳1,350",
+        "delivery": "3-5 Days"
     }
 ];

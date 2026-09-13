@@ -449,6 +449,110 @@ const translations = {
         "g37_spec3": "Micro Miniature Size",
         "g37_desc": "Ultra-high precision micro 3D print set featuring five distinct parametric spiral and geometric mini vases alongside a miniature potted red tulip, demonstrated with coin scale reference.",
 
+        // Item 38
+        "g38_title": "Miniature Dollhouse Furniture & Master Bedroom Suite Set",
+        "g38_badge": "🛋️ Mini Master Suite",
+        "g38_spec1": "Complete Master Bedroom Suite",
+        "g38_spec2": "Multi-Color PLA Filament",
+        "g38_spec3": "Beds, Chairs & Wardrobe",
+        "g38_desc": "High-detail 3D printed miniature dollhouse interior set featuring master double beds with white bedding, tufted armchairs in pink and black, wardrobe cabinet, and bathroom fixtures.",
+
+        // Item 39
+        "g39_title": "Micro 3D Printed Tufted Chesterfield Armchairs Pair (Scale Edition)",
+        "g39_badge": "🪑 Micro Armchairs",
+        "g39_spec1": "High Detail Chesterfield Texture",
+        "g39_spec2": "Mat Black Eco PLA",
+        "g39_spec3": "5-Taka Coin Scale Reference",
+        "g39_desc": "Ultra-precise micro 3D printed pair of black Chesterfield armchairs showcasing intricate button-tufted upholstery texture and cushion curves, shown next to a 5 Taka coin for scale comparison.",
+
+        // Item 40
+        "g40_title": "Print-in-Place Mechanical Iris Aperture Storage Container",
+        "g40_badge": "⚙️ Mechanical Iris",
+        "g40_spec1": "Print-in-Place Iris Mechanism",
+        "g40_spec2": "Pink Grid Body & Black Ring",
+        "g40_spec3": "Interlocking Shutter Blades",
+        "g40_desc": "Functional multi-part mechanical storage container featuring an interlocking aperture iris mechanism that opens smoothly by twisting the top gear ring.",
+
+        // Item 41
+        "g41_title": "\"Adita\" Floral Cursive Script Custom Desk Nameplate / Keychain",
+        "g41_badge": "🌸 Floral Script Name",
+        "g41_spec1": "Custom Cursive Typography",
+        "g41_spec2": "Coral Pink Flower Motif",
+        "g41_spec3": "White Cloud Base Plate",
+        "g41_desc": "Elegant 3D printed custom nameplate with brown cursive script lettering over a cloud-shaped white backdrop, decorated with a vibrant coral pink flower accent.",
+
+        // Item 42
+        "g42_title": "Oriental Ambient LED Illuminated Lamp Trio Collection",
+        "g42_badge": "🏮 Oriental Lamp Trio",
+        "g42_spec1": "3 Distinct Asian Lamp Designs",
+        "g42_spec2": "Built-in Warm LED Illumination",
+        "g42_spec3": "Bonsai, Pagoda & Spiral Column",
+        "g42_desc": "Trio collection of traditional oriental lighting featuring a Bonsai Shoji lantern, a Chinese Pagoda lantern with Kanji calligraphy, and a modern spiral geometric column light.",
+
+        // Item 43
+        "g43_title": "Architectural Cottage & Fantasy House Miniature Trio",
+        "g43_badge": "🏠 Mini House Trio",
+        "g43_spec1": "3 Architectural Styles",
+        "g43_spec2": "Pagoda, Suburban & Stone Cottage",
+        "g43_spec3": "Multi-Material & FDM Details",
+        "g43_desc": "Architectural display set comprising three mini house models: a dark Japanese temple pagoda, a cheerful red-roofed suburban house, and a white stone fantasy cottage.",
+
+        // Item 44
+        "g44_title": "Complete Miniature Villa House & Living Room Interior Set",
+        "g44_badge": "🏡 Deluxe Villa Set",
+        "g44_spec1": "Villa Model with Full Furnishings",
+        "g44_spec2": "Armchair Circle & Coffee Table",
+        "g44_spec3": "Bed, Wardrobe & Toilet Accessories",
+        "g44_desc": "Deluxe 3D printed mini villa setup combining a red-roofed house model with complete living room seating circle, bedroom suite, wardrobe, and bathroom elements.",
+
+        // Item 45
+        "g45_title": "Japanese Great Wave & Bonsai Shoji Ambient Desk Lamp (Rechargeable)",
+        "g45_badge": "🌊 Great Wave Lamp",
+        "g45_spec1": "Great Wave & Bonsai Silhouette Panels",
+        "g45_spec2": "Built-in USB Charge & Toggle Switch",
+        "g45_spec3": "Warm LED Backlit Glow",
+        "g45_desc": "Premium wooden-finish 3D printed Japanese Shoji table lamp featuring 3D cutouts of Hokusai's Great Wave off Kanagawa and a Bonsai tree with Kanji calligraphy, USB rechargeable.",
+
+        // Item 46
+        "g46_title": "Miniature Wooden Wardrobe & Armchairs Accent Set",
+        "g46_badge": "🚪 Wardrobe Set",
+        "g46_spec1": "Wood-Texture Wardrobe Cabinet",
+        "g46_spec2": "2 Tufted Armchairs & Dining Chairs",
+        "g46_spec3": "Multi-Piece Scale Diorama",
+        "g46_desc": "Detailed mini furniture accent pack featuring a brown double-door wardrobe with realistic wood layer lines, paired with two black tufted armchairs and wooden dining chairs.",
+
+        // Item 47
+        "g47_title": "BLACKPINK K-Pop Fan Club 3D Printed Logo Plaque / Keychain",
+        "g47_badge": "🖤💗 K-Pop Custom",
+        "g47_spec1": "Official Stylized Typography",
+        "g47_spec2": "Black & Pink Dual Filament",
+        "g47_spec3": "Raised Border Frame",
+        "g47_desc": "Custom 3D printed official BLACKPINK logo desk plaque / keychain featuring black \"BLAƆK\" and pink \"PIИK\" stylized embossed typography within a black border frame over a white base.",
+
+        // Item 48
+        "g48_title": "Traditional Chinese Pagoda LED Night Lamp with Kanji Panels",
+        "g48_badge": "⛩️ Pagoda Lamp",
+        "g48_spec1": "Chinese Pagoda Architecture",
+        "g48_spec2": "Kanji Characters \"Prosperity\" & \"Love\"",
+        "g48_spec3": "Removable Roof Lid & Inner LED",
+        "g48_desc": "Intricately printed oriental pagoda night lamp featuring removable black tile roof, wooden lattice frame, warm inner LED lighting, and side panels displaying Kanji characters for Prosperity (繁榮) and Love (愛).",
+
+        // Item 49
+        "g49_title": "Pink-Roofed Storybook Cottage Miniature Model",
+        "g49_badge": "🏡 Storybook Cottage",
+        "g49_spec1": "Bright Pink Tiled Gable Roof",
+        "g49_spec2": "Timber Frame & Window Detailing",
+        "g49_spec3": "Compact Desktop Decor",
+        "g49_desc": "Charming 3D printed miniature storybook house featuring a scalloped pink shingle roof with chimney, brown wood-paneled walls, crisp white trim, and arched front door.",
+
+        // Item 50
+        "g50_title": "Village Architecture Mini Models Set (Pagoda, Cottage & Stone House)",
+        "g50_badge": "🏘️ Village Set",
+        "g50_spec1": "3 Architectural Scale Models",
+        "g50_spec2": "Black, Multi-Color & White Stone",
+        "g50_spec3": "Display Stand Ready",
+        "g50_desc": "Detailed architectural mini set featuring three iconic structures: an Asian black pagoda, a colorful suburban cottage, and a medieval white stone cottage, ideal for tabletop gaming and display.",
+
         // Pricing Page
         "pricing_headline": "Pricing Tiers",
         "pricing_sub": "// SIMPLE_FRIENDLY_RATES",
@@ -945,6 +1049,110 @@ const translations = {
         "g37_spec2": "৫টি ভাজ + টিউলিপ ফুল",
         "g37_spec3": "মাইক্রো মিনিয়াচার আকার",
         "g37_desc": "অতি ক্ষুদ্র ও প্রিসাইস ৩ডি স্পাইরাল ও জ্যামিতিক ৫টি প্যারেমেট্রিক ভাজ এবং ১টি মিনি টবে টিউলিপ ফুল সেট। ৫ টাকার মুদ্রার সাথে সূক্ষ্মতার তুলনা প্রফেশনাল মাইক্রো প্রিন্ট এক্সাম্পল।",
+
+        // Item 38
+        "g38_title": "মিনিয়াচার ডলহাউস ফার্নিচার ও মাস্টার বেডরুম সুইট সেট",
+        "g38_badge": "🛋️ মিনি সুইট ফার্নিচার",
+        "g38_spec1": "সম্পূর্ণ মাস্টার বেডরুম সেট",
+        "g38_spec2": "মাল্টি-কালার প্রিমিয়াম PLA",
+        "g38_spec3": "বেড, চেয়ার ও ওয়ারড্রোব",
+        "g38_desc": "উচ্চ-সূক্ষ্মতায় ৩ডি প্রিন্ট করা মিনিয়াচার ডলহাউস ইন্টেরিয়র সেট। যাতে রয়েছে সাদা তোশকসহ মাস্টার ডাবল বেড, গোলাপি ও কালো টাফটেড আর্মচেয়ার, উডেন ওয়ারড্রোব ও বাথরুমের আসবাবপত্র।",
+
+        // Item 39
+        "g39_title": "মাইক্রো ৩ডি প্রিন্টেড টাফটেড আর্মার্ড চেয়ার পেয়ার (মুদ্রা স্কেল)",
+        "g39_badge": "🪑 মাইক্রো সোফা চেয়ার",
+        "g39_spec1": "টাফটেড কুশন টেক্সচার",
+        "g39_spec2": "ম্যাট ব্ল্যাক প্রিমিয়াম PLA",
+        "g39_spec3": "৫ টাকার মুদ্রা স্কেল রেফারেন্স",
+        "g39_desc": "অতিক্ষুদ্র আকৃতির প্রিসিশন ৩ডি প্রিন্টেড এক জোড়া কালো চেস্টারফিল্ড আর্মচেয়ার। এতে সুক্ষ্ম বাটন-টাফটেড কুশন ও রিক্লাইন্ড শেপ স্পষ্টভাবে দৃশ্যমান, ৫ টাকার মুদ্রার সাপেক্ষে স্কেল তুলনাযুক্ত।",
+
+        // Item 40
+        "g40_title": "প্রিসিশন মেকানিক্যাল আইরিস অ্যাপারচার স্টোরেজ বক্স",
+        "g40_badge": "⚙️ মেকানিক্যাল আইরিস",
+        "g40_spec1": "প্রিন্ট-ইন-প্লেস মেকানিজম",
+        "g40_spec2": "পিঙ্ক গ্রিড বডি ও ব্ল্যাক গিয়ার",
+        "g40_spec3": "সুক্ষ্ম ঘূর্ণায়মান শাটার ব্লেড",
+        "g40_desc": "মাল্টি-কালার প্রিসিশন মেকানিক্যাল স্টোরেজ কনটেইনার। যার উপরের গিয়ার রিং ঘুরালেই শাটার ব্লেডগুলো আইরিস অ্যাপারচারের মতো মসৃণভাবে খুলে যায় এবং বন্ধ হয়।",
+
+        // Item 41
+        "g41_title": "\"Adita\" ফ্লোরাল কার্সিভ স্ক্রিপ্ট কাস্টম নেমপ্লেট / কী-চেইন",
+        "g41_badge": "🌸 ফ্লোরাল নেম ট্যাগ",
+        "g41_spec1": "কাস্টম কার্সিভ টাইপোগ্রাফি",
+        "g41_spec2": "কোরাল পিঙ্ক ফ্লাওয়ার আইকন",
+        "g41_spec3": "ক্লাউড শেপ হোয়াইট বেজ",
+        "g41_desc": "আকর্ষণীয় কাস্টম থ্রিডি ডেকোরেটিভ নেমপ্লেট। সাদা ক্লাউড বেজের উপর চকচকে ব্রাউন কার্সিভ ফন্টে নাম এবং পাশে সুন্দর কোরাল পিঙ্ক ৫-পাপড়ির ফুল সংযোজিত।",
+
+        // Item 42
+        "g42_title": "অরিয়েন্টাল অ্যাম্বিয়েন্ট এলইডি ডেস্কে ল্যাম্প ট্রাইও কালেকশন",
+        "g42_badge": "🏮 অরিয়েন্টাল ল্যাম্প ট্রাইও",
+        "g42_spec1": "৩টি আলাদা ট্র্যাডিশনাল ডিজাইন",
+        "g42_spec2": "ওয়ার্ম এলইডি লাইটিং সিস্টেম",
+        "g42_spec3": "বনসাই, প্যাগোডা ও স্পাইরাল লাইট",
+        "g42_desc": "প্রিমিয়াম থ্রিডি প্রিন্টেড অরিয়েন্টাল লাইটিং কালেকশন। যার মধ্যে রয়েছে জাপানি বনসাই শোজি ল্যাম্প, চীনা প্যাগোডা ল্যাম্প এবং আধুনিক স্পাইরাল কলাম লাইট।",
+
+        // Item 43
+        "g43_title": "আর্কিটেকচারাল কটেজ ও ফ্যান্টাসি হাউস মিনিয়াচার ট্রাইও",
+        "g43_badge": "🏠 মিনি হাউস ট্রাইও",
+        "g43_spec1": "৩টি আর্কিটেকচারাল স্টাইল",
+        "g43_spec2": "প্যাগোডা, রোড কটেজ ও স্টোন হাউস",
+        "g43_spec3": "নিখুঁত থ্রিডি প্রিন্ট টেক্সচার",
+        "g43_desc": "সুন্দর আর্কিটেকচারাল শোপিস ট্রাইও সেট। এতে রয়েছে কালো জাপানিজ মন্দির মডেল, লাল ছাদের চমৎকার শহরতলির বাড়ি এবং সাদা পাথরের তৈরি ফ্যান্টাসি কটেজ।",
+
+        // Item 44
+        "g44_title": "কমপ্লিট মিনিয়াচার ভিলা হাউস ও লিভিং রুম ইন্টেরিয়র সেট",
+        "g44_badge": "🏡 ডিলাক্স ভিলা সেট",
+        "g44_spec1": "ভিলা হাউস ও পূর্ণাঙ্গ আসবাবপত্র",
+        "g44_spec2": "সোফা সার্কেল ও টি-টেবিল",
+        "g44_spec3": "বেড, ওয়ারড্রোব ও বাথরুম সামগ্রী",
+        "g44_desc": "ডিল্যাক্স মিনিয়াচার ভিলা প্লে-সেট। যার মধ্যে লাল ছাদের বাড়ি, ৫টি কালো সোফার সাথে টি-টেবিল, ডাবল বেড, ওয়ার্ডরোব এবং কমপ্লিট বাথরুমের ফিটিংস বিদ্যমান।",
+
+        // Item 45
+        "g45_title": "জাপানিজ দ্য গ্রেট ওয়েভ ও বনসাই শোজি অ্যাম্বিয়েন্ট ল্যাম্প",
+        "g45_badge": "🌊 গ্রেট ওয়েভ ল্যাম্প",
+        "g45_spec1": "গ্রেট ওয়েভ ও বনসাই প্যানেল",
+        "g45_spec2": "ইউএসবি রিচার্জেবল ও টগল সুইচ",
+        "g45_spec3": "নমনীয় ওয়ার্ম এলইডি গ্লো",
+        "g45_desc": "জাপানি ঐতিহ্যবাহী উডেন-ফিনিশ ৩ডি প্রিন্টেড শোজি নাইট ল্যাম্প। এতে বিখ্যাত 'দ্য গ্রেট ওয়েভ' ও বনসাই গাছের থ্রিডি কাটআউট শ্যাডো প্যানেল, কাঞ্জি ক্যালিগ্রাফি এবং ইউএসবি চার্জিং পোর্ট রয়েছে।",
+
+        // Item 46
+        "g46_title": "মিনিয়াচার উডেন ওয়ারড্রোব ও আর্মচেয়ার অ্যাকসেন্ট সেট",
+        "g46_badge": "🚪 ওয়ারড্রোব সেট",
+        "g46_spec1": "কাঠের টেক্সচার ডাবল-ডোর কেবিনেট",
+        "g46_spec2": "২টি টাফটেড সোফা ও ডাইনিং চেয়ার",
+        "g46_spec3": "মাল্টি-পিস ডিওরামা উপাদান",
+        "g46_desc": "বাস্তবসম্মত উড টেক্সচার ফিনিশের ডাবল-ডোর ওয়ারড্রোব কেবিনেট, সাথে এক জোড়া কালো টাফটেড সোফা এবং দুটি ডাইনিং চেয়ারের প্রিসিশন ডেকোরেশন সেট।",
+
+        // Item 47
+        "g47_title": "ব্ল্যাকপিঙ্ক (BLACKPINK) কে-পপ লোগো ৩ডি কী-ট্যাগ / প্লাক",
+        "g47_badge": "🖤💗 কে-পপ মার্চ",
+        "g47_spec1": "অফিসিয়াল স্টাইলাইজড টাইপোগ্রাফি",
+        "g47_spec2": "ব্ল্যাক ও পিঙ্ক ডুয়াল কালার",
+        "g47_spec3": "রেইজড বর্ডার ফ্রেম",
+        "g47_desc": "কে-পপ ভক্তদের জন্য প্রস্তুতকৃত ব্ল্যাকপিঙ্ক লোগো প্লাক। সাদা অ্যাক্রিলিক-স্টাইল ফিনিশ বেজের ওপর উঁচু করা কালো \"BLAƆK\" এবং পিঙ্ক \"PIИK\" অ্যামবসড অক্ষরের চমৎকার শোপিস।",
+
+        // Item 48
+        "g48_title": "ট্রেডিশনাল চায়নিজ প্যাগোডা এলইডি নাইট ল্যাম্প উইথ কাঞ্জি প্যানেল",
+        "g48_badge": "⛩️ প্যাগোডা ল্যাম্প",
+        "g48_spec1": "চায়নিজ প্যাগোডা আর্কিটেকচার",
+        "g48_spec2": "কাঞ্জি ক্যালিগ্রাফি \"সমৃদ্ধি\" ও \"ভালোবাসা\"",
+        "g48_spec3": "খোলার যোগ্য ছাদ ও এলইডি লাইট",
+        "g48_desc": "চীনা ঐতিহ্যবাহী স্থাপত্যের থ্রিডি প্রিন্টেড প্যাগোডা নাইট ল্যাম্প। এর পাশ জুড়ে 'সমৃদ্ধি' (繁榮) ও 'ভালোবাসা' (愛) কাঞ্জি প্যানেল, উডেন ল্যাটিস ফ্রেম এবং খোলার উপযোগী কালো রূফ লিড সংযোজিত।",
+
+        // Item 49
+        "g49_title": "পিঙ্ক-রূফ স্টোরিবুক কটেজ মিনিয়াচার মডেল",
+        "g49_badge": "🏡 রূপকথার কটেজ",
+        "g49_spec1": "উজ্জ্বল গোলাপি টাইলস ছাদ",
+        "g49_spec2": "উডেন টিম্বার ও উইন্ডো ডিটেইলিং",
+        "g49_spec3": "ডেসটপ সাইজ ডেকোরেশন",
+        "g49_desc": "সুদৃশ্য রূপকথার গল্পের থ্রিডি কটেজ মডেল। এতে রয়েছে গোলাপি রঙের স্কেলড রূফ টাইলস, ব্রিক চিমনি, সাদা জানালার ফ্রেম এবং খোদাই করা কাঠের প্রবেশদার।",
+
+        // Item 50
+        "g50_title": "ভিলেজ আর্কিটেকচার মিনি মডেলস সেট (প্যাগোডা, কটেজ ও স্টোন হাউস)",
+        "g50_badge": "🏘️ ভিলেজ আর্কিটেকচার",
+        "g50_spec1": "৩টি ল্যান্ডমার্ক স্থাপত্য মডেল",
+        "g50_spec2": "ব্ল্যাক, মাল্টি-কালার ও হোয়াইট ফিনিশ",
+        "g50_spec3": "শোকেস ও টেবিলটপ ডিসপ্লে",
+        "g50_desc": "৩টি স্বতন্ত্র বিশ্বনন্দিত স্থাপত্য আকৃতির থ্রিডি প্রিন্ট মডেল সেট। যেখানে স্থান পেয়েছে এশিয়ান ব্ল্যাক প্যাগোডা, রঙিন সিটি কটেজ এবং ইউরোপীয় হোয়াইট স্টোন হাউস।",
 
         // Pricing Page
         "pricing_headline": "সহজ ও সাশ্রয়ী প্রাইস প্ল্যান",

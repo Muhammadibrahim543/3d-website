@@ -140,34 +140,49 @@ document.addEventListener('DOMContentLoaded', () => {
             return div;
         }
 
-        // ---- BASE PLATE: thick colored slab with stroke ----
-        const baseLayers = Math.max(8, Math.floor(thickness * 2.5));
+        // ---- MEASURE TEXT ----
+        const sizerWidth = sizer.offsetWidth;
+        const sizerHeight = sizer.offsetHeight;
+        let plateWidth = sizerWidth + 80;
+        let plateHeight = sizerHeight + 50;
+        
+        if (currentTemplate === 'badge') {
+            plateWidth += 20;
+            plateHeight += 20;
+        } else if (currentTemplate === 'deskstand') {
+            plateWidth += 40;
+        }
+
+        // ---- BASE PLATE: solid rounded rectangle ----
+        const baseLayers = Math.max(6, Math.floor(thickness * 2.0));
         const sideColor = darkenColor(currentColor, 18);
         const topColor = currentColor;
         const bottomColor = darkenColor(currentColor, 30);
-        const strokeW = (currentTemplate === 'badge') ? '16px' : '12px';
 
         for (let i = 0; i < baseLayers; i++) {
-            const progress = i / (baseLayers - 1);
-            // Gradient from dark bottom to bright top
             let col;
             if (i === 0) col = bottomColor;
             else if (i === baseLayers - 1) col = topColor;
             else col = sideColor;
 
-            const extraCls = (i === 0) ? 'layer-base-bottom' : (i === baseLayers - 1 ? 'layer-base-top' : '');
-            const layer = createTextLayer({
-                className: 'layer-base',
-                extraClass: extraCls,
-                z: i * 1.5, // 1.5px spacing per layer = thick 3D effect
-                color: col,
-                stroke: `${strokeW} ${col}`
-            });
-            nameplate3D.appendChild(layer);
+            const div = document.createElement('div');
+            div.className = 'layer-base ' + ((i === 0) ? 'layer-base-bottom' : (i === baseLayers - 1 ? 'layer-base-top' : ''));
+            div.style.cssText = `
+                position: absolute;
+                width: ${plateWidth}px;
+                height: ${plateHeight}px;
+                background: ${col};
+                border-radius: 20px;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%) translateZ(${i * 1.5}px);
+            `;
+            
+            if (currentTemplate === 'badge' && i === baseLayers - 1) {
+                div.style.border = `4px solid ${lightenColor(col, 20)}`;
+            }
 
-            // Add template accessories on every 4th base layer for depth
-            if (!((i % 4) === 0 && i < baseLayers - 1)) continue;
-            addTemplateAccessory(layer, col, i * 1.5);
+            nameplate3D.appendChild(div);
+            addTemplateAccessory(nameplate3D, col, i * 1.5, plateWidth, plateHeight);
         }
 
         // ---- RAISED TEXT: lighter/contrasting on top ----
@@ -198,19 +213,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Add template-specific 3D accessories as sibling divs
-    function addTemplateAccessory(parentLayer, color, zPos) {
-        const scene = nameplate3D;
-
+    function addTemplateAccessory(scene, color, zPos, pW, pH) {
         if (currentTemplate === 'keyring') {
             // Keyring hole on the left
             const ring = document.createElement('div');
             ring.style.cssText = `
                 position: absolute;
-                width: 22px; height: 22px;
-                border: 5px solid ${color};
+                width: 30px; height: 30px;
+                border: 8px solid ${color};
                 border-radius: 50%;
-                top: 50%; left: -28px;
-                transform: translateY(-50%) translateZ(${zPos}px);
+                top: 50%; left: 50%;
+                transform: translate(-${pW/2 + 25}px, -50%) translateZ(${zPos}px);
             `;
             scene.appendChild(ring);
         } else if (currentTemplate === 'pettag') {
@@ -218,11 +231,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const loop = document.createElement('div');
             loop.style.cssText = `
                 position: absolute;
-                width: 18px; height: 18px;
-                border: 4px solid ${color};
-                border-radius: 50%;
-                top: -22px; left: 50%;
-                transform: translateX(-50%) translateZ(${zPos}px);
+                width: 24px; height: 28px;
+                border: 8px solid ${color};
+                border-radius: 12px;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -${pH/2 + 20}px) translateZ(${zPos}px);
             `;
             scene.appendChild(loop);
         } else if (currentTemplate === 'deskstand') {
@@ -230,25 +243,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const stand = document.createElement('div');
             stand.style.cssText = `
                 position: absolute;
-                width: 110%; height: 14px;
+                width: ${pW + 20}px; height: 24px;
                 background: ${color};
-                bottom: -18px; left: -5%;
-                border-radius: 4px 4px 8px 8px;
-                transform: translateZ(${zPos}px);
+                top: 50%; left: 50%;
+                border-radius: 6px;
+                transform: translate(-50%, ${pH/2 - 5}px) translateZ(${zPos}px);
             `;
             scene.appendChild(stand);
-        } else if (currentTemplate === 'badge') {
-            // Outer rectangular plaque frame
-            const frame = document.createElement('div');
-            frame.style.cssText = `
-                position: absolute;
-                top: -12px; left: -14px; right: -14px; bottom: -12px;
-                border: 4px solid ${color};
-                border-radius: 12px;
-                transform: translateZ(${zPos}px);
-                pointer-events: none;
-            `;
-            scene.appendChild(frame);
         }
     }
 
@@ -257,6 +258,70 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nameplate3D) {
             nameplate3D.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
+    }
+
+    // --- Mouse & Touch Interaction for 3D Stage ---
+    let isDragging = false;
+    let startX, startY;
+    
+    if (stageCard) {
+        stageCard.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.pageX;
+            startY = e.pageY;
+            stageCard.style.cursor = 'grabbing';
+        });
+        
+        window.addEventListener('mouseup', () => {
+            isDragging = false;
+            stageCard.style.cursor = '';
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const dx = e.pageX - startX;
+            const dy = e.pageY - startY;
+            rotY += dx * 0.4;
+            rotX -= dy * 0.4;
+            
+            // Limit rotX to avoid flipping upside down
+            if (rotX > 70) rotX = 70;
+            if (rotX < -70) rotX = -70;
+            
+            startX = e.pageX;
+            startY = e.pageY;
+            apply3DRotation();
+        });
+        
+        // Touch events
+        stageCard.addEventListener('touchstart', (e) => {
+            isDragging = true;
+            startX = e.touches[0].pageX;
+            startY = e.touches[0].pageY;
+        });
+        window.addEventListener('touchend', () => {
+            isDragging = false;
+        });
+        window.addEventListener('touchmove', (e) => {
+            if (!isDragging) return;
+            const dx = e.touches[0].pageX - startX;
+            const dy = e.touches[0].pageY - startY;
+            rotY += dx * 0.6;
+            rotX -= dy * 0.6;
+            if (rotX > 70) rotX = 70;
+            if (rotX < -70) rotX = -70;
+            startX = e.touches[0].pageX;
+            startY = e.touches[0].pageY;
+            apply3DRotation();
+        });
+    }
+
+    if (btnResetView) {
+        btnResetView.addEventListener('click', () => {
+            rotX = 15;
+            rotY = -20;
+            apply3DRotation();
+        });
     }
 
     // --- Template Selector Event Listeners ---
