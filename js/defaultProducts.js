@@ -54,7 +54,7 @@ const defaultProducts = [
                 "i18n": ""
             }
         ],
-        "price": "৳2250",
+        "price": "৳1200",
         "delivery": "3-5 Days"
     },
     {
@@ -83,7 +83,7 @@ const defaultProducts = [
                 "i18n": "g1_spec3"
             }
         ],
-        "price": "৳2450",
+        "price": "৳300",
         "delivery": "3-5 Days"
     },
     {
@@ -112,7 +112,7 @@ const defaultProducts = [
                 "i18n": "g2_spec3"
             }
         ],
-        "price": "৳1200",
+        "price": "৳300",
         "delivery": "3-5 Days"
     },
     {
@@ -141,7 +141,7 @@ const defaultProducts = [
                 "i18n": "g3_spec3"
             }
         ],
-        "price": "৳1700",
+        "price": "৳150",
         "delivery": "3-5 Days"
     },
     {
@@ -170,7 +170,7 @@ const defaultProducts = [
                 "i18n": "g4_spec3"
             }
         ],
-        "price": "৳2300",
+        "price": "৳450",
         "delivery": "3-5 Days"
     },
     {
@@ -228,7 +228,7 @@ const defaultProducts = [
                 "i18n": "g6_spec3"
             }
         ],
-        "price": "৳1000",
+        "price": "৳350",
         "delivery": "3-5 Days"
     },
     {
@@ -286,7 +286,7 @@ const defaultProducts = [
                 "i18n": "g8_spec3"
             }
         ],
-        "price": "৳1950",
+        "price": "৳550",
         "delivery": "3-5 Days"
     },
     {
@@ -344,7 +344,7 @@ const defaultProducts = [
                 "i18n": "g10_spec3"
             }
         ],
-        "price": "৳1750",
+        "price": "৳120",
         "delivery": "3-5 Days"
     },
     {
@@ -460,7 +460,7 @@ const defaultProducts = [
                 "i18n": "g14_spec3"
             }
         ],
-        "price": "৳1350",
+        "price": "৳120",
         "delivery": "3-5 Days"
     },
     {
@@ -489,7 +489,7 @@ const defaultProducts = [
                 "i18n": "g15_spec3"
             }
         ],
-        "price": "৳1500",
+        "price": "৳120",
         "delivery": "3-5 Days"
     },
     {
@@ -663,7 +663,7 @@ const defaultProducts = [
                 "i18n": "g21_spec3"
             }
         ],
-        "price": "৳800",
+        "price": "৳120",
         "delivery": "3-5 Days"
     },
     {
@@ -721,7 +721,7 @@ const defaultProducts = [
                 "i18n": "g23_spec3"
             }
         ],
-        "price": "৳1100",
+        "price": "৳120",
         "delivery": "3-5 Days"
     },
     {
@@ -837,7 +837,7 @@ const defaultProducts = [
                 "i18n": "g27_spec3"
             }
         ],
-        "price": "৳2050",
+        "price": "৳120",
         "delivery": "3-5 Days"
     }
 ];
