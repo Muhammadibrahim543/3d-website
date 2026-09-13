@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="css/components.css?v=3.3">
     <link rel="stylesheet" href="css/animations.css?v=3.0">
     <link rel="stylesheet" href="css/pages.css?v=3.0">
-    <link rel="stylesheet" href="css/customize.css?v=4.0">
+    <link rel="stylesheet" href="css/customize.css?v=5.0">
 </head>
 <body>
     <div class="site-wrapper">
@@ -94,10 +94,9 @@
 
             <div class="customizer-grid">
                 <!-- Left: Live Preview Stage -->
-                <div class="clay-card customizer-stage-card reveal-on-scroll" id="customizer-stage-card">
+                <div class="customizer-stage-card reveal-on-scroll" id="customizer-stage-card">
                     <!-- Stage Overlay Actions -->
                     <div class="stage-toolbar">
-                        <button id="btn-toggle-bed" class="stage-toggle-btn" title="Toggle 3D Print Bed Grid">🏁 Build Plate</button>
                         <button id="btn-reset-view" class="stage-toggle-btn" title="Reset 3D Camera Angle">🔄 Reset View</button>
                     </div>
 
@@ -106,18 +105,12 @@
                         <span></span><span></span><span></span>
                         <span></span><span></span><span></span>
                     </div>
-                    
-                    <!-- 3D Print Bed Grid (Togglable) -->
-                    <div class="build-plate-grid" id="build-plate-grid" style="display:none;">
-                        <div class="bed-surface">
-                            <div class="bed-ruler-top"><span>0</span><span>50</span><span>100</span><span>150</span><span>200mm</span></div>
-                            <div class="bed-ruler-left"><span>200</span><span>150</span><span>100</span><span>50</span><span>0</span></div>
-                            <div class="bed-logo">BAMBU PEI 256x256</div>
-                        </div>
-                    </div>
 
                     <!-- Dark Studio Reflection -->
                     <div class="stage-surface" id="stage-surface"></div>
+
+                    <!-- Template badge overlay -->
+                    <div class="stage-template-badge" id="stage-template-badge">🔑 KEYRING</div>
 
                     <!-- 3D Nameplate Scene Container -->
                     <div class="nameplate-scene">
@@ -126,7 +119,7 @@
                         </div>
                     </div>
 
-                    <div class="stage-hint">🖐️ Swipe or Drag to Rotate 3D Model</div>
+                    <div class="stage-hint">🖐️ Drag to Rotate • Scroll to Zoom</div>
                 </div>
 
                 <!-- Right: Controls -->
@@ -163,20 +156,22 @@
                         <small style="color:var(--c-text-muted);">Maximum 14 characters for best 3D output</small>
                     </div>
 
-                    <!-- Font Selector (Includes Lobster) -->
+                    <!-- Compact Horizontal Font Pills -->
                     <div class="form-group">
                         <label>Font Style</label>
-                        <div class="font-options" id="font-options">
-                            <div class="font-option active" data-font="'Lobster', cursive" style="font-family:'Lobster',cursive;">Abc<small>Lobster (Popular)</small></div>
-                            <div class="font-option" data-font="'Chewy', cursive" style="font-family:'Chewy',cursive;">Abc<small>Chewy</small></div>
-                            <div class="font-option" data-font="'Fredoka', sans-serif" style="font-family:'Fredoka',sans-serif;">Abc<small>Fredoka</small></div>
-                            <div class="font-option" data-font="'Baloo 2', cursive" style="font-family:'Baloo 2',cursive;">Abc<small>Baloo 2</small></div>
-                            <div class="font-option" data-font="'Pacifico', cursive" style="font-family:'Pacifico',cursive;">Abc<small>Pacifico</small></div>
-                            <div class="font-option" data-font="'Righteous', cursive" style="font-family:'Righteous',cursive;">Abc<small>Righteous</small></div>
-                            <div class="font-option" data-font="'Lilita One', sans-serif" style="font-family:'Lilita One',sans-serif;">Abc<small>Lilita One</small></div>
-                            <div class="font-option" data-font="'Orbitron', sans-serif" style="font-family:'Orbitron',sans-serif;">Abc<small>Orbitron (Sci-Fi)</small></div>
-                            <div class="font-option" data-font="'Montserrat', sans-serif" style="font-family:'Montserrat',sans-serif;">Abc<small>Montserrat</small></div>
-                            <div class="font-option" data-font="'Crafty Girls', cursive" style="font-family:'Crafty Girls',cursive;">Abc<small>Crafty</small></div>
+                        <div class="font-scroll-wrapper">
+                            <div class="font-scroll-strip" id="font-options">
+                                <div class="font-pill active" data-font="'Lobster', cursive"><span class="fp-preview" style="font-family:'Lobster',cursive;">Abc</span><span class="fp-name">Lobster</span></div>
+                                <div class="font-pill" data-font="'Chewy', cursive"><span class="fp-preview" style="font-family:'Chewy',cursive;">Abc</span><span class="fp-name">Chewy</span></div>
+                                <div class="font-pill" data-font="'Fredoka', sans-serif"><span class="fp-preview" style="font-family:'Fredoka',sans-serif;">Abc</span><span class="fp-name">Fredoka</span></div>
+                                <div class="font-pill" data-font="'Baloo 2', cursive"><span class="fp-preview" style="font-family:'Baloo 2',cursive;">Abc</span><span class="fp-name">Baloo 2</span></div>
+                                <div class="font-pill" data-font="'Pacifico', cursive"><span class="fp-preview" style="font-family:'Pacifico',cursive;">Abc</span><span class="fp-name">Pacifico</span></div>
+                                <div class="font-pill" data-font="'Righteous', cursive"><span class="fp-preview" style="font-family:'Righteous',cursive;">Abc</span><span class="fp-name">Righteous</span></div>
+                                <div class="font-pill" data-font="'Lilita One', sans-serif"><span class="fp-preview" style="font-family:'Lilita One',sans-serif;">Abc</span><span class="fp-name">Lilita One</span></div>
+                                <div class="font-pill" data-font="'Orbitron', sans-serif"><span class="fp-preview" style="font-family:'Orbitron',sans-serif;">Abc</span><span class="fp-name">Orbitron</span></div>
+                                <div class="font-pill" data-font="'Montserrat', sans-serif"><span class="fp-preview" style="font-family:'Montserrat',sans-serif;">Abc</span><span class="fp-name">Montserrat</span></div>
+                                <div class="font-pill" data-font="'Crafty Girls', cursive"><span class="fp-preview" style="font-family:'Crafty Girls',cursive;">Abc</span><span class="fp-name">Crafty</span></div>
+                            </div>
                         </div>
                     </div>
 
@@ -260,6 +255,6 @@
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/cart.js?v=6"></script>
-    <script src="js/customize.js?v=2"></script>
+    <script src="js/customize.js?v=5"></script>
 </body>
 </html>

@@ -9,10 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const nameplate3D = document.getElementById('nameplate-3d');
     const stageCard = document.getElementById('customizer-stage-card');
-    const btnToggleBed = document.getElementById('btn-toggle-bed');
     const btnResetView = document.getElementById('btn-reset-view');
-    const buildPlateGrid = document.getElementById('build-plate-grid');
-    const stageSurface = document.getElementById('stage-surface');
+    const templateBadge = document.getElementById('stage-template-badge');
 
     const displayPrice = document.getElementById('cust-price');
     const displaySpecs = document.getElementById('cust-specs');
@@ -21,17 +19,16 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!inputName || !nameplate3D) return;
 
     // State Variables
-    let currentTemplate = 'keyring'; // 'keyring' | 'deskstand' | 'pettag' | 'badge'
+    let currentTemplate = 'keyring';
     let currentFont = "'Lobster', cursive";
     let currentColor = '#2979FF';
     let currentColorName = 'Ocean Blue';
     let currentRate = 5.0;
-    let currentFinish = 'standard'; // 'standard' | 'silk' | 'satin' | 'neon'
-    let isBuildPlateVisible = false;
+    let currentFinish = 'standard';
 
     // Camera 3D Orbit Angles
-    let rotX = 12;
-    let rotY = -15;
+    let rotX = 15;
+    let rotY = -20;
 
     // --- Helper: Darken Hex Color ---
     function darkenColor(hex, percent) {
@@ -43,6 +40,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return '#' + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).padStart(6, '0');
     }
 
+    // --- Helper: Lighten Hex Color ---
+    function lightenColor(hex, percent) {
+        let num = parseInt(hex.replace('#', ''), 16),
+            amt = Math.round(2.55 * percent),
+            R = Math.min(255, (num >> 16) + amt),
+            G = Math.min(255, (num >> 8 & 0x00FF) + amt),
+            B = Math.min(255, (num & 0x0000FF) + amt);
+        return '#' + (0x1000000 + R*0x10000 + G*0x100 + B).toString(16).padStart(6, '0');
+    }
+
     // --- Helper: Get Template Name Label ---
     function getTemplateLabel(tpl) {
         switch(tpl) {
@@ -52,20 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
             default: return 'Keyring';
         }
     }
+    function getTemplateEmoji(tpl) {
+        switch(tpl) {
+            case 'deskstand': return '🏆';
+            case 'pettag': return '🏷️';
+            case 'badge': return '🛡️';
+            default: return '🔑';
+        }
+    }
 
-    // --- Update Preview ---
+    // ===== CORE: Build Thick 3D Nameplate with CSS Layers =====
     function updatePreview() {
         const text = inputName.value.trim() || 'Name';
         const thickness = parseInt(inputThickness.value, 10);
         const upperText = text.toUpperCase();
 
-        // 1. Update Sliders & Specifications UI
+        // Update slider track fill
         valThickness.textContent = thickness + 'mm';
         const min = parseInt(inputThickness.min, 10) || 3;
         const max = parseInt(inputThickness.max, 10) || 10;
         const pct = ((thickness - min) / (max - min)) * 100;
         inputThickness.style.background = `linear-gradient(to right, #FF8A75 0%, #FF5E5E ${pct}%, rgba(142, 132, 120, 0.2) ${pct}%, rgba(142, 132, 120, 0.2) 100%)`;
 
+        // Pricing
         const numLetters = text.length;
         const letterFee = 22 * numLetters;
         const thicknessMultiplier = thickness / 4.0;
@@ -81,127 +97,159 @@ document.addEventListener('DOMContentLoaded', () => {
         displayPrice.textContent = '৳' + total.toLocaleString('en-US');
         displaySpecs.textContent = `${getTemplateLabel(currentTemplate)} • ${currentColorName} PLA • ${thickness}mm Thick • ${numLetters} Letters`;
 
-        // 2. Clear & Prepare 3D Scene
+        // Update template badge
+        if (templateBadge) {
+            templateBadge.textContent = `${getTemplateEmoji(currentTemplate)} ${getTemplateLabel(currentTemplate).toUpperCase()}`;
+        }
+
+        // === Clear & Build 3D Scene ===
         nameplate3D.className = 'nameplate-3d finish-' + currentFinish;
         nameplate3D.innerHTML = '';
-        
-        // Sizer element to measure exact text dimensions
+
+        // Sizer element (hidden) to measure text width
         const sizer = document.createElement('span');
         sizer.className = 'layer-sizer';
         sizer.textContent = upperText;
         sizer.style.fontFamily = currentFont;
         nameplate3D.appendChild(sizer);
 
-        // Helper function to build 2.5D SVG Layers
-        function createSVGLayer(className, color, strokeW, isText, zPos, extraClass) {
-            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-            svg.setAttribute("class", className);
-            if (extraClass) svg.classList.add(extraClass);
-            
-            svg.setAttribute("width", "100%");
-            svg.setAttribute("height", "100%");
-            svg.style.position = 'absolute';
-            svg.style.top = '0';
-            svg.style.left = '0';
-            svg.style.overflow = 'visible';
-            svg.style.transform = `translateZ(${zPos}px)`;
-            
-            const txt = document.createElementNS("http://www.w3.org/2000/svg", "text");
-            txt.setAttribute("x", "50%");
-            txt.setAttribute("y", "50%");
-            txt.setAttribute("text-anchor", "middle");
-            txt.setAttribute("dominant-baseline", "central");
-            txt.setAttribute("dy", "0.05em"); 
-            txt.textContent = upperText;
-            txt.style.fontFamily = currentFont;
-            
-            if (isText) {
-                txt.setAttribute("fill", color);
-            } else {
-                txt.setAttribute("fill", color);
-                txt.setAttribute("stroke", color);
-                txt.setAttribute("stroke-width", strokeW);
-                txt.setAttribute("stroke-linejoin", "round");
-            }
-            svg.appendChild(txt);
-            
-            // Render 3D Template Accessories on Base Plate Layers
-            if (!isText) {
-                if (currentTemplate === 'keyring') {
-                    // Left mounting keyring hole
-                    const ring = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    ring.setAttribute("cx", "-20");
-                    ring.setAttribute("cy", "50%");
-                    ring.setAttribute("r", "9");
-                    ring.setAttribute("fill", "transparent");
-                    ring.setAttribute("stroke", color);
-                    ring.setAttribute("stroke-width", "10");
-                    svg.appendChild(ring);
-                } else if (currentTemplate === 'pettag') {
-                    // Top centered loop for pet tags
-                    const topLoop = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    topLoop.setAttribute("cx", "50%");
-                    topLoop.setAttribute("cy", "-16");
-                    topLoop.setAttribute("r", "8");
-                    topLoop.setAttribute("fill", "transparent");
-                    topLoop.setAttribute("stroke", color);
-                    topLoop.setAttribute("stroke-width", "8");
-                    svg.appendChild(topLoop);
-                } else if (currentTemplate === 'deskstand') {
-                    // Extruded bottom wedge base block for table display
-                    const standBase = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    standBase.setAttribute("x", "-15%");
-                    standBase.setAttribute("y", "68%");
-                    standBase.setAttribute("width", "130%");
-                    standBase.setAttribute("height", "28");
-                    standBase.setAttribute("rx", "8");
-                    standBase.setAttribute("fill", color);
-                    standBase.setAttribute("stroke", color);
-                    standBase.setAttribute("stroke-width", "4");
-                    svg.appendChild(standBase);
-                } else if (currentTemplate === 'badge') {
-                    // Outer rectangular frame plaque border
-                    const frame = document.createElementNS("http://www.w3.org/2000/svg", "rect");
-                    frame.setAttribute("x", "-10%");
-                    frame.setAttribute("y", "-15%");
-                    frame.setAttribute("width", "120%");
-                    frame.setAttribute("height", "130%");
-                    frame.setAttribute("rx", "16");
-                    frame.setAttribute("fill", "transparent");
-                    frame.setAttribute("stroke", color);
-                    frame.setAttribute("stroke-width", "8");
-                    svg.appendChild(frame);
-                }
-            }
-            
-            return svg;
+        // Helper: Create a single <div> text layer at a given Z position
+        function createTextLayer(opts) {
+            const div = document.createElement('div');
+            div.className = opts.className || '';
+            if (opts.extraClass) div.classList.add(opts.extraClass);
+            div.textContent = upperText;
+            div.style.cssText = `
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                font-size: clamp(2.8rem, 7vw, 5rem);
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: 3px;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform: translateZ(${opts.z}px);
+                font-family: ${currentFont};
+                color: ${opts.color || 'transparent'};
+                -webkit-text-stroke: ${opts.stroke || '0px transparent'};
+                paint-order: stroke fill;
+            `;
+            return div;
         }
 
-        // Generate 3D Base Plastic Layers
-        const baseThickness = Math.max(4, Math.floor(thickness * 1.5));
-        const sideColor = darkenColor(currentColor, 15);
-        const strokeWidth = (currentTemplate === 'badge') ? 32 : 24;
-        
-        for (let i = 0; i < baseThickness; i++) {
-            const col = (i === baseThickness - 1) ? currentColor : sideColor;
-            const extra = (i === 0) ? 'layer-base-bottom' : (i === baseThickness - 1 ? 'layer-base-top' : '');
-            const svg = createSVGLayer('layer-base', col, strokeWidth, false, i, extra);
-            nameplate3D.appendChild(svg);
+        // ---- BASE PLATE: thick colored slab with stroke ----
+        const baseLayers = Math.max(8, Math.floor(thickness * 2.5));
+        const sideColor = darkenColor(currentColor, 18);
+        const topColor = currentColor;
+        const bottomColor = darkenColor(currentColor, 30);
+        const strokeW = (currentTemplate === 'badge') ? '16px' : '12px';
+
+        for (let i = 0; i < baseLayers; i++) {
+            const progress = i / (baseLayers - 1);
+            // Gradient from dark bottom to bright top
+            let col;
+            if (i === 0) col = bottomColor;
+            else if (i === baseLayers - 1) col = topColor;
+            else col = sideColor;
+
+            const extraCls = (i === 0) ? 'layer-base-bottom' : (i === baseLayers - 1 ? 'layer-base-top' : '');
+            const layer = createTextLayer({
+                className: 'layer-base',
+                extraClass: extraCls,
+                z: i * 1.5, // 1.5px spacing per layer = thick 3D effect
+                color: col,
+                stroke: `${strokeW} ${col}`
+            });
+            nameplate3D.appendChild(layer);
+
+            // Add template accessories on every 4th base layer for depth
+            if (!((i % 4) === 0 && i < baseLayers - 1)) continue;
+            addTemplateAccessory(layer, col, i * 1.5);
         }
 
-        // Generate 3D Raised Text Layers
-        const textThickness = Math.max(3, Math.floor(thickness * 0.8));
-        const topTextColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#F5F0E8');
-        for (let i = 0; i < textThickness; i++) {
-            const col = (i === textThickness - 1) ? topTextColor : '#d4ccbb';
-            const extra = (i === textThickness - 1) ? 'layer-text-top' : 'layer-text-side';
-            const zPos = baseThickness + i;
-            const svg = createSVGLayer('layer-text', col, 0, true, zPos, extra);
-            nameplate3D.appendChild(svg);
+        // ---- RAISED TEXT: lighter/contrasting on top ----
+        const textLayers = Math.max(5, Math.floor(thickness * 1.2));
+        const textTopColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#F5F0E8');
+        const textSideColor = (currentFinish === 'neon') ? '#35AA9E' : '#d4ccbb';
+        const textBottomColor = darkenColor(textSideColor, 10);
+
+        const baseTopZ = baseLayers * 1.5;
+        for (let i = 0; i < textLayers; i++) {
+            let col;
+            if (i === 0) col = textBottomColor;
+            else if (i === textLayers - 1) col = textTopColor;
+            else col = textSideColor;
+
+            const extraCls = (i === textLayers - 1) ? 'layer-text-top' : 'layer-text-side';
+            const layer = createTextLayer({
+                className: 'layer-text',
+                extraClass: extraCls,
+                z: baseTopZ + (i * 1.5),
+                color: col,
+                stroke: '0px transparent'
+            });
+            nameplate3D.appendChild(layer);
         }
 
-        // Apply 3D Transform Angle
         apply3DRotation();
+    }
+
+    // Add template-specific 3D accessories as sibling divs
+    function addTemplateAccessory(parentLayer, color, zPos) {
+        const scene = nameplate3D;
+
+        if (currentTemplate === 'keyring') {
+            // Keyring hole on the left
+            const ring = document.createElement('div');
+            ring.style.cssText = `
+                position: absolute;
+                width: 22px; height: 22px;
+                border: 5px solid ${color};
+                border-radius: 50%;
+                top: 50%; left: -28px;
+                transform: translateY(-50%) translateZ(${zPos}px);
+            `;
+            scene.appendChild(ring);
+        } else if (currentTemplate === 'pettag') {
+            // Top centered D-ring loop
+            const loop = document.createElement('div');
+            loop.style.cssText = `
+                position: absolute;
+                width: 18px; height: 18px;
+                border: 4px solid ${color};
+                border-radius: 50%;
+                top: -22px; left: 50%;
+                transform: translateX(-50%) translateZ(${zPos}px);
+            `;
+            scene.appendChild(loop);
+        } else if (currentTemplate === 'deskstand') {
+            // Bottom wedge base block
+            const stand = document.createElement('div');
+            stand.style.cssText = `
+                position: absolute;
+                width: 110%; height: 14px;
+                background: ${color};
+                bottom: -18px; left: -5%;
+                border-radius: 4px 4px 8px 8px;
+                transform: translateZ(${zPos}px);
+            `;
+            scene.appendChild(stand);
+        } else if (currentTemplate === 'badge') {
+            // Outer rectangular plaque frame
+            const frame = document.createElement('div');
+            frame.style.cssText = `
+                position: absolute;
+                top: -12px; left: -14px; right: -14px; bottom: -12px;
+                border: 4px solid ${color};
+                border-radius: 12px;
+                transform: translateZ(${zPos}px);
+                pointer-events: none;
+            `;
+            scene.appendChild(frame);
+        }
     }
 
     // --- Apply 3D Transformation ---
@@ -223,19 +271,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Font Selection Event Listeners ---
+    // --- Font Selection (Font Pills) ---
     if (fontOptions) {
-        fontOptions.querySelectorAll('.font-option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                fontOptions.querySelectorAll('.font-option').forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentFont = opt.getAttribute('data-font');
+        fontOptions.querySelectorAll('.font-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                fontOptions.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+                currentFont = pill.getAttribute('data-font');
                 updatePreview();
             });
         });
     }
 
-    // --- Color Selection Event Listeners ---
+    // --- Color Selection ---
     if (colorSwatches) {
         colorSwatches.querySelectorAll('.color-swatch').forEach(swatch => {
             swatch.addEventListener('click', () => {
@@ -249,7 +297,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Finish Selection Event Listeners ---
+    // --- Finish Selection ---
     if (finishOptions) {
         finishOptions.querySelectorAll('.finish-option').forEach(opt => {
             opt.addEventListener('click', () => {
@@ -261,39 +309,22 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Build Plate & View Toggle ---
-    if (btnToggleBed) {
-        btnToggleBed.addEventListener('click', () => {
-            isBuildPlateVisible = !isBuildPlateVisible;
-            if (isBuildPlateVisible) {
-                btnToggleBed.classList.add('active');
-                btnToggleBed.innerHTML = '✨ Floating View';
-                if (buildPlateGrid) buildPlateGrid.style.display = 'flex';
-                if (stageSurface) stageSurface.style.opacity = '0.2';
-            } else {
-                btnToggleBed.classList.remove('active');
-                btnToggleBed.innerHTML = '🏁 Build Plate';
-                if (buildPlateGrid) buildPlateGrid.style.display = 'none';
-                if (stageSurface) stageSurface.style.opacity = '1';
-            }
-        });
-    }
-
+    // --- Reset View ---
     if (btnResetView) {
         btnResetView.addEventListener('click', () => {
-            rotX = 12;
-            rotY = -15;
+            rotX = 15;
+            rotY = -20;
             apply3DRotation();
         });
     }
 
-    // --- Mobile & Desktop Smooth 3D Touch Orbit Physics ---
+    // ===== Smooth 3D Orbit Drag =====
     if (stageCard && nameplate3D) {
         let isDragging = false;
         let startX = 0, startY = 0;
-        let startRotX = 12, startRotY = -15;
+        let startRotX = 15, startRotY = -20;
 
-        // Mouse Events
+        // Mouse
         stageCard.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX;
@@ -307,7 +338,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isDragging) return;
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
-
             rotY = startRotY + (deltaX * 0.4);
             rotX = Math.max(-60, Math.min(60, startRotX - (deltaY * 0.4)));
             apply3DRotation();
@@ -320,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Touch Events for Mobile (Smooth Orbit Gesture)
+        // Touch
         stageCard.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 isDragging = true;
@@ -335,13 +365,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isDragging || e.touches.length !== 1) return;
             const touch = e.touches[0];
             const deltaX = touch.clientX - startX;
-            const deltaY = touch.clientY - touchStartY || (touch.clientY - startY);
-
-            // Rotate 3D Preview smoothly
+            const deltaY = touch.clientY - startY;
             rotY = startRotY + (deltaX * 0.5);
             rotX = Math.max(-60, Math.min(60, startRotX - (deltaY * 0.5)));
             apply3DRotation();
-
             if (e.cancelable) e.preventDefault();
         }, { passive: false });
 
@@ -350,7 +377,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Slider inputs
+    // Slider & text input
     inputName.addEventListener('input', updatePreview);
     inputThickness.addEventListener('input', updatePreview);
 
@@ -358,9 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
     function generateSnapshotSVG() {
         const text = inputName.value.trim() || 'CUSTOM NAME';
         const upperText = text.toUpperCase();
-        const fontEl = fontOptions ? fontOptions.querySelector('.font-option.active') : null;
+        const fontEl = fontOptions ? fontOptions.querySelector('.font-pill.active') : null;
         const fontName = fontEl ? fontEl.getAttribute('data-font') : currentFont;
-        const fontDisplayName = fontEl && fontEl.querySelector('small') ? fontEl.querySelector('small').textContent : 'Lobster';
+        const fontDisplayName = fontEl && fontEl.querySelector('.fp-name') ? fontEl.querySelector('.fp-name').textContent : 'Lobster';
 
         const sizer = document.querySelector('.layer-sizer');
         const textWidth = sizer ? (sizer.offsetWidth || (upperText.length * 28)) : (upperText.length * 28);
