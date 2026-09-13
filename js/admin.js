@@ -524,6 +524,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
             });
+            defaultProducts.forEach(defP => {
+                if (!products.some(dp => dp.id === defP.id)) {
+                    products.push(defP);
+                    needsSave = true;
+                }
+            });
         }
         if (needsSave) {
             localStorage.setItem('kiras_products', JSON.stringify(products));

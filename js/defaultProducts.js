@@ -839,5 +839,295 @@ const defaultProducts = [
         ],
         "price": "৳120",
         "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-30",
+        "category": "custom",
+        "desc": "Dual-layer 3D printed keychain inspired by the Grand Theft Auto logo. Constructed with durable matte black base, yellow accent layer, and raised crisp white lettering. Includes heavy-duty metal split ring.",
+        "descKey": "g28_desc",
+        "image": "images/gta_keychain_black_yellow.webp",
+        "badge": "🔑 Multi-Layer Tag",
+        "badgeI18n": "g28_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "GTA (Grand Theft Auto) Multi-Layered 3D Keychain",
+        "titleI18n": "g28_title",
+        "specs": [
+            {
+                "text": "Matte Black & Yellow PLA",
+                "i18n": "g28_spec1"
+            },
+            {
+                "text": "Raised White Lettering",
+                "i18n": "g28_spec2"
+            },
+            {
+                "text": "Metal Keyring Attached",
+                "i18n": "g28_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-31",
+        "category": "custom",
+        "desc": "Adorable set of multi-colored ghost keychains featuring Halloween-themed details including witch hats, mini pumpkins, and candy apples with clean black outlines.",
+        "descKey": "g29_desc",
+        "image": "images/cute_ghost_halloween_keychains.webp",
+        "badge": "👻 Ghost Charms",
+        "badgeI18n": "g29_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "Cute Halloween Ghost & Pumpkin Keychains Set",
+        "titleI18n": "g29_title",
+        "specs": [
+            {
+                "text": "Textured White PLA",
+                "i18n": "g29_spec1"
+            },
+            {
+                "text": "Multi-Color Accents",
+                "i18n": "g29_spec2"
+            },
+            {
+                "text": "Set of 4 Designs",
+                "i18n": "g29_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-32",
+        "category": "custom",
+        "desc": "Personalized multi-layered name tags in iconic Lego typography. Features bold red and yellow outer borders with clean white 3D raised script and integrated key loop.",
+        "descKey": "g30_desc",
+        "image": "images/lego_name_keychains_set.webp",
+        "badge": "🧩 Custom Name",
+        "badgeI18n": "g30_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "Lego-Style Personalized 3D Name Keychains Collection",
+        "titleI18n": "g30_title",
+        "specs": [
+            {
+                "text": "Red, Yellow & White PLA",
+                "i18n": "g30_spec1"
+            },
+            {
+                "text": "Custom Name Printing",
+                "i18n": "g30_spec2"
+            },
+            {
+                "text": "3D Embossed Font",
+                "i18n": "g30_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-33",
+        "category": "custom",
+        "desc": "Comprehensive showcase of custom 3D printed keychains, including sports jerseys (Messi #10), gaming tags (Minecraft, GTA), ghost figures, and cord charm accessories.",
+        "descKey": "g31_desc",
+        "image": "images/master_keychain_collection_board.webp",
+        "badge": "✨ Master Showcase",
+        "badgeI18n": "g31_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "Master Collection 3D Printed Keychains & Badges Assortment",
+        "titleI18n": "g31_title",
+        "specs": [
+            {
+                "text": "Custom Multi-Color PLA",
+                "i18n": "g31_spec1"
+            },
+            {
+                "text": "Assorted Gaming & Names",
+                "i18n": "g31_spec2"
+            },
+            {
+                "text": "High Precision Details",
+                "i18n": "g31_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-34",
+        "category": "custom",
+        "desc": "Studio shot edition of the GTA dual-layer 3D key tag. Precision printed with yellow inner accent strip and clean white embossed text on a durable black body.",
+        "descKey": "g32_desc",
+        "image": "images/gta_keychain_white_bg.webp",
+        "badge": "🎮 Gaming Tag",
+        "badgeI18n": "g32_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "GTA Logo 3D Printed Keyring Tag (Studio Edition)",
+        "titleI18n": "g32_title",
+        "specs": [
+            {
+                "text": "Dual-Layer Structure",
+                "i18n": "g32_spec1"
+            },
+            {
+                "text": "Matte Finish PLA",
+                "i18n": "g32_spec2"
+            },
+            {
+                "text": "Pocket Size",
+                "i18n": "g32_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-35",
+        "category": "custom",
+        "desc": "Modular 3D printed letter beads threaded on a durable white braided cord, accented with colorful inlays, musical note symbol, and heart end-charms.",
+        "descKey": "g33_desc",
+        "image": "images/custom_letter_beads_cord.webp",
+        "badge": "📿 Cord Charm",
+        "badgeI18n": "g33_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "Personalized 3D Printed Letter Beads & Charm Bracelet Cord",
+        "titleI18n": "g33_title",
+        "specs": [
+            {
+                "text": "White PLA with Color Inlay",
+                "i18n": "g33_spec1"
+            },
+            {
+                "text": "Custom Threaded Beads",
+                "i18n": "g33_spec2"
+            },
+            {
+                "text": "Heart & Note Charms",
+                "i18n": "g33_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-36",
+        "category": "custom",
+        "desc": "Elegant personalized name keychain featuring white cursive typography over a soft lavender base plate, topped with a pink heart sunburst emblem.",
+        "descKey": "g34_desc",
+        "image": "images/ananya_heart_name_keychain.webp",
+        "badge": "💖 Script Name",
+        "badgeI18n": "g34_badge",
+        "categoryLabel": "Custom & Keychains",
+        "categoryI18n": "filter_custom",
+        "name": "\"Ananya\" Cursive Script Heart Name Keychain",
+        "titleI18n": "g34_title",
+        "specs": [
+            {
+                "text": "Lavender & Pink PLA",
+                "i18n": "g34_spec1"
+            },
+            {
+                "text": "Cursive Typography",
+                "i18n": "g34_spec2"
+            },
+            {
+                "text": "Sunburst Heart Emblem",
+                "i18n": "g34_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-37",
+        "category": "art",
+        "desc": "Detailed 3D printed miniature arched bookcase in warm wood tones, fully furnished with mini black-bound books, parametric white vases, and a potted red tulip on the top shelf.",
+        "descKey": "g35_desc",
+        "image": "images/miniature_bookshelf_decor.webp",
+        "badge": "📚 Mini Diorama",
+        "badgeI18n": "g35_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Miniature Arched Wooden Bookshelf & Decor Display",
+        "titleI18n": "g35_title",
+        "specs": [
+            {
+                "text": "Brown Wood-Tone PLA",
+                "i18n": "g35_spec1"
+            },
+            {
+                "text": "Includes Mini Books & Vases",
+                "i18n": "g35_spec2"
+            },
+            {
+                "text": "Potted Tulip Top Accent",
+                "i18n": "g35_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-38",
+        "category": "art",
+        "desc": "Precision 3D printed two-story architectural scale cottage model featuring stone texture base walls, cream clapboard upper siding, dark roof tiles, chimney, and framed balcony.",
+        "descKey": "g36_desc",
+        "image": "images/architectural_cottage_house_model.webp",
+        "badge": "🏠 Scale Model",
+        "badgeI18n": "g36_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Architectural Scale Model 3D Cottage with Balcony",
+        "titleI18n": "g36_title",
+        "specs": [
+            {
+                "text": "Multi-Material Composition",
+                "i18n": "g36_spec1"
+            },
+            {
+                "text": "Stone Wall & Roof Texture",
+                "i18n": "g36_spec2"
+            },
+            {
+                "text": "Detailed Balcony Railings",
+                "i18n": "g36_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
+    },
+    {
+        "id": "PROD-OLD-39",
+        "category": "art",
+        "desc": "Ultra-high precision micro 3D print set featuring five distinct parametric spiral and geometric mini vases alongside a miniature potted red tulip, demonstrated with coin scale reference.",
+        "descKey": "g37_desc",
+        "image": "images/micro_vases_tulip_coin_scale.webp",
+        "badge": "🔎 Micro Print",
+        "badgeI18n": "g37_badge",
+        "categoryLabel": "Artistic & Decor",
+        "categoryI18n": "filter_artistic",
+        "name": "Micro 3D Parametric Vases & Tulip Set (Scale Edition)",
+        "titleI18n": "g37_title",
+        "specs": [
+            {
+                "text": "High Precision SLA/FDM",
+                "i18n": "g37_spec1"
+            },
+            {
+                "text": "5 Parametric Vases + Tulip",
+                "i18n": "g37_spec2"
+            },
+            {
+                "text": "Micro Miniature Size",
+                "i18n": "g37_spec3"
+            }
+        ],
+        "price": "Contact for Quote",
+        "delivery": "3-5 Days"
     }
 ];

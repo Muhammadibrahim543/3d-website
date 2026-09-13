@@ -369,6 +369,86 @@ const translations = {
         "g27_spec3": "Gift & Studio Tags",
         "g27_desc": "Vibrant collection of dual-color 3D keychains and plaques featuring \"kiras CREATION\", \"IBRAHIM\", \"MOULY SOVON\", \"SENORITA\", and \"Happy birthday!\" script.",
 
+        // Item 28
+        "g28_title": "GTA (Grand Theft Auto) Multi-Layered 3D Keychain",
+        "g28_badge": "🔑 Multi-Layer Tag",
+        "g28_spec1": "Matte Black & Yellow PLA",
+        "g28_spec2": "Raised White Lettering",
+        "g28_spec3": "Metal Keyring Attached",
+        "g28_desc": "Dual-layer 3D printed keychain inspired by the Grand Theft Auto logo. Constructed with durable matte black base, yellow accent layer, and raised crisp white lettering. Includes heavy-duty metal split ring.",
+
+        // Item 29
+        "g29_title": "Cute Halloween Ghost & Pumpkin Keychains Set",
+        "g29_badge": "👻 Ghost Charms",
+        "g29_spec1": "Textured White PLA",
+        "g29_spec2": "Multi-Color Accents",
+        "g29_spec3": "Set of 4 Designs",
+        "g29_desc": "Adorable set of multi-colored ghost keychains featuring Halloween-themed details including witch hats, mini pumpkins, and candy apples with clean black outlines.",
+
+        // Item 30
+        "g30_title": "Lego-Style Personalized 3D Name Keychains Collection",
+        "g30_badge": "🧩 Custom Name",
+        "g30_spec1": "Red, Yellow & White PLA",
+        "g30_spec2": "Custom Name Printing",
+        "g30_spec3": "3D Embossed Font",
+        "g30_desc": "Personalized multi-layered name tags in iconic Lego typography. Features bold red and yellow outer borders with clean white 3D raised script and integrated key loop.",
+
+        // Item 31
+        "g31_title": "Master Collection 3D Printed Keychains & Badges Assortment",
+        "g31_badge": "✨ Master Showcase",
+        "g31_spec1": "Custom Multi-Color PLA",
+        "g31_spec2": "Assorted Gaming & Names",
+        "g31_spec3": "High Precision Details",
+        "g31_desc": "Comprehensive showcase of custom 3D printed keychains, including sports jerseys (Messi #10), gaming tags (Minecraft, GTA), ghost figures, and cord charm accessories.",
+
+        // Item 32
+        "g32_title": "GTA Logo 3D Printed Keyring Tag (Studio Edition)",
+        "g32_badge": "🎮 Gaming Tag",
+        "g32_spec1": "Dual-Layer Structure",
+        "g32_spec2": "Matte Finish PLA",
+        "g32_spec3": "Pocket Size",
+        "g32_desc": "Studio shot edition of the GTA dual-layer 3D key tag. Precision printed with yellow inner accent strip and clean white embossed text on a durable black body.",
+
+        // Item 33
+        "g33_title": "Personalized 3D Printed Letter Beads & Charm Bracelet Cord",
+        "g33_badge": "📿 Cord Charm",
+        "g33_spec1": "White PLA with Color Inlay",
+        "g33_spec2": "Custom Threaded Beads",
+        "g33_spec3": "Heart & Note Charms",
+        "g33_desc": "Modular 3D printed letter beads threaded on a durable white braided cord, accented with colorful inlays, musical note symbol, and heart end-charms.",
+
+        // Item 34
+        "g34_title": "\"Ananya\" Cursive Script Heart Name Keychain",
+        "g34_badge": "💖 Script Name",
+        "g34_spec1": "Lavender & Pink PLA",
+        "g34_spec2": "Cursive Typography",
+        "g34_spec3": "Sunburst Heart Emblem",
+        "g34_desc": "Elegant personalized name keychain featuring white cursive typography over a soft lavender base plate, topped with a pink heart sunburst emblem.",
+
+        // Item 35
+        "g35_title": "Miniature Arched Wooden Bookshelf & Decor Display",
+        "g35_badge": "📚 Mini Diorama",
+        "g35_spec1": "Brown Wood-Tone PLA",
+        "g35_spec2": "Includes Mini Books & Vases",
+        "g35_spec3": "Potted Tulip Top Accent",
+        "g35_desc": "Detailed 3D printed miniature arched bookcase in warm wood tones, fully furnished with mini black-bound books, parametric white vases, and a potted red tulip on the top shelf.",
+
+        // Item 36
+        "g36_title": "Architectural Scale Model 3D Cottage with Balcony",
+        "g36_badge": "🏠 Scale Model",
+        "g36_spec1": "Multi-Material Composition",
+        "g36_spec2": "Stone Wall & Roof Texture",
+        "g36_spec3": "Detailed Balcony Railings",
+        "g36_desc": "Precision 3D printed two-story architectural scale cottage model featuring stone texture base walls, cream clapboard upper siding, dark roof tiles, chimney, and framed balcony.",
+
+        // Item 37
+        "g37_title": "Micro 3D Parametric Vases & Tulip Set (Scale Edition)",
+        "g37_badge": "🔎 Micro Print",
+        "g37_spec1": "High Precision SLA/FDM",
+        "g37_spec2": "5 Parametric Vases + Tulip",
+        "g37_spec3": "Micro Miniature Size",
+        "g37_desc": "Ultra-high precision micro 3D print set featuring five distinct parametric spiral and geometric mini vases alongside a miniature potted red tulip, demonstrated with coin scale reference.",
+
         // Pricing Page
         "pricing_headline": "Pricing Tiers",
         "pricing_sub": "// SIMPLE_FRIENDLY_RATES",
@@ -785,6 +865,86 @@ const translations = {
         "g27_spec2": "কাস্টম ফন্ট",
         "g27_spec3": "গিফট ও স্টুডিও ট্যাগ",
         "g27_desc": "দুই রঙের উজ্জ্বল থ্রিডি কী-চেইন ও প্লাক কালেকশন, যাতে \"kiras CREATION\", \"IBRAHIM\", \"MOULY SOVON\", \"SENORITA\" এবং \"Happy birthday!\" টাইপোগ্রাফি রয়েছে।",
+
+        // Item 28
+        "g28_title": "জিটিএ (Grand Theft Auto) মাল্টি-লেয়ার থ্রিডি কী-চেইন",
+        "g28_badge": "🔑 মাল্টি-লেয়ার ট্যাগ",
+        "g28_spec1": "ম্যাট ব্ল্যাক ও ইয়েলো PLA",
+        "g28_spec2": "উঁচু করা সাদা অক্ষর",
+        "g28_spec3": "মেটাল কী-রিং সংযুক্ত",
+        "g28_desc": "গ্র্যান্ড থ্রেফ্ট অটো (GTA) লোগো অনুপ্রাণিত মাল্টি-লেয়ার থ্রিডি প্রিন্টেড কী-চেইন। টেকসই ম্যাট ব্ল্যাক বেস, ইয়েলো অ্যাকসেন্ট লেয়ার এবং নিখুঁত সাদা অক্ষরের সমন্বয়ে তৈরি। সাথে রয়েছে মেটাল কী-রিং।",
+
+        // Item 29
+        "g29_title": "কিউট হ্যালোইন গোস্ট ও পাম্পকিন কী-চেইন সেট",
+        "g29_badge": "👻 গোস্ট চার্মস",
+        "g29_spec1": "টেক্সচার্ড হোয়াইট PLA",
+        "g29_spec2": "মাল্টি-কালার অ্যাকসেন্ট",
+        "g29_spec3": "৪টি ডিজাইনের সেট",
+        "g29_desc": "হ্যালোইন থিমের ৪টি ভিন্ন ডিজাইনের কিউট গোস্ট কী-চেইন সেট। সাদা প্লে বডি, মিনি পাম্পকিন, উইচ হ্যাটার ও নিখুঁত ব্ল্যাক আউটলাইনের সাথে সুক্ষ্ম কালার অ্যাকসেন্ট যুক্ত।",
+
+        // Item 30
+        "g30_title": "লেগো-স্টাইল কাস্টম নেম কী-চেইন কালেকশন",
+        "g30_badge": "🧩 কাস্টম নেম",
+        "g30_spec1": "রেড, ইয়েলো ও হোয়াইট PLA",
+        "g30_spec2": "কাস্টম নেম প্রিন্টিং",
+        "g30_spec3": "থ্রিডি অ্যামবসড ফন্ট",
+        "g30_desc": "লেগো স্টাইল ফন্টে তৈরি পার্সোনালাইজড মাল্টি-লেয়ার নেম কী-চেইন কালেকশন। লাল ও হলুদ বর্ডার, কালো শেড এবং উঁচু করা সাদা অক্ষরের নিখুঁত ফিনিশিং।",
+
+        // Item 31
+        "g31_title": "মাস্টার কালেকশন থ্রিডি প্রিন্টেড কী-চেইন ও ব্যাজ অ্যাসোর্টমেন্ট",
+        "g31_badge": "✨ মাস্টার শোপিস",
+        "g31_spec1": "কাস্টম মাল্টি-কালার PLA",
+        "g31_spec2": "গেমিং ও নেম কালেকশন",
+        "g31_spec3": "হাই প্রিসিশন ডিটেইলস",
+        "g31_desc": "বিভিন্ন ক্যাটাগরির কাস্টম থ্রিডি প্রিন্টেড কী-চেইন ও ব্যাজ কালেকশন। যার মধ্যে রয়েছে স্পোর্টস জার্সি (মেসি ১০), গেমিং ট্যাগ (মাইনক্রাফট, জিটিএ), কিউট ফিগার ও কাস্টম নেম ট্যাগ।",
+
+        // Item 32
+        "g32_title": "জিটিএ লোগো ৩ডি কী-ট্যাগ (স্টুডিও এডিওয়াশ)",
+        "g32_badge": "🎮 গেমিং ট্যাগ",
+        "g32_spec1": "ডুয়াল-লেয়ার স্ট্রাকচার",
+        "g32_spec2": "ম্যাট ফিনিশ PLA",
+        "g32_spec3": "পকেট সাইজ",
+        "g32_desc": "জিটিএ (GTA) লোগো ৩ডি কী-ট্যাগের স্টুডিও এডিওয়াশ। ইয়েলো ট্রিম লাইন এবং টেকসই ব্ল্যাক বডির উপর সাদা অ্যামবসড টাইপোগ্রাফি সম্বলিত কমপ্যাক্ট ডেকোরেশন পকেট কী-চেইন।",
+
+        // Item 33
+        "g33_title": "পার্সোনালাইজড ৩ডি লেটার বিডস ও চার্ম ব্রেসলেট কর্ড",
+        "g33_badge": "📿 কর্ড চার্ম",
+        "g33_spec1": "কালার ইনলে সহ হোয়াইট PLA",
+        "g33_spec2": "কাস্টম থ্রেডেড বিডস",
+        "g33_spec3": "হার্ট ও মিউজিক নোট",
+        "g33_desc": "টেকসই সুতা বা কর্ডে পরানোর উপযোগী ৩ডি প্রিন্টেড কাস্টম লেটার বিডস ও চার্ম সেট। যাতে রয়েছে রঙিন ইনলে অক্ষর, হার্ট ও মিউজিক নোট চার্ম।",
+
+        // Item 34
+        "g34_title": "\"অনন্যা\" কার্সিভ স্ক্রিপ্ট হার্ট নেম কী-চেইন",
+        "g34_badge": "💖 স্ক্রিপ্ট নেম",
+        "g34_spec1": "ল্যাভেন্ডার ও পিঙ্ক PLA",
+        "g34_spec2": "কার্সিভ টাইপোগ্রাফি",
+        "g34_spec3": "সানবার্স্ট হার্ট লোগো",
+        "g34_desc": "হালকা ল্যাভেন্ডার বেজ প্লেটের উপর কার্সিভ ফন্টে \"Ananya\" লেখা এবং উপরে গোলাপি রঙের সানবার্স্ট হার্ট লোগো সম্বলিত কাস্টম নেম কী-চেইন।",
+
+        // Item 35
+        "g35_title": "মিনিয়াচার আর্চড উডেন বুকশেলফ ও ডেকোরেশন এক্সেসরিজ",
+        "g35_badge": "📚 মিনি ডিওরামা",
+        "g35_spec1": "ব্রাউন উড-টোন PLA",
+        "g35_spec2": "মিনি বই ও ভাজ অন্তর্ভুক্ত",
+        "g35_spec3": "টবে লাল টিউলিপ ফুল",
+        "g35_desc": "আর্চড উডেন ফিনিশের সুক্ষ্ম ৩ডি মিনিয়াচার বুকশেলফ ডেকোর। যার প্রতিটি তাকে রয়েছে ছোট ছোট কালো বাঁধাই বই, মিনি সিরামিক-স্টাইল ভাজ এবং শীর্ষে টবে লাল টিউলিপ ফুল।",
+
+        // Item 36
+        "g36_title": "আর্কিটেকচারাল স্কেল মডেল ৩ডি কটেজ উইথ ব্যালকনি",
+        "g36_badge": "🏠 স্কেল মডেল",
+        "g36_spec1": "মাল্টি-ম্যাটেরিয়াল কম্বিনেশন",
+        "g36_spec2": "পাথর ও রূফ টেক্সচার",
+        "g36_spec3": "নিখুঁত ব্যালকনি রেলিং",
+        "g36_desc": "প্রিসিশন থ্রিডি প্রিন্টেড আর্কিটেকচারাল স্কেল মডেল দোতলা কটেজ। পাথরের টেক্সচারযুক্ত গ্রাউন্ড ওয়াল, উডেন সাইডিং, বেলকনি গ্রিল, রূফ টাইলস এবং ব্রিক চিমনির নিখুঁত সমাহার।",
+
+        // Item 37
+        "g37_title": "মাইক্রো ৩ডি প্যারেমেট্রিক ভাজ ও টিউলিপ সেট (মুদ্রা স্কেল)",
+        "g37_badge": "🔎 মাইক্রো প্রিন্ট",
+        "g37_spec1": "হাই প্রিসিশন SLA/FDM",
+        "g37_spec2": "৫টি ভাজ + টিউলিপ ফুল",
+        "g37_spec3": "মাইক্রো মিনিয়াচার আকার",
+        "g37_desc": "অতি ক্ষুদ্র ও প্রিসাইস ৩ডি স্পাইরাল ও জ্যামিতিক ৫টি প্যারেমেট্রিক ভাজ এবং ১টি মিনি টবে টিউলিপ ফুল সেট। ৫ টাকার মুদ্রার সাথে সূক্ষ্মতার তুলনা প্রফেশনাল মাইক্রো প্রিন্ট এক্সাম্পল।",
 
         // Pricing Page
         "pricing_headline": "সহজ ও সাশ্রয়ী প্রাইস প্ল্যান",

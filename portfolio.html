@@ -382,6 +382,12 @@
                         }
                     }
                 });
+                defaultProducts.forEach(defP => {
+                    if (!dynamicProducts.some(dp => dp.id === defP.id)) {
+                        dynamicProducts.push(defP);
+                        needsSave = true;
+                    }
+                });
             }
             if (needsSave) {
                 localStorage.setItem('kiras_products', JSON.stringify(dynamicProducts));
