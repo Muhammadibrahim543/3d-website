@@ -3,6 +3,15 @@
    Complete Redesign — Thick 3D extrusion, compact layout
    ============================================================ */
 
+/* --- Always visible customizer containers --- */
+.customizer-stage-card,
+.customizer-controls,
+.customizer-grid {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+}
+
 /* --- Grid Layout --- */
 .customizer-grid {
     display: grid;
