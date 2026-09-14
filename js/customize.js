@@ -34,11 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const elLetterThickSlider = document.getElementById('scad-letter-thick-slider');
     const valThickness = document.getElementById('val-thickness');
 
-    const elHoleSizeNum = document.getElementById('scad-hole-size');
-    const elHoleSizeSlider = document.getElementById('scad-hole-size-slider');
-
-    const elHoleXNum = document.getElementById('scad-hole-x');
-    const elHoleXSlider = document.getElementById('scad-hole-x-slider');
+    const elHoleYNum = document.getElementById('scad-hole-y');
+    const elHoleYSlider = document.getElementById('scad-hole-y-slider');
 
     // 3D Scene Handles
     const nameplate3D = document.getElementById('nameplate-3d');
@@ -85,7 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
             spaceWidth: elSpaceWidthNum ? elSpaceWidthNum.value : '1.0',
             letterThick: inputThickness ? inputThickness.value : '3.0',
             holeSize: elHoleSizeNum ? elHoleSizeNum.value : '5.0',
-            holeX: elHoleXNum ? elHoleXNum.value : '3.0'
+            holeX: elHoleXNum ? elHoleXNum.value : '3.0',
+            holeY: elHoleYNum ? elHoleYNum.value : '0.0'
         });
         if (stateHistory.length > 25) stateHistory.shift();
     }
@@ -150,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Connect All 6 Stepper-Slider Groups
+    // Connect All 7 Stepper-Slider Groups
     setupParamSync(elOutlineNum, elOutlineSlider, 'btn-minus-outline', 'btn-plus-outline');
     setupParamSync(elBaseThickNum, elBaseThickSlider, 'btn-minus-basethick', 'btn-plus-basethick');
     setupParamSync(elTextSizeNum, elTextSizeSlider, 'btn-minus-textsize', 'btn-plus-textsize');
@@ -158,8 +156,9 @@ document.addEventListener('DOMContentLoaded', () => {
     setupParamSync(inputThickness, elLetterThickSlider, 'btn-minus-thick', 'btn-plus-thick');
     setupParamSync(elHoleSizeNum, elHoleSizeSlider, 'btn-minus-holesize', 'btn-plus-holesize');
     setupParamSync(elHoleXNum, elHoleXSlider, 'btn-minus-holex', 'btn-plus-holex');
+    setupParamSync(elHoleYNum, elHoleYSlider, 'btn-minus-holey', 'btn-plus-holey');
 
-    // ===== CORE: Build Parametric OpenSCAD 3D Preview =====
+    // ===== CORE: Build Parametric OpenSCAD Multi-Layer 3D Engine =====
     function updatePreview() {
         const text = inputName.value.trim() || 'LEGO';
         const upperText = text.toUpperCase();
@@ -171,6 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const letterThick = parseFloat(inputThickness ? inputThickness.value : 3.0);
         const holeSize = parseFloat(elHoleSizeNum ? elHoleSizeNum.value : 5.0);
         const holeX = parseFloat(elHoleXNum ? elHoleXNum.value : 3.0);
+        const holeY = parseFloat(elHoleYNum ? elHoleYNum.value : 0.0);
 
         if (valThickness) valThickness.textContent = letterThick + 'mm';
 
@@ -195,163 +195,177 @@ document.addEventListener('DOMContentLoaded', () => {
             templateBadge.textContent = `🧱 ${modelName.toUpperCase()}`;
         }
 
-        // === Rebuild 3D Layers ===
+        // Clear 3D Stage Container
         nameplate3D.className = 'nameplate-3d finish-' + currentFinish;
         nameplate3D.innerHTML = '';
 
-        // Hidden sizer to measure text width
-        const sizer = document.createElement('span');
-        sizer.className = 'layer-sizer';
-        sizer.textContent = upperText;
-        sizer.style.fontFamily = currentFont;
-        sizer.style.letterSpacing = spaceWidth + 'px';
-        nameplate3D.appendChild(sizer);
+        // Dynamic Sizing & Positioning Parameters
+        const charWidth = (currentFont.includes('Lobster') || currentFont.includes('Pacifico')) ? 24 : 34;
+        const estTextWidth = Math.max(140, upperText.length * charWidth * (textSize / 18) + (spaceWidth * upperText.length * 4));
+        const svgW = Math.max(380, estTextWidth + (outlineSize * 24) + (holeSize * 12) + 140);
+        const svgH = Math.max(160, (textSize * 4) + (outlineSize * 16) + 50);
 
-        const sizerWidth = sizer.offsetWidth || 180;
-        const sizerHeight = sizer.offsetHeight || 50;
+        nameplate3D.style.width = svgW + 'px';
+        nameplate3D.style.height = svgH + 'px';
 
-        // Base Plate Dimensions dynamically derived from parameters
-        let plateWidth = sizerWidth + (outlineSize * 14) + 40;
-        let plateHeight = sizerHeight + (outlineSize * 8) + 24;
+        const cx = (svgW / 2) + 25;
+        const cy = svgH / 2;
+        const fontStyle = (currentTemplate === 'lego') ? 'italic' : 'normal';
 
-        if (currentTemplate === 'deskstand') plateWidth += 30;
-        if (currentTemplate === 'badge') { plateWidth += 20; plateHeight += 20; }
+        // Keyring Hole Position
+        const holeRadiusOuter = (holeSize * 2.4) + (outlineSize * 2.2) + 8;
+        const holeRadiusInner = (holeSize * 1.6);
+        const holeXPos = (cx - estTextWidth / 2) - (holeX * 3.0) - holeRadiusOuter + 6;
+        const holeYPos = cy - (holeY * 3.0);
 
-        // --- 1. OUTER LEGO / BRIM LAYER (Yellow or Contrast Accent) ---
-        const brimColor = (currentTemplate === 'lego') ? '#E5C158' : lightenColor(currentColor, 25);
-        const brimLayers = Math.max(3, Math.floor(baseThick * 1.5));
-
-        for (let i = 0; i < brimLayers; i++) {
+        // Helper to append 3D SVG Layer
+        function addSvgLayer(svgContent, zPos, dropShadow = false) {
             const div = document.createElement('div');
-            div.className = 'layer-base layer-brim-outline';
+            div.className = 'layer-3d-svg';
             div.style.cssText = `
-                position: absolute;
-                width: ${plateWidth + (outlineSize * 4)}px;
-                height: ${plateHeight + (outlineSize * 4)}px;
-                background: ${i === 0 ? darkenColor(brimColor, 25) : brimColor};
-                border-radius: 18px;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%) translateZ(${i * 1.2}px);
-                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                width: ${svgW}px;
+                height: ${svgH}px;
+                transform: translateZ(${zPos}px);
+                filter: ${dropShadow ? 'drop-shadow(0 15px 25px rgba(0,0,0,0.65))' : 'none'};
             `;
+            div.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="overflow:visible;">${svgContent}</svg>`;
             nameplate3D.appendChild(div);
         }
 
-        // --- 2. INNER BASE PLATE (Ruby Red / Selected Color) ---
-        const baseZStart = brimLayers * 1.2;
-        const baseLayers = Math.max(4, Math.floor(baseThick * 2.0));
-        const sideColor = darkenColor(currentColor, 18);
-        const topColor = currentColor;
-        const bottomColor = darkenColor(currentColor, 28);
-
-        for (let i = 0; i < baseLayers; i++) {
-            let col = (i === 0) ? bottomColor : (i === baseLayers - 1 ? topColor : sideColor);
-
-            const div = document.createElement('div');
-            div.className = 'layer-base ' + ((i === 0) ? 'layer-base-bottom' : (i === baseLayers - 1 ? 'layer-base-top' : ''));
-            div.style.cssText = `
-                position: absolute;
-                width: ${plateWidth}px;
-                height: ${plateHeight}px;
-                background: ${col};
-                border-radius: 14px;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -50%) translateZ(${baseZStart + (i * 1.2)}px);
-            `;
-
-            if (currentTemplate === 'badge' && i === baseLayers - 1) {
-                div.style.border = `3px solid ${lightenColor(col, 20)}`;
-            }
-
-            nameplate3D.appendChild(div);
-        }
-
-        // --- 3. LEGO STUDS ACCENT (Iconic LEGO Brick Studs) ---
-        const baseTopZ = baseZStart + (baseLayers * 1.2);
+        // ==========================================
+        // 1. LEGO KEYCHAIN MODEL (AUTHENTIC MULTI-LAYER BUBBLE CONTOURS)
+        // ==========================================
         if (currentTemplate === 'lego') {
-            const numStuds = Math.max(4, Math.floor(plateWidth / 35));
-            const studSpacing = plateWidth / (numStuds + 1);
+            const baseColor = currentColor; // e.g. Red
+            const yellowColor = '#FFD700';  // authentic LEGO Yellow
+            const blackColor = '#111111';   // authentic LEGO Black stroke
 
-            for (let i = 1; i <= numStuds; i++) {
-                // Top row studs
-                const studTop = document.createElement('div');
-                studTop.style.cssText = `
-                    position: absolute;
-                    width: 14px; height: 14px;
-                    background: ${lightenColor(currentColor, 15)};
-                    border: 2px solid ${darkenColor(currentColor, 15)};
-                    border-radius: 50%;
-                    top: 50%; left: 50%;
-                    transform: translate(-${(plateWidth/2) - (i * studSpacing)}px, -${(plateHeight/2) - 8}px) translateZ(${baseTopZ + 2}px);
-                    box-shadow: inset 0 -2px 3px rgba(0,0,0,0.3);
+            // --- A. Red Extruded Base Bubble Layers ---
+            const baseCount = Math.max(5, Math.floor(baseThick * 2.5));
+            let zCurrent = 0;
+
+            for (let i = 0; i < baseCount; i++) {
+                const col = (i === 0) ? darkenColor(baseColor, 28) : (i === baseCount - 1 ? baseColor : darkenColor(baseColor, 15));
+                const isBottom = (i === 0);
+
+                const svgContent = `
+                    <!-- Keychain Ring Outer Base Circle -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 3}" />
+                    <!-- Text Contoured Bubble Base Outline -->
+                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 7 + 20}"
+                          stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
+                    <!-- Keychain Hole Cutout -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#14121d" />
                 `;
-                nameplate3D.appendChild(studTop);
+                addSvgLayer(svgContent, zCurrent, isBottom);
+                zCurrent += 1.4;
+            }
+
+            // --- B. Yellow Inner Contour Accent Layers ---
+            const yellowCount = 3;
+            for (let i = 0; i < yellowCount; i++) {
+                const svgContent = `
+                    <!-- Keyring Yellow Accent Ring -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - 2}" fill="none" stroke="${yellowColor}" stroke-width="${outlineSize * 2 + 4}" />
+                    <!-- Text Yellow Inner Contour -->
+                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="none" stroke="${yellowColor}" stroke-width="${outlineSize * 4 + 10}"
+                          stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
+                `;
+                addSvgLayer(svgContent, zCurrent, false);
+                zCurrent += 1.2;
+            }
+
+            // --- C. Black Shadow Contour Accent Layers ---
+            const blackCount = 3;
+            for (let i = 0; i < blackCount; i++) {
+                const svgContent = `
+                    <!-- Keyring Black Accent Ring -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - outlineSize * 1.5}" fill="none" stroke="${blackColor}" stroke-width="3.5" />
+                    <!-- Text Black Inner Shadow Outline -->
+                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${blackColor}" stroke="${blackColor}" stroke-width="${outlineSize * 1.8 + 4}"
+                          stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
+                `;
+                addSvgLayer(svgContent, zCurrent, false);
+                zCurrent += 1.2;
+            }
+
+            // --- D. Top 3D Extruded White Text Layers ---
+            const textCount = Math.max(5, Math.floor(letterThick * 2.2));
+            const sideTextColor = (currentFinish === 'neon') ? '#35AA9E' : '#DCDCDC';
+            const topTextColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#FFFFFF');
+
+            for (let i = 0; i < textCount; i++) {
+                const isTop = (i === textCount - 1);
+                const col = isTop ? topTextColor : sideTextColor;
+
+                const svgContent = `
+                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1.2">${upperText}</text>
+                `;
+                addSvgLayer(svgContent, zCurrent, false);
+                zCurrent += 1.2;
             }
         }
+        // ==========================================
+        // 2. OTHER MODELS (NAMETAG, DESKSTAND, BADGE)
+        // ==========================================
+        else {
+            const baseColor = currentColor;
+            const baseCount = Math.max(5, Math.floor(baseThick * 2.5));
+            let zCurrent = 0;
 
-        // --- 4. KEYCHAIN HOLE ACCESSORY ---
-        const holeZPos = baseTopZ + 1;
-        const ringOuter = (holeSize * 3) + 12;
-        const holeOffsetX = (plateWidth / 2) + holeX + 10;
+            // Extruded Base Plate
+            for (let i = 0; i < baseCount; i++) {
+                const col = (i === 0) ? darkenColor(baseColor, 28) : (i === baseCount - 1 ? baseColor : darkenColor(baseColor, 15));
+                const isBottom = (i === 0);
 
-        if (currentTemplate === 'lego' || currentTemplate === 'nametag') {
-            const ring = document.createElement('div');
-            ring.style.cssText = `
-                position: absolute;
-                width: ${ringOuter}px; height: ${ringOuter}px;
-                border: ${holeSize + 2}px solid ${currentColor};
-                background: rgba(0,0,0,0.8);
-                border-radius: 50%;
-                top: 50%; left: 50%;
-                transform: translate(-${holeOffsetX}px, -50%) translateZ(${holeZPos}px);
-                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-            `;
-            nameplate3D.appendChild(ring);
-        } else if (currentTemplate === 'deskstand') {
-            const stand = document.createElement('div');
-            stand.style.cssText = `
-                position: absolute;
-                width: ${plateWidth + 24}px; height: 22px;
-                background: ${darkenColor(currentColor, 25)};
-                border: 2px solid ${currentColor};
-                top: 50%; left: 50%;
-                border-radius: 8px;
-                transform: translate(-50%, ${(plateHeight/2) - 6}px) translateZ(${baseTopZ}px);
-            `;
-            nameplate3D.appendChild(stand);
-        }
+                let extraGraphic = '';
+                if (currentTemplate === 'deskstand') {
+                    // Trophy Pedestal Stand below plate
+                    extraGraphic = `<rect x="${cx - estTextWidth/2 - 30}" y="${cy + textSize * 1.2}" width="${estTextWidth + 60}" height="22" rx="6" fill="${darkenColor(baseColor, 35)}" stroke="${col}" stroke-width="3" />`;
+                } else if (currentTemplate === 'badge') {
+                    // Shield Crest Border Trim
+                    extraGraphic = `<rect x="${cx - estTextWidth/2 - 25}" y="${cy - textSize * 1.5}" width="${estTextWidth + 50}" height="${textSize * 3}" rx="14" fill="none" stroke="${lightenColor(baseColor, 30)}" stroke-width="5" />`;
+                }
 
-        // --- 5. RAISED 3D TEXT LAYERS ---
-        const textLayers = Math.max(4, Math.floor(letterThick * 1.5));
-        const textTopColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#FFFFFF');
-        const textSideColor = (currentFinish === 'neon') ? '#35AA9E' : '#d8d4cb';
-        const textBottomColor = darkenColor(textSideColor, 15);
+                const svgContent = `
+                    ${(currentTemplate === 'nametag') ? `
+                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 2}" />
+                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#14121d" />
+                    ` : ''}
+                    <rect x="${cx - estTextWidth/2 - 20 - outlineSize * 2}" y="${cy - textSize * 1.3 - outlineSize * 2}" 
+                          width="${estTextWidth + 40 + outlineSize * 4}" height="${textSize * 2.6 + outlineSize * 4}" 
+                          rx="16" fill="${col}" stroke="${darkenColor(col, 15)}" stroke-width="${outlineSize * 2}" />
+                    ${extraGraphic}
+                `;
+                addSvgLayer(svgContent, zCurrent, isBottom);
+                zCurrent += 1.4;
+            }
 
-        for (let i = 0; i < textLayers; i++) {
-            let col = (i === 0) ? textBottomColor : (i === textLayers - 1 ? textTopColor : textSideColor);
+            // Top Raised Text Layers
+            const textCount = Math.max(5, Math.floor(letterThick * 2.2));
+            const sideTextColor = (currentFinish === 'silk') ? '#D5B242' : '#E8E8E8';
+            const topTextColor = (currentFinish === 'silk') ? '#FFE680' : '#FFFFFF';
 
-            const div = document.createElement('div');
-            div.className = 'layer-text ' + (i === textLayers - 1 ? 'layer-text-top' : 'layer-text-side');
-            div.textContent = upperText;
-            div.style.cssText = `
-                position: absolute;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
-                font-size: ${textSize * 2.4}px;
-                font-weight: 900;
-                text-transform: uppercase;
-                letter-spacing: ${spaceWidth + 2}px;
-                white-space: nowrap;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transform: translateZ(${baseTopZ + (i * 1.2)}px);
-                font-family: ${currentFont};
-                color: ${col};
-                text-shadow: ${i === textLayers - 1 ? '0 2px 4px rgba(0,0,0,0.4)' : 'none'};
-                -webkit-text-stroke: ${currentTemplate === 'lego' ? '1px #111' : '0px transparent'};
-            `;
-            nameplate3D.appendChild(div);
+            for (let i = 0; i < textCount; i++) {
+                const isTop = (i === textCount - 1);
+                const col = isTop ? topTextColor : sideTextColor;
+
+                const svgContent = `
+                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
+                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1.2">${upperText}</text>
+                `;
+                addSvgLayer(svgContent, zCurrent, false);
+                zCurrent += 1.2;
+            }
         }
 
         apply3DRotation();
@@ -458,6 +472,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (elHoleSizeSlider) elHoleSizeSlider.value = 5.0;
             if (elHoleXNum) elHoleXNum.value = 3.0;
             if (elHoleXSlider) elHoleXSlider.value = 3.0;
+            if (elHoleYNum) elHoleYNum.value = 0.0;
+            if (elHoleYSlider) elHoleYSlider.value = 0.0;
 
             rotX = 18;
             rotY = -22;
@@ -495,6 +511,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (elHoleSizeSlider) elHoleSizeSlider.value = prev.holeSize;
                     if (elHoleXNum) elHoleXNum.value = prev.holeX;
                     if (elHoleXSlider) elHoleXSlider.value = prev.holeX;
+                    if (elHoleYNum) elHoleYNum.value = prev.holeY || 0.0;
+                    if (elHoleYSlider) elHoleYSlider.value = prev.holeY || 0.0;
 
                     updatePreview();
                 }

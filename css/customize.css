@@ -127,6 +127,13 @@
     transform-origin: center center;
 }
 
+.layer-3d-svg {
+    position: absolute;
+    top: 50%; left: 50%;
+    pointer-events: none;
+    transform-origin: center center;
+}
+
 /* Base plate shadow */
 .layer-base-bottom {
     filter: drop-shadow(0 20px 25px rgba(0,0,0,0.7));
