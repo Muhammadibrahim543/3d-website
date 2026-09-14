@@ -76,9 +76,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State Variables ---
     let currentTemplate = 'lego'; // 'lego', 'nametag'
-    let currentFont = "'Fredoka', sans-serif";
-    let currentColor = '#D32F2F';
-    let currentColorName = 'Ruby Red';
+    let currentFont = "'Montserrat', sans-serif";
+    let currentColor = '#D01012';
+    let currentColorName = 'LEGO Red';
     let currentRate = 7.0;
     let currentFinish = 'standard';
 
@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(stageWidth, stageHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
+    renderer.toneMappingExposure = 1.0;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -151,10 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 2. STUDIO LIGHTING & BAMBU-STYLE BUILD PLATE
     // ============================================================
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.45);
     scene.add(ambientLight);
 
-    const keyLight = new THREE.DirectionalLight(0xfff7ed, 1.25);
+    const keyLight = new THREE.DirectionalLight(0xfffaf2, 0.85);
     keyLight.position.set(65, 85, 120);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
@@ -169,11 +169,11 @@ document.addEventListener('DOMContentLoaded', () => {
     keyLight.shadow.bias = -0.0005;
     scene.add(keyLight);
 
-    const fillLight = new THREE.DirectionalLight(0xcde0ff, 0.45);
+    const fillLight = new THREE.DirectionalLight(0xd4e2ff, 0.35);
     fillLight.position.set(-70, -50, 80);
     scene.add(fillLight);
 
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.65);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.35);
     rimLight.position.set(0, -90, -30);
     scene.add(rimLight);
 
@@ -200,7 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. PBR MATERIAL FACTORY
     // ============================================================
     function getBaseMaterial() {
-        const col = new THREE.Color(currentColor);
+        let hex = currentColor;
+        if (currentColor && currentColor.toLowerCase() === '#d32f2f') {
+            hex = '#D01012';
+        }
+        const col = new THREE.Color(hex);
         if (currentFinish === 'silk') {
             return new THREE.MeshStandardMaterial({
                 color: col,
@@ -225,8 +229,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return new THREE.MeshStandardMaterial({
             color: col,
-            roughness: 0.38,
-            metalness: 0.08
+            roughness: 0.32,
+            metalness: 0.04
         });
     }
 
@@ -380,10 +384,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ctx.clearRect(0, 0, W, H);
         ctx.fillStyle = '#000000';
-        ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         ctx.font = `italic 900 220px ${fontStr}`;
-        ctx.fillText(text, W / 2, H / 2);
+
+        // Tight kerning so letters snuggle together naturally like authentic LEGO branding
+        const chars = text.split('');
+        const charWidths = chars.map(c => ctx.measureText(c).width);
+        const tracking = 0.86;
+        let totalW = 0;
+        for (let i = 0; i < chars.length; i++) {
+            totalW += (i === chars.length - 1) ? charWidths[i] : charWidths[i] * tracking;
+        }
+        let curX = (W - totalW) / 2;
+        ctx.textAlign = 'left';
+        for (let i = 0; i < chars.length; i++) {
+            ctx.fillText(chars[i], curX, H / 2);
+            curX += charWidths[i] * tracking;
+        }
 
         const imgData = ctx.getImageData(0, 0, W, H);
         const data = imgData.data;
@@ -560,7 +577,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return group;
         }
 
-        const fontStr = `${currentFont}, 'Fredoka', 'Lilita One', 'Montserrat', sans-serif`;
+        const fontStr = `${currentFont}, 'Montserrat', 'Arial Black', sans-serif`;
         const { paths: textPaths, outerPaths, exPolys } = extractTextContours(text, fontStr);
 
         if (!textPaths || textPaths.length === 0) {
@@ -573,19 +590,89 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clean & simplify input paths
         const cleanTextPaths = ClipperLib.Clipper.CleanPolygons(textPaths, 0.1 * CLIPPER_SCALE);
-        const cleanOuterPaths = ClipperLib.Clipper.CleanPolygons(outerPaths && outerPaths.length ? outerPaths : textPaths, 0.1 * CLIPPER_SCALE);
 
         // ------------------------------------------------------------
-        // 1. RED BASE PLATE (0.0mm -> 3.2mm, Height = 3.2mm)
-        // Solid backing behind letters: offset outer letter contours
+        // 1. BLACK OUTLINE LAYER (4.2mm -> 5.2mm, Height = 1.0mm)
+        // Offset closely-spaced text characters by 1.8mm to form a single continuous merged black border
         // ------------------------------------------------------------
-        const redOutlineMm = Math.max(4.0, (params.outlineSize || 4.5) * 1.15);
+        const blackOutlineMm = 1.8;
+        const coBlack = new ClipperLib.ClipperOffset(2.0, arcTol);
+        coBlack.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        const blackPolyTree = new ClipperLib.PolyTree();
+        coBlack.Execute(blackPolyTree, blackOutlineMm * CLIPPER_SCALE);
+        const rawBlackExPolygons = ClipperLib.JS.PolyTreeToExPolygons(blackPolyTree);
+        const blackExPolygons = smoothExPolygons(rawBlackExPolygons, 3);
+        const blackShapes = exPolygonsToThreeShapes(blackExPolygons, invScale);
+
+        if (blackShapes.length > 0) {
+            const blackGeo = new THREE.ExtrudeGeometry(blackShapes, {
+                depth: 1.0,
+                bevelEnabled: true,
+                bevelThickness: 0.16,
+                bevelSize: 0.16,
+                bevelSegments: 3,
+                curveSegments: 36
+            });
+            const blackMat = new THREE.MeshStandardMaterial({
+                color: 0x111111, // Solid Jet Black
+                roughness: 0.42,
+                metalness: 0.08
+            });
+            const blackMesh = new THREE.Mesh(blackGeo, blackMat);
+            blackMesh.position.z = 4.2; // Exactly 4.2mm Elevation
+            blackMesh.castShadow = true;
+            group.add(blackMesh);
+        }
+
+        // ------------------------------------------------------------
+        // 2. YELLOW ACCENT BRIM (3.2mm -> 4.2mm, Height = 1.0mm)
+        // Hierarchically offset the BLACK OUTLINE boundary by 2.2mm
+        // Solid backing plate under letters (no counter-holes punched through)
+        // ------------------------------------------------------------
+        const blackOuterBoundaries = rawBlackExPolygons.map(exp => exp.outer).filter(Boolean);
+        const yellowBrimMm = 2.2;
+        const coYellow = new ClipperLib.ClipperOffset(2.0, arcTol);
+        coYellow.AddPaths(blackOuterBoundaries, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        const yellowPolyTree = new ClipperLib.PolyTree();
+        coYellow.Execute(yellowPolyTree, yellowBrimMm * CLIPPER_SCALE);
+        const rawYellowExPolygons = ClipperLib.JS.PolyTreeToExPolygons(yellowPolyTree);
+        const solidYellowExPolygons = rawYellowExPolygons.map(exp => ({ outer: exp.outer, holes: [] }));
+        const yellowExPolygons = smoothExPolygons(solidYellowExPolygons, 3);
+        const yellowShapes = exPolygonsToThreeShapes(yellowExPolygons, invScale);
+
+        if (yellowShapes.length > 0) {
+            const yellowGeo = new THREE.ExtrudeGeometry(yellowShapes, {
+                depth: 1.0,
+                bevelEnabled: true,
+                bevelThickness: 0.18,
+                bevelSize: 0.18,
+                bevelSegments: 3,
+                curveSegments: 36
+            });
+            const yellowMat = new THREE.MeshStandardMaterial({
+                color: 0xFED100, // Authentic LEGO Bright Sunny Yellow
+                roughness: 0.30,
+                metalness: 0.04
+            });
+            const yellowMesh = new THREE.Mesh(yellowGeo, yellowMat);
+            yellowMesh.position.z = 3.2; // Exactly 3.2mm Elevation
+            yellowMesh.castShadow = true;
+            group.add(yellowMesh);
+        }
+
+        // ------------------------------------------------------------
+        // 3. RED BASE PLATE (0.0mm -> 3.2mm, Height = 3.2mm)
+        // Hierarchically offset the YELLOW BRIM boundary by 2.6mm
+        // Forms a unified, silky-smooth continuous capsule/emblem contour
+        // ------------------------------------------------------------
+        const yellowOuterBoundaries = rawYellowExPolygons.map(exp => exp.outer).filter(Boolean);
+        const redExtraOffsetMm = Math.max(2.0, (params.outlineSize || 4.5) * 0.58);
         const coRed = new ClipperLib.ClipperOffset(2.0, arcTol);
-        coRed.AddPaths(cleanOuterPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        coRed.AddPaths(yellowOuterBoundaries, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
         const redOffsetPaths = new ClipperLib.Paths();
-        coRed.Execute(redOffsetPaths, redOutlineMm * CLIPPER_SCALE);
+        coRed.Execute(redOffsetPaths, redExtraOffsetMm * CLIPPER_SCALE);
 
-        // Find bounding box of red offset to place keychain eyelet ring
+        // Find bounding box of red offset to integrate keychain eyelet tab
         let redMinX = Infinity, redMaxX = -Infinity, redMinY = Infinity, redMaxY = -Infinity;
         redOffsetPaths.forEach(path => {
             path.forEach(pt => {
@@ -598,14 +685,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const redCenterY = (redMinY + redMaxY) / 2;
         const holeDiameterMm = Math.max(3.5, params.holeSize || 5.0);
-        const eyeletOuterRadiusMm = (holeDiameterMm / 2) + 2.8;
+        const eyeletOuterRadiusMm = (holeDiameterMm / 2) + 3.4;
         const eyeletOuterR = eyeletOuterRadiusMm * CLIPPER_SCALE;
         const eyeletInnerR = (holeDiameterMm / 2) * CLIPPER_SCALE;
 
-        const eyeletX = redMinX - (eyeletOuterR * 0.70) + ((params.holeX || 3.0) * CLIPPER_SCALE * 0.5);
+        // Position eyelet circle integrated seamlessly into left edge of red base
+        const eyeletX = redMinX - (eyeletOuterR * 0.40) + ((params.holeX || 3.0) * CLIPPER_SCALE * 0.25);
         const eyeletY = redCenterY + ((params.holeY || 0.0) * CLIPPER_SCALE * 0.5);
 
-        // Create 64-segment ultra-round circular eyelet
+        // 64-segment ultra-round circular eyelet outer boundary
         const eyeletOuterCircle = [];
         const numEyeletPts = 64;
         for (let i = 0; i < numEyeletPts; i++) {
@@ -616,14 +704,24 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Mathematical Boolean Union of Text Outline + Keychain Ring
+        // Tangential Bridge (trapezoid hull) to eliminate any skinny neck / pinch
+        const bridgePoly = [
+            { X: Math.round(eyeletX), Y: Math.round(eyeletY + eyeletOuterR) },
+            { X: Math.round(eyeletX + eyeletOuterR * 1.5), Y: Math.round(eyeletY + eyeletOuterR * 1.35) },
+            { X: Math.round(eyeletX + eyeletOuterR * 1.5), Y: Math.round(eyeletY - eyeletOuterR * 1.35) },
+            { X: Math.round(eyeletX), Y: Math.round(eyeletY - eyeletOuterR) }
+        ];
+
+        // Boolean Union: Red Base Perimeter + Eyelet Circle + Tangential Bridge
         const redClipper = new ClipperLib.Clipper();
         redClipper.AddPaths(redOffsetPaths, ClipperLib.PolyType.ptSubject, true);
         redClipper.AddPath(eyeletOuterCircle, ClipperLib.PolyType.ptClip, true);
+        redClipper.AddPath(bridgePoly, ClipperLib.PolyType.ptClip, true);
         const redPolyTree = new ClipperLib.PolyTree();
         redClipper.Execute(ClipperLib.ClipType.ctUnion, redPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
         const rawRedExPolygons = ClipperLib.JS.PolyTreeToExPolygons(redPolyTree);
-        const redExPolygons = smoothExPolygons(rawRedExPolygons, 3); // 3-stage smoothing eliminates all creases
+        const solidRedExPolygons = rawRedExPolygons.map(exp => ({ outer: exp.outer, holes: [] }));
+        const redExPolygons = smoothExPolygons(solidRedExPolygons, 3);
         const redShapes = exPolygonsToThreeShapes(redExPolygons, invScale);
 
         // Add 3D Keychain Through-Hole to the red base
@@ -642,7 +740,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 bevelSegments: 4,
                 curveSegments: 36
             });
-            const redMesh = new THREE.Mesh(redGeo, getBaseMaterial()); // Ruby Red (User Selected)
+            const redMesh = new THREE.Mesh(redGeo, getBaseMaterial()); // Ruby Red / LEGO Red
             redMesh.position.z = 0.0;
             redMesh.castShadow = true;
             redMesh.receiveShadow = true;
@@ -650,72 +748,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // ------------------------------------------------------------
-        // 2. YELLOW ACCENT BRIM (3.2mm -> 4.2mm, Height = 1.0mm)
-        // ------------------------------------------------------------
-        const yellowOutlineMm = Math.max(2.4, redOutlineMm - 1.8);
-        const coYellow = new ClipperLib.ClipperOffset(2.0, arcTol);
-        coYellow.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-        const yellowPolyTree = new ClipperLib.PolyTree();
-        coYellow.Execute(yellowPolyTree, yellowOutlineMm * CLIPPER_SCALE);
-        const rawYellowExPolygons = ClipperLib.JS.PolyTreeToExPolygons(yellowPolyTree);
-        const yellowExPolygons = smoothExPolygons(rawYellowExPolygons, 3);
-        const yellowShapes = exPolygonsToThreeShapes(yellowExPolygons, invScale);
-
-        if (yellowShapes.length > 0) {
-            const yellowGeo = new THREE.ExtrudeGeometry(yellowShapes, {
-                depth: 1.0,
-                bevelEnabled: true,
-                bevelThickness: 0.18,
-                bevelSize: 0.18,
-                bevelSegments: 3,
-                curveSegments: 36
-            });
-            const yellowMat = new THREE.MeshStandardMaterial({
-                color: 0xFFD700, // Vibrant LEGO Yellow
-                roughness: 0.35,
-                metalness: 0.05
-            });
-            const yellowMesh = new THREE.Mesh(yellowGeo, yellowMat);
-            yellowMesh.position.z = 3.2; // EXACTLY 3.2mm Elevation!
-            yellowMesh.castShadow = true;
-            group.add(yellowMesh);
-        }
-
-        // ------------------------------------------------------------
-        // 3. BLACK OUTLINE LAYER (4.2mm -> 5.2mm, Height = 1.0mm)
-        // ------------------------------------------------------------
-        const blackOutlineMm = Math.max(1.1, yellowOutlineMm - 1.4);
-        const coBlack = new ClipperLib.ClipperOffset(2.0, arcTol);
-        coBlack.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-        const blackPolyTree = new ClipperLib.PolyTree();
-        coBlack.Execute(blackPolyTree, blackOutlineMm * CLIPPER_SCALE);
-        const rawBlackExPolygons = ClipperLib.JS.PolyTreeToExPolygons(blackPolyTree);
-        const blackExPolygons = smoothExPolygons(rawBlackExPolygons, 3);
-        const blackShapes = exPolygonsToThreeShapes(blackExPolygons, invScale);
-
-        if (blackShapes.length > 0) {
-            const blackGeo = new THREE.ExtrudeGeometry(blackShapes, {
-                depth: 1.0,
-                bevelEnabled: true,
-                bevelThickness: 0.18,
-                bevelSize: 0.18,
-                bevelSegments: 3,
-                curveSegments: 36
-            });
-            const blackMat = new THREE.MeshStandardMaterial({
-                color: 0x141414, // Solid Jet Black
-                roughness: 0.45,
-                metalness: 0.10
-            });
-            const blackMesh = new THREE.Mesh(blackGeo, blackMat);
-            blackMesh.position.z = 4.2; // EXACTLY 4.2mm Elevation!
-            blackMesh.castShadow = true;
-            group.add(blackMesh);
-        }
-
-        // ------------------------------------------------------------
         // 4. WHITE RAISED LETTERS (5.2mm -> 6.0mm, Height = 0.8mm)
-        // Extrude shapes with exact inner holes for O, A, B, D, P, R, etc.
+        // Letters with precise holes (O, A, B, D, P, R, etc.)
         // ------------------------------------------------------------
         const smoothedWhiteExPolys = smoothExPolygons(exPolys, 2);
         const whiteShapes = exPolygonsToThreeShapes(smoothedWhiteExPolys, invScale);
@@ -731,11 +765,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             const whiteMat = new THREE.MeshStandardMaterial({
                 color: 0xFFFFFF, // Pure Solid White
-                roughness: 0.30,
-                metalness: 0.05
+                roughness: 0.28,
+                metalness: 0.02
             });
             const whiteMesh = new THREE.Mesh(whiteGeo, whiteMat);
-            whiteMesh.position.z = 5.2; // EXACTLY 5.2mm Elevation! Total = 6.0mm
+            whiteMesh.position.z = 5.2; // Exactly 5.2mm Elevation, Total = 6.0mm
             whiteMesh.castShadow = true;
             group.add(whiteMesh);
         }
