@@ -98,7 +98,7 @@
 .nameplate-3d {
     transform-style: preserve-3d;
     transition: transform 0.08s ease-out;
-    transform: rotateX(15deg) rotateY(-20deg);
+    transform: rotateX(22deg) rotateY(22deg);
     position: relative;
 }
 
@@ -129,7 +129,7 @@
 
 .layer-3d-svg {
     position: absolute;
-    top: 50%; left: 50%;
+    top: 0; left: 0;
     pointer-events: none;
     transform-origin: center center;
 }

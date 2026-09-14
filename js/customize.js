@@ -34,6 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const elLetterThickSlider = document.getElementById('scad-letter-thick-slider');
     const valThickness = document.getElementById('val-thickness');
 
+    const elHoleSizeNum = document.getElementById('scad-hole-size');
+    const elHoleSizeSlider = document.getElementById('scad-hole-size-slider');
+
+    const elHoleXNum = document.getElementById('scad-hole-x');
+    const elHoleXSlider = document.getElementById('scad-hole-x-slider');
+
     const elHoleYNum = document.getElementById('scad-hole-y');
     const elHoleYSlider = document.getElementById('scad-hole-y-slider');
 
@@ -62,8 +68,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFinish = 'standard';
 
     // Camera 3D Orbit Angles
-    let rotX = 18;
-    let rotY = -22;
+    let rotX = 22;
+    let rotY = 22;
 
     // History Stack for Undo
     let stateHistory = [];
@@ -226,91 +232,114 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: ${svgW}px;
                 height: ${svgH}px;
                 transform: translateZ(${zPos}px);
-                filter: ${dropShadow ? 'drop-shadow(0 15px 25px rgba(0,0,0,0.65))' : 'none'};
+                filter: ${dropShadow ? 'drop-shadow(0 25px 30px rgba(0,0,0,0.75))' : 'none'};
             `;
-            div.innerHTML = `<svg viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="overflow:visible;">${svgContent}</svg>`;
+            div.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="overflow:visible;">${svgContent}</svg>`;
             nameplate3D.appendChild(div);
         }
+
+        // (Build plate is now in the scene CSS, not inside nameplate3D)
 
         // ==========================================
         // 1. LEGO KEYCHAIN MODEL (AUTHENTIC MULTI-LAYER BUBBLE CONTOURS)
         // ==========================================
         if (currentTemplate === 'lego') {
-            const baseColor = currentColor; // e.g. Red
-            const yellowColor = '#FFD700';  // authentic LEGO Yellow
-            const blackColor = '#111111';   // authentic LEGO Black stroke
-
-            // --- A. Red Extruded Base Bubble Layers ---
-            const baseCount = Math.max(5, Math.floor(baseThick * 2.5));
+            const baseColor = currentColor;
+            const yellowColor = '#FFD700';
+            const blackColor = '#111111';
+            const zStep = 0.35;
             let zCurrent = 0;
 
+            // ===== PHASE 1: RED BASE PLATE + BUBBLE TEXT OUTLINE =====
+            const baseCount = Math.max(25, Math.floor(baseThick * 18));
+
             for (let i = 0; i < baseCount; i++) {
-                const col = (i === 0) ? darkenColor(baseColor, 28) : (i === baseCount - 1 ? baseColor : darkenColor(baseColor, 15));
                 const isBottom = (i === 0);
+                const isTop = (i === baseCount - 1);
+                const darkness = isBottom ? 40 : Math.round(20 * (1 - i / baseCount));
+                const col = darkenColor(baseColor, darkness);
 
                 const svgContent = `
-                    <!-- Keychain Ring Outer Base Circle -->
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 3}" />
-                    <!-- Text Contoured Bubble Base Outline -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="2" />
                     <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
                           font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 7 + 20}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 7 + 22}"
                           stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
-                    <!-- Keychain Hole Cutout -->
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#14121d" />
+                    ${isTop ? `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner + 1}" fill="#050505" />` : ''}
                 `;
                 addSvgLayer(svgContent, zCurrent, isBottom);
-                zCurrent += 1.4;
+                zCurrent += zStep;
             }
 
-            // --- B. Yellow Inner Contour Accent Layers ---
-            const yellowCount = 3;
+            // ===== PHASE 2: YELLOW ACCENT OUTLINE =====
+            const yellowCount = 8;
             for (let i = 0; i < yellowCount; i++) {
+                const t = i / (yellowCount - 1);
+                const yCol = `rgb(${Math.round(180 + 75*t)},${Math.round(160 + 55*t)},0)`;
                 const svgContent = `
-                    <!-- Keyring Yellow Accent Ring -->
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - 2}" fill="none" stroke="${yellowColor}" stroke-width="${outlineSize * 2 + 4}" />
-                    <!-- Text Yellow Inner Contour -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - 1}" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 1.8 + 5}" />
                     <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
                           font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="none" stroke="${yellowColor}" stroke-width="${outlineSize * 4 + 10}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 3.5 + 9}"
                           stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner + 1}" fill="#050505" />
                 `;
                 addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += 1.2;
+                zCurrent += zStep;
             }
 
-            // --- C. Black Shadow Contour Accent Layers ---
-            const blackCount = 3;
+            // ===== PHASE 3: BLACK SHADOW OUTLINE =====
+            const blackCount = 8;
             for (let i = 0; i < blackCount; i++) {
+                const t = i / (blackCount - 1);
+                const bCol = `rgb(${Math.round(30*t)},${Math.round(30*t)},${Math.round(30*t)})`;
                 const svgContent = `
-                    <!-- Keyring Black Accent Ring -->
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - outlineSize * 1.5}" fill="none" stroke="${blackColor}" stroke-width="3.5" />
-                    <!-- Text Black Inner Shadow Outline -->
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - outlineSize}" fill="none" stroke="${bCol}" stroke-width="3" />
                     <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
                           font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${blackColor}" stroke="${blackColor}" stroke-width="${outlineSize * 1.8 + 4}"
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${bCol}" stroke="${bCol}" stroke-width="${outlineSize * 1.2 + 3}"
                           stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner + 1}" fill="#050505" />
                 `;
                 addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += 1.2;
+                zCurrent += zStep;
             }
 
-            // --- D. Top 3D Extruded White Text Layers ---
-            const textCount = Math.max(5, Math.floor(letterThick * 2.2));
-            const sideTextColor = (currentFinish === 'neon') ? '#35AA9E' : '#DCDCDC';
+            // ===== PHASE 4: WHITE 3D TEXT (gradient from dark side to bright top) =====
+            const textCount = Math.max(25, Math.floor(letterThick * 18));
             const topTextColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#FFFFFF');
+            const topR = parseInt(topTextColor.slice(1,3),16);
+            const topG = parseInt(topTextColor.slice(3,5),16);
+            const topB = parseInt(topTextColor.slice(5,7),16);
 
             for (let i = 0; i < textCount; i++) {
-                const isTop = (i === textCount - 1);
-                const col = isTop ? topTextColor : sideTextColor;
+                const t = i / Math.max(1, textCount - 1);
+                const r = Math.round(80 + (topR - 80) * t);
+                const g = Math.round(80 + (topG - 80) * t);
+                const b = Math.round(80 + (topB - 80) * t);
+                const col = `rgb(${r},${g},${b})`;
 
                 const svgContent = `
                     <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
                           font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1.2">${upperText}</text>
+                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1">${upperText}</text>
                 `;
                 addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += 1.2;
+                zCurrent += zStep;
+            }
+
+            // ===== PHASE 5: KEYRING EXTRUDED ABOVE PLATE =====
+            const ringBaseZ = zCurrent + 1;
+            const ringLayers = 16;
+            for (let i = 0; i < ringLayers; i++) {
+                const t = i / (ringLayers - 1);
+                const darkness = Math.round(42 * (1 - t));
+                const rCol = darkenColor(baseColor, darkness);
+                const svgContent = `
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${rCol}" stroke="${darkenColor(rCol,8)}" stroke-width="2" />
+                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#000000" />
+                `;
+                addSvgLayer(svgContent, ringBaseZ + i * zStep * 2, false);
             }
         }
         // ==========================================
@@ -318,40 +347,51 @@ document.addEventListener('DOMContentLoaded', () => {
         // ==========================================
         else {
             const baseColor = currentColor;
-            const baseCount = Math.max(5, Math.floor(baseThick * 2.5));
+            const baseCount = Math.max(20, Math.floor(baseThick * 15));
             let zCurrent = 0;
+            const zStep = 0.35;
 
             // Extruded Base Plate
             for (let i = 0; i < baseCount; i++) {
-                const col = (i === 0) ? darkenColor(baseColor, 28) : (i === baseCount - 1 ? baseColor : darkenColor(baseColor, 15));
                 const isBottom = (i === 0);
+                const isTop = (i === baseCount - 1);
+                const col = isBottom ? darkenColor(baseColor, 35) : (isTop ? baseColor : darkenColor(baseColor, 18));
 
-                let extraGraphic = '';
-                if (currentTemplate === 'deskstand') {
-                    // Trophy Pedestal Stand below plate
-                    extraGraphic = `<rect x="${cx - estTextWidth/2 - 30}" y="${cy + textSize * 1.2}" width="${estTextWidth + 60}" height="22" rx="6" fill="${darkenColor(baseColor, 35)}" stroke="${col}" stroke-width="3" />`;
+                const rectX = cx - estTextWidth/2 - 20 - outlineSize * 2;
+                const rectY = cy - textSize * 1.3 - outlineSize * 2;
+                const rectW = estTextWidth + 40 + outlineSize * 4;
+                const rectH = textSize * 2.6 + outlineSize * 4;
+                
+                let baseShapeSVG = '';
+
+                if (currentTemplate === 'nametag') {
+                    const rx = rectH / 2;
+                    baseShapeSVG = `
+                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 2}" />
+                        <rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="${rx}" fill="${col}" stroke="${darkenColor(col, 10)}" stroke-width="${outlineSize * 2}" />
+                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#14121d" />
+                    `;
+                } else if (currentTemplate === 'deskstand') {
+                    baseShapeSVG = `
+                        <rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="4" fill="${col}" stroke="${darkenColor(col, 10)}" stroke-width="${outlineSize * 2}" />
+                        <rect x="${rectX - 10}" y="${rectY + rectH - 5}" width="${rectW + 20}" height="22" rx="4" fill="${isTop ? darkenColor(baseColor, 20) : darkenColor(baseColor, 35)}" stroke="${col}" stroke-width="3" />
+                    `;
                 } else if (currentTemplate === 'badge') {
-                    // Shield Crest Border Trim
-                    extraGraphic = `<rect x="${cx - estTextWidth/2 - 25}" y="${cy - textSize * 1.5}" width="${estTextWidth + 50}" height="${textSize * 3}" rx="14" fill="none" stroke="${lightenColor(baseColor, 30)}" stroke-width="5" />`;
+                    const pathData = `M ${rectX} ${rectY} L ${rectX + rectW} ${rectY} L ${rectX + rectW} ${rectY + rectH * 0.55} Q ${rectX + rectW} ${rectY + rectH * 1.1} ${rectX + rectW/2} ${rectY + rectH * 1.15} Q ${rectX} ${rectY + rectH * 1.1} ${rectX} ${rectY + rectH * 0.55} Z`;
+                    baseShapeSVG = `
+                        <path d="${pathData}" fill="${col}" stroke="${darkenColor(col, 10)}" stroke-width="${outlineSize * 2}" stroke-linejoin="round" />
+                        <!-- Inner Trim (only on top layer) -->
+                        ${isTop ? `<path d="${pathData}" fill="none" stroke="${lightenColor(baseColor, 30)}" stroke-width="3" transform="scale(0.95) translate(${rectX*0.05 + rectW*0.025}, ${rectY*0.05 + rectH*0.025})" />` : ''}
+                    `;
                 }
 
-                const svgContent = `
-                    ${(currentTemplate === 'nametag') ? `
-                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 2}" />
-                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#14121d" />
-                    ` : ''}
-                    <rect x="${cx - estTextWidth/2 - 20 - outlineSize * 2}" y="${cy - textSize * 1.3 - outlineSize * 2}" 
-                          width="${estTextWidth + 40 + outlineSize * 4}" height="${textSize * 2.6 + outlineSize * 4}" 
-                          rx="16" fill="${col}" stroke="${darkenColor(col, 15)}" stroke-width="${outlineSize * 2}" />
-                    ${extraGraphic}
-                `;
-                addSvgLayer(svgContent, zCurrent, isBottom);
-                zCurrent += 1.4;
+                addSvgLayer(baseShapeSVG, zCurrent, isBottom);
+                zCurrent += zStep;
             }
 
             // Top Raised Text Layers
-            const textCount = Math.max(5, Math.floor(letterThick * 2.2));
-            const sideTextColor = (currentFinish === 'silk') ? '#D5B242' : '#E8E8E8';
+            const textCount = Math.max(20, Math.floor(letterThick * 15));
+            const sideTextColor = (currentFinish === 'silk') ? '#A3862A' : '#B0B0B0';
             const topTextColor = (currentFinish === 'silk') ? '#FFE680' : '#FFFFFF';
 
             for (let i = 0; i < textCount; i++) {
@@ -364,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                           letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1.2">${upperText}</text>
                 `;
                 addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += 1.2;
+                zCurrent += zStep;
             }
         }
 
