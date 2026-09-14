@@ -122,99 +122,218 @@
                     <div class="stage-hint">🖐️ Drag to Rotate • Scroll to Zoom</div>
                 </div>
 
-                <!-- Right: Controls -->
-                <div class="clay-card customizer-controls reveal-on-scroll">
-                    <h3 style="margin-bottom:1.2rem; color:var(--c-primary);">🎨 3D Model Parameters</h3>
-
-                    <!-- 3D Template Variant Cards -->
-                    <div class="form-group">
-                        <label>3D Model Template</label>
-                        <div class="template-options" id="template-options">
-                            <div class="template-option active" data-template="keyring">
-                                <span class="tpl-icon">🔑</span>
-                                <span class="tpl-title">Keyring</span>
-                            </div>
-                            <div class="template-option" data-template="deskstand">
-                                <span class="tpl-icon">🏆</span>
-                                <span class="tpl-title">Desk Stand</span>
-                            </div>
-                            <div class="template-option" data-template="pettag">
-                                <span class="tpl-icon">🏷️</span>
-                                <span class="tpl-title">Pet Tag</span>
-                            </div>
-                            <div class="template-option" data-template="badge">
-                                <span class="tpl-icon">🛡️</span>
-                                <span class="tpl-title">Badge Plaque</span>
+                <!-- Right: Parametric OpenSCAD Model Maker Controls -->
+                <div class="clay-card customizer-controls reveal-on-scroll" id="parametric-controls-card">
+                    <!-- Top Bar: SCAD Model Selector -->
+                    <div class="scad-header-bar">
+                        <div class="scad-title-row">
+                            <span class="scad-icon">🧊</span>
+                            <div class="scad-info">
+                                <span class="scad-badge">OPENSCAD PARAMETRIC</span>
+                                <h3 class="scad-model-name">Parametric Model Maker</h3>
                             </div>
                         </div>
-                    </div>
-                    
-                    <!-- Name Input -->
-                    <div class="form-group">
-                        <label for="cust-text">Your Name / Text</label>
-                        <input type="text" id="cust-text" class="clay-input" value="Ibrahim" maxlength="14" style="font-size:1.2rem; font-weight:700; letter-spacing:1px;">
-                        <small style="color:var(--c-text-muted);">Maximum 14 characters for best 3D output</small>
-                    </div>
 
-                    <!-- Compact Horizontal Font Pills -->
-                    <div class="form-group">
-                        <label>Font Style</label>
-                        <div class="font-scroll-wrapper">
-                            <div class="font-scroll-strip" id="font-options">
-                                <div class="font-pill active" data-font="'Lobster', cursive"><span class="fp-preview" style="font-family:'Lobster',cursive;">Abc</span><span class="fp-name">Lobster</span></div>
-                                <div class="font-pill" data-font="'Chewy', cursive"><span class="fp-preview" style="font-family:'Chewy',cursive;">Abc</span><span class="fp-name">Chewy</span></div>
-                                <div class="font-pill" data-font="'Fredoka', sans-serif"><span class="fp-preview" style="font-family:'Fredoka',sans-serif;">Abc</span><span class="fp-name">Fredoka</span></div>
-                                <div class="font-pill" data-font="'Baloo 2', cursive"><span class="fp-preview" style="font-family:'Baloo 2',cursive;">Abc</span><span class="fp-name">Baloo 2</span></div>
-                                <div class="font-pill" data-font="'Pacifico', cursive"><span class="fp-preview" style="font-family:'Pacifico',cursive;">Abc</span><span class="fp-name">Pacifico</span></div>
-                                <div class="font-pill" data-font="'Righteous', cursive"><span class="fp-preview" style="font-family:'Righteous',cursive;">Abc</span><span class="fp-name">Righteous</span></div>
-                                <div class="font-pill" data-font="'Lilita One', sans-serif"><span class="fp-preview" style="font-family:'Lilita One',sans-serif;">Abc</span><span class="fp-name">Lilita One</span></div>
-                                <div class="font-pill" data-font="'Orbitron', sans-serif"><span class="fp-preview" style="font-family:'Orbitron',sans-serif;">Abc</span><span class="fp-name">Orbitron</span></div>
-                                <div class="font-pill" data-font="'Montserrat', sans-serif"><span class="fp-preview" style="font-family:'Montserrat',sans-serif;">Abc</span><span class="fp-name">Montserrat</span></div>
-                                <div class="font-pill" data-font="'Crafty Girls', cursive"><span class="fp-preview" style="font-family:'Crafty Girls',cursive;">Abc</span><span class="fp-name">Crafty</span></div>
+                        <!-- SCAD Model Dropdown Selector -->
+                        <div class="scad-select-wrapper">
+                            <label for="scad-model-select">Customizable Model (.scad)</label>
+                            <div class="scad-select-box">
+                                <span class="scad-file-icon">📜</span>
+                                <select id="scad-model-select" class="scad-dropdown">
+                                    <option value="lego" selected>LEGO Keychain.scad</option>
+                                    <option value="nametag">Customizable Name Tag.scad</option>
+                                    <option value="deskstand">Desk Stand Trophy.scad</option>
+                                    <option value="badge">Badge Plaque Shield.scad</option>
+                                </select>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Base Color (Visual Swatches) -->
-                    <div class="form-group">
-                        <label>Base Material Color</label>
-                        <div class="color-swatches" id="color-swatches">
-                            <button class="color-swatch active" data-color="#2979FF" data-name="Ocean Blue" data-rate="5.0" style="background:#2979FF;" title="Ocean Blue PLA"></button>
-                            <button class="color-swatch" data-color="#00BCD4" data-name="Cyan Blue" data-rate="5.0" style="background:#00BCD4;" title="Cyan Blue PLA"></button>
-                            <button class="color-swatch" data-color="#D32F2F" data-name="Ruby Red" data-rate="7.0" style="background:#D32F2F;" title="Ruby Red ABS"></button>
-                            <button class="color-swatch" data-color="#222222" data-name="Carbon Black" data-rate="5.0" style="background:#222222;" title="Carbon Black PLA"></button>
-                            <button class="color-swatch" data-color="#E5C158" data-name="Silk Gold" data-rate="8.0" style="background:linear-gradient(135deg, #d4a843, #f0d878, #c9993a);" title="Silk Gold PLA"></button>
-                            <button class="color-swatch" data-color="#7B1FA2" data-name="Purple" data-rate="5.5" style="background:#7B1FA2;" title="Royal Purple PLA"></button>
-                            <button class="color-swatch" data-color="#388E3C" data-name="Forest Green" data-rate="5.0" style="background:#388E3C;" title="Forest Green PLA"></button>
-                            <button class="color-swatch" data-color="#FF6F00" data-name="Sunset Orange" data-rate="5.5" style="background:#FF6F00;" title="Sunset Orange PLA"></button>
+                    <!-- Parametric Accordion Sections -->
+                    <div class="scad-accordion-container">
+                        
+                        <!-- Accordion 1: Text -->
+                        <div class="scad-accordion-item open" id="acc-text">
+                            <button type="button" class="scad-accordion-header" onclick="toggleScadAccordion('acc-text')">
+                                <span class="acc-title">📝 Text</span>
+                                <span class="acc-chevron">▾</span>
+                            </button>
+                            <div class="scad-accordion-body">
+                                <div class="scad-param-field">
+                                    <label for="cust-text">nome <span class="param-hint">(Text String)</span></label>
+                                    <input type="text" id="cust-text" class="scad-text-input" value="LEGO" maxlength="14">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <label>Font Style</label>
+                                    <div class="font-scroll-wrapper">
+                                        <div class="font-scroll-strip" id="font-options">
+                                            <div class="font-pill active" data-font="'Fredoka', sans-serif"><span class="fp-preview" style="font-family:'Fredoka',sans-serif;">LEGO</span><span class="fp-name">LEGO 3D</span></div>
+                                            <div class="font-pill" data-font="'Baloo 2', cursive"><span class="fp-preview" style="font-family:'Baloo 2',cursive;">Abc</span><span class="fp-name">Baloo 2</span></div>
+                                            <div class="font-pill" data-font="'Lilita One', sans-serif"><span class="fp-preview" style="font-family:'Lilita One',sans-serif;">Abc</span><span class="fp-name">Lilita</span></div>
+                                            <div class="font-pill" data-font="'Lobster', cursive"><span class="fp-preview" style="font-family:'Lobster',cursive;">Abc</span><span class="fp-name">Lobster</span></div>
+                                            <div class="font-pill" data-font="'Chewy', cursive"><span class="fp-preview" style="font-family:'Chewy',cursive;">Abc</span><span class="fp-name">Chewy</span></div>
+                                            <div class="font-pill" data-font="'Pacifico', cursive"><span class="fp-preview" style="font-family:'Pacifico',cursive;">Abc</span><span class="fp-name">Pacifico</span></div>
+                                            <div class="font-pill" data-font="'Righteous', cursive"><span class="fp-preview" style="font-family:'Righteous',cursive;">Abc</span><span class="fp-name">Righteous</span></div>
+                                            <div class="font-pill" data-font="'Orbitron', sans-serif"><span class="fp-preview" style="font-family:'Orbitron',sans-serif;">Abc</span><span class="fp-name">Orbitron</span></div>
+                                            <div class="font-pill" data-font="'Montserrat', sans-serif"><span class="fp-preview" style="font-family:'Montserrat',sans-serif;">Abc</span><span class="fp-name">Montserrat</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Material Finish Swatches -->
-                    <div class="form-group">
-                        <label>Surface Finish</label>
-                        <div class="finish-options" id="finish-options">
-                            <button class="finish-option active" data-finish="standard">Matte PLA</button>
-                            <button class="finish-option" data-finish="silk">Silk Metallic</button>
-                            <button class="finish-option" data-finish="satin">Glossy Satin</button>
-                            <button class="finish-option" data-finish="neon">Neon Glow</button>
+                        <!-- Accordion 2: Brim / Base Outline -->
+                        <div class="scad-accordion-item open" id="acc-brim">
+                            <button type="button" class="scad-accordion-header" onclick="toggleScadAccordion('acc-brim')">
+                                <span class="acc-title">🛡️ Brim & Outline</span>
+                                <span class="acc-chevron">▾</span>
+                            </button>
+                            <div class="scad-accordion-body">
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-outline-size">Outline Size</label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-outline">-</button>
+                                            <input type="number" id="scad-outline-size" value="4.5" step="0.5" min="0" max="10">
+                                            <button type="button" class="stepper-btn" id="btn-plus-outline">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-outline-slider" class="scad-slider" min="0" max="10" step="0.5" value="4.5">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-base-thick">Base Thickness (mm)</label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-basethick">-</button>
+                                            <input type="number" id="scad-base-thick" value="1.5" step="0.5" min="1" max="8">
+                                            <button type="button" class="stepper-btn" id="btn-plus-basethick">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-base-thick-slider" class="scad-slider" min="1" max="8" step="0.5" value="1.5">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <label>Base Color</label>
+                                    <div class="color-swatches" id="color-swatches">
+                                        <button class="color-swatch active" data-color="#D32F2F" data-name="Ruby Red" data-rate="7.0" style="background:#D32F2F;" title="Ruby Red"></button>
+                                        <button class="color-swatch" data-color="#E5C158" data-name="LEGO Yellow" data-rate="6.0" style="background:#E5C158;" title="LEGO Yellow"></button>
+                                        <button class="color-swatch" data-color="#2979FF" data-name="Ocean Blue" data-rate="5.0" style="background:#2979FF;" title="Ocean Blue"></button>
+                                        <button class="color-swatch" data-color="#222222" data-name="Carbon Black" data-rate="5.0" style="background:#222222;" title="Carbon Black"></button>
+                                        <button class="color-swatch" data-color="#388E3C" data-name="Green" data-rate="5.0" style="background:#388E3C;" title="Forest Green"></button>
+                                        <button class="color-swatch" data-color="#FF6F00" data-name="Orange" data-rate="5.5" style="background:#FF6F00;" title="Sunset Orange"></button>
+                                    </div>
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <label>Surface Finish</label>
+                                    <div class="finish-options" id="finish-options">
+                                        <button class="finish-option active" data-finish="standard">Matte PLA</button>
+                                        <button class="finish-option" data-finish="silk">Silk Metallic</button>
+                                        <button class="finish-option" data-finish="satin">Glossy Satin</button>
+                                        <button class="finish-option" data-finish="neon">Neon Glow</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
+
+                        <!-- Accordion 3: Letters -->
+                        <div class="scad-accordion-item open" id="acc-letters">
+                            <button type="button" class="scad-accordion-header" onclick="toggleScadAccordion('acc-letters')">
+                                <span class="acc-title">🔤 Letters & Geometry</span>
+                                <span class="acc-chevron">▾</span>
+                            </button>
+                            <div class="scad-accordion-body">
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-text-size">Text Size</label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-textsize">-</button>
+                                            <input type="number" id="scad-text-size" value="18" step="1" min="10" max="30">
+                                            <button type="button" class="stepper-btn" id="btn-plus-textsize">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-text-size-slider" class="scad-slider" min="10" max="30" step="1" value="18">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-space-width">Space Width / Letter Spacing</label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-space">-</button>
+                                            <input type="number" id="scad-space-width" value="1.0" step="0.5" min="0" max="6">
+                                            <button type="button" class="stepper-btn" id="btn-plus-space">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-space-width-slider" class="scad-slider" min="0" max="6" step="0.5" value="1.0">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="cust-thickness">Letter Thickness (mm)</label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-thick">-</button>
+                                            <input type="number" id="cust-thickness" value="3.0" step="0.5" min="1" max="10">
+                                            <button type="button" class="stepper-btn" id="btn-plus-thick">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-letter-thick-slider" class="scad-slider" min="1" max="10" step="0.5" value="3.0">
+                                    <span id="val-thickness" style="display:none;">3.0mm</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Accordion 4: Keychain Hole -->
+                        <div class="scad-accordion-item open" id="acc-hole">
+                            <button type="button" class="scad-accordion-header" onclick="toggleScadAccordion('acc-hole')">
+                                <span class="acc-title">🔑 Keychain Hole</span>
+                                <span class="acc-chevron">▾</span>
+                            </button>
+                            <div class="scad-accordion-body">
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-hole-size">Keychain Hole Size Input <span class="param-sublabel">Keychain hole diameter</span></label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-holesize">-</button>
+                                            <input type="number" id="scad-hole-size" value="5.0" step="0.5" min="2" max="12">
+                                            <button type="button" class="stepper-btn" id="btn-plus-holesize">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-hole-size-slider" class="scad-slider" min="2" max="12" step="0.5" value="5.0">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-hole-x">Hole Horizontal Adjustment <span class="param-sublabel">X Movement</span></label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-holex">-</button>
+                                            <input type="number" id="scad-hole-x" value="3.0" step="0.5" min="-20" max="20">
+                                            <button type="button" class="stepper-btn" id="btn-plus-holex">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-hole-x-slider" class="scad-slider" min="-20" max="20" step="0.5" value="3.0">
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
 
-                    <!-- Thickness Slider -->
-                    <div class="form-group">
-                        <label for="cust-thickness">Extrusion Depth: <strong id="val-thickness">5mm</strong></label>
-                        <input type="range" id="cust-thickness" class="clay-slider" min="3" max="10" value="5">
-                    </div>
-
-                    <!-- Pricing -->
+                    <!-- Pricing & Specs Output -->
                     <div class="pricing-panel">
                         <div style="font-size:0.85rem; color:var(--c-text-muted); margin-bottom:0.3rem;">Estimated Price</div>
                         <div id="cust-price" style="font-size:2.4rem; font-weight:800; color:var(--c-accent); font-family:var(--f-head);">৳350</div>
-                        <div id="cust-specs" style="font-size:0.78rem; color:var(--c-text-muted); margin-top:0.4rem;">Keyring • Ocean Blue PLA • 5mm Thick • 7 Letters</div>
+                        <div id="cust-specs" style="font-size:0.78rem; color:var(--c-text-muted); margin-top:0.4rem;">LEGO Keychain.scad • Ruby Red PLA • 3mm Letter • 4.5mm Brim</div>
                     </div>
 
-                    <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:1.5rem;">
+                    <!-- MakerWorld Style Action Bar -->
+                    <div class="scad-action-bar">
+                        <button type="button" id="btn-scad-reset" class="scad-icon-btn" title="Reset to Model Defaults">🔄</button>
+                        <button type="button" id="btn-scad-undo" class="scad-icon-btn" title="Undo Last Change">↩️</button>
+                        <button type="button" id="btn-scad-generate" class="scad-generate-btn">✨ Generate</button>
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:1.2rem;">
                         <button id="btn-add-cart-custom" class="clay-btn btn-lg btn-coral btn-block" style="font-size:1.05rem;" data-i18n="cart_add">🛒 Add to Cart</button>
                         <div style="display:flex; gap:0.8rem;">
                             <button id="btn-save-preset-custom" class="clay-btn btn-cream btn-sm" style="flex:1;" data-i18n="preset_save">⭐ Save Preset</button>

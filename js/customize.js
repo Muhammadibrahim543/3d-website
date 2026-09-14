@@ -1,34 +1,94 @@
+// ============================================================
+// MAKERWORLD OPENSCAD PARAMETRIC 3D MODEL MAKER ENGINE (js/customize.js)
+// ============================================================
+
+window.toggleScadAccordion = function(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.classList.toggle('open');
+    }
+};
+
 document.addEventListener('DOMContentLoaded', () => {
+    // Inputs & Control Elements
     const inputName = document.getElementById('cust-text');
+    const scadSelect = document.getElementById('scad-model-select');
     const fontOptions = document.getElementById('font-options');
     const colorSwatches = document.getElementById('color-swatches');
-    const templateOptions = document.getElementById('template-options');
     const finishOptions = document.getElementById('finish-options');
+
+    // Stepper & Slider Element Handles
+    const elOutlineNum = document.getElementById('scad-outline-size');
+    const elOutlineSlider = document.getElementById('scad-outline-slider');
+
+    const elBaseThickNum = document.getElementById('scad-base-thick');
+    const elBaseThickSlider = document.getElementById('scad-base-thick-slider');
+
+    const elTextSizeNum = document.getElementById('scad-text-size');
+    const elTextSizeSlider = document.getElementById('scad-text-size-slider');
+
+    const elSpaceWidthNum = document.getElementById('scad-space-width');
+    const elSpaceWidthSlider = document.getElementById('scad-space-width-slider');
+
     const inputThickness = document.getElementById('cust-thickness');
+    const elLetterThickSlider = document.getElementById('scad-letter-thick-slider');
     const valThickness = document.getElementById('val-thickness');
 
+    const elHoleSizeNum = document.getElementById('scad-hole-size');
+    const elHoleSizeSlider = document.getElementById('scad-hole-size-slider');
+
+    const elHoleXNum = document.getElementById('scad-hole-x');
+    const elHoleXSlider = document.getElementById('scad-hole-x-slider');
+
+    // 3D Scene Handles
     const nameplate3D = document.getElementById('nameplate-3d');
     const stageCard = document.getElementById('customizer-stage-card');
     const btnResetView = document.getElementById('btn-reset-view');
     const templateBadge = document.getElementById('stage-template-badge');
 
+    // Pricing & Actions
     const displayPrice = document.getElementById('cust-price');
     const displaySpecs = document.getElementById('cust-specs');
     const btnOrder = document.getElementById('btn-order-custom');
+    const btnResetScad = document.getElementById('btn-scad-reset');
+    const btnUndoScad = document.getElementById('btn-scad-undo');
+    const btnGenerateScad = document.getElementById('btn-scad-generate');
 
     if (!inputName || !nameplate3D) return;
 
     // State Variables
-    let currentTemplate = 'keyring';
-    let currentFont = "'Lobster', cursive";
-    let currentColor = '#2979FF';
-    let currentColorName = 'Ocean Blue';
-    let currentRate = 5.0;
+    let currentTemplate = 'lego'; // 'lego', 'nametag', 'deskstand', 'badge'
+    let currentFont = "'Fredoka', sans-serif";
+    let currentColor = '#D32F2F';
+    let currentColorName = 'Ruby Red';
+    let currentRate = 7.0;
     let currentFinish = 'standard';
 
     // Camera 3D Orbit Angles
-    let rotX = 15;
-    let rotY = -20;
+    let rotX = 18;
+    let rotY = -22;
+
+    // History Stack for Undo
+    let stateHistory = [];
+
+    function saveHistoryState() {
+        stateHistory.push({
+            template: currentTemplate,
+            text: inputName.value,
+            font: currentFont,
+            color: currentColor,
+            colorName: currentColorName,
+            finish: currentFinish,
+            outline: elOutlineNum ? elOutlineNum.value : '4.5',
+            baseThick: elBaseThickNum ? elBaseThickNum.value : '1.5',
+            textSize: elTextSizeNum ? elTextSizeNum.value : '18',
+            spaceWidth: elSpaceWidthNum ? elSpaceWidthNum.value : '1.0',
+            letterThick: inputThickness ? inputThickness.value : '3.0',
+            holeSize: elHoleSizeNum ? elHoleSizeNum.value : '5.0',
+            holeX: elHoleXNum ? elHoleXNum.value : '3.0'
+        });
+        if (stateHistory.length > 25) stateHistory.shift();
+    }
 
     // --- Helper: Darken Hex Color ---
     function darkenColor(hex, percent) {
@@ -50,120 +110,142 @@ document.addEventListener('DOMContentLoaded', () => {
         return '#' + (0x1000000 + R*0x10000 + G*0x100 + B).toString(16).padStart(6, '0');
     }
 
-    // --- Helper: Get Template Name Label ---
-    function getTemplateLabel(tpl) {
-        switch(tpl) {
-            case 'deskstand': return 'Desk Stand';
-            case 'pettag': return 'Pet Tag';
-            case 'badge': return 'Badge Plaque';
-            default: return 'Keyring';
+    // --- Helper: Synchronize Stepper & Range Slider Pairs ---
+    function setupParamSync(numEl, sliderEl, minusBtnId, plusBtnId) {
+        if (!numEl) return;
+        const minusBtn = document.getElementById(minusBtnId);
+        const plusBtn = document.getElementById(plusBtnId);
+
+        function applyVal(val) {
+            let v = parseFloat(val);
+            const min = parseFloat(numEl.min || 0);
+            const max = parseFloat(numEl.max || 100);
+            if (isNaN(v)) v = min;
+            if (v < min) v = min;
+            if (v > max) v = max;
+
+            numEl.value = v;
+            if (sliderEl) sliderEl.value = v;
+
+            saveHistoryState();
+            updatePreview();
         }
-    }
-    function getTemplateEmoji(tpl) {
-        switch(tpl) {
-            case 'deskstand': return '🏆';
-            case 'pettag': return '🏷️';
-            case 'badge': return '🛡️';
-            default: return '🔑';
+
+        numEl.addEventListener('input', () => applyVal(numEl.value));
+        if (sliderEl) {
+            sliderEl.addEventListener('input', () => applyVal(sliderEl.value));
+        }
+
+        if (minusBtn) {
+            minusBtn.addEventListener('click', () => {
+                const step = parseFloat(numEl.step || 1);
+                applyVal(parseFloat(numEl.value || 0) - step);
+            });
+        }
+        if (plusBtn) {
+            plusBtn.addEventListener('click', () => {
+                const step = parseFloat(numEl.step || 1);
+                applyVal(parseFloat(numEl.value || 0) + step);
+            });
         }
     }
 
-    // ===== CORE: Build Thick 3D Nameplate with CSS Layers =====
+    // Connect All 6 Stepper-Slider Groups
+    setupParamSync(elOutlineNum, elOutlineSlider, 'btn-minus-outline', 'btn-plus-outline');
+    setupParamSync(elBaseThickNum, elBaseThickSlider, 'btn-minus-basethick', 'btn-plus-basethick');
+    setupParamSync(elTextSizeNum, elTextSizeSlider, 'btn-minus-textsize', 'btn-plus-textsize');
+    setupParamSync(elSpaceWidthNum, elSpaceWidthSlider, 'btn-minus-space', 'btn-plus-space');
+    setupParamSync(inputThickness, elLetterThickSlider, 'btn-minus-thick', 'btn-plus-thick');
+    setupParamSync(elHoleSizeNum, elHoleSizeSlider, 'btn-minus-holesize', 'btn-plus-holesize');
+    setupParamSync(elHoleXNum, elHoleXSlider, 'btn-minus-holex', 'btn-plus-holex');
+
+    // ===== CORE: Build Parametric OpenSCAD 3D Preview =====
     function updatePreview() {
-        const text = inputName.value.trim() || 'Name';
-        const thickness = parseInt(inputThickness.value, 10);
+        const text = inputName.value.trim() || 'LEGO';
         const upperText = text.toUpperCase();
 
-        // Update slider track fill
-        valThickness.textContent = thickness + 'mm';
-        const min = parseInt(inputThickness.min, 10) || 3;
-        const max = parseInt(inputThickness.max, 10) || 10;
-        const pct = ((thickness - min) / (max - min)) * 100;
-        inputThickness.style.background = `linear-gradient(to right, #FF8A75 0%, #FF5E5E ${pct}%, rgba(142, 132, 120, 0.2) ${pct}%, rgba(142, 132, 120, 0.2) 100%)`;
+        const outlineSize = parseFloat(elOutlineNum ? elOutlineNum.value : 4.5);
+        const baseThick = parseFloat(elBaseThickNum ? elBaseThickNum.value : 1.5);
+        const textSize = parseFloat(elTextSizeNum ? elTextSizeNum.value : 18);
+        const spaceWidth = parseFloat(elSpaceWidthNum ? elSpaceWidthNum.value : 1.0);
+        const letterThick = parseFloat(inputThickness ? inputThickness.value : 3.0);
+        const holeSize = parseFloat(elHoleSizeNum ? elHoleSizeNum.value : 5.0);
+        const holeX = parseFloat(elHoleXNum ? elHoleXNum.value : 3.0);
 
-        // Pricing
+        if (valThickness) valThickness.textContent = letterThick + 'mm';
+
+        // --- Calculate Pricing ---
         const numLetters = text.length;
-        const letterFee = 22 * numLetters;
-        const thicknessMultiplier = thickness / 4.0;
+        const letterFee = 20 * numLetters;
+        const thickMultiplier = letterThick / 3.0;
+        const brimMultiplier = 1.0 + (outlineSize * 0.05);
         const matMultiplier = currentRate / 5.0;
 
-        let templateMultiplier = 1.0;
-        if (currentTemplate === 'deskstand') templateMultiplier = 1.35;
-        else if (currentTemplate === 'badge') templateMultiplier = 1.25;
-        else if (currentTemplate === 'pettag') templateMultiplier = 0.9;
+        let modelName = 'LEGO Keychain.scad';
+        if (currentTemplate === 'nametag') modelName = 'Customizable Name Tag.scad';
+        else if (currentTemplate === 'deskstand') modelName = 'Desk Stand Trophy.scad';
+        else if (currentTemplate === 'badge') modelName = 'Badge Plaque Shield.scad';
 
-        const total = Math.round((120 + letterFee) * thicknessMultiplier * matMultiplier * templateMultiplier);
+        const total = Math.round((140 + letterFee) * thickMultiplier * brimMultiplier * matMultiplier);
         
         displayPrice.textContent = '৳' + total.toLocaleString('en-US');
-        displaySpecs.textContent = `${getTemplateLabel(currentTemplate)} • ${currentColorName} PLA • ${thickness}mm Thick • ${numLetters} Letters`;
+        displaySpecs.textContent = `${modelName} • ${currentColorName} PLA • ${letterThick}mm Letter • ${outlineSize}mm Brim`;
 
-        // Update template badge
         if (templateBadge) {
-            templateBadge.textContent = `${getTemplateEmoji(currentTemplate)} ${getTemplateLabel(currentTemplate).toUpperCase()}`;
+            templateBadge.textContent = `🧱 ${modelName.toUpperCase()}`;
         }
 
-        // === Clear & Build 3D Scene ===
+        // === Rebuild 3D Layers ===
         nameplate3D.className = 'nameplate-3d finish-' + currentFinish;
         nameplate3D.innerHTML = '';
 
-        // Sizer element (hidden) to measure text width
+        // Hidden sizer to measure text width
         const sizer = document.createElement('span');
         sizer.className = 'layer-sizer';
         sizer.textContent = upperText;
         sizer.style.fontFamily = currentFont;
+        sizer.style.letterSpacing = spaceWidth + 'px';
         nameplate3D.appendChild(sizer);
 
-        // Helper: Create a single <div> text layer at a given Z position
-        function createTextLayer(opts) {
+        const sizerWidth = sizer.offsetWidth || 180;
+        const sizerHeight = sizer.offsetHeight || 50;
+
+        // Base Plate Dimensions dynamically derived from parameters
+        let plateWidth = sizerWidth + (outlineSize * 14) + 40;
+        let plateHeight = sizerHeight + (outlineSize * 8) + 24;
+
+        if (currentTemplate === 'deskstand') plateWidth += 30;
+        if (currentTemplate === 'badge') { plateWidth += 20; plateHeight += 20; }
+
+        // --- 1. OUTER LEGO / BRIM LAYER (Yellow or Contrast Accent) ---
+        const brimColor = (currentTemplate === 'lego') ? '#E5C158' : lightenColor(currentColor, 25);
+        const brimLayers = Math.max(3, Math.floor(baseThick * 1.5));
+
+        for (let i = 0; i < brimLayers; i++) {
             const div = document.createElement('div');
-            div.className = opts.className || '';
-            if (opts.extraClass) div.classList.add(opts.extraClass);
-            div.textContent = upperText;
+            div.className = 'layer-base layer-brim-outline';
             div.style.cssText = `
                 position: absolute;
-                top: 0; left: 0;
-                width: 100%; height: 100%;
-                font-size: clamp(2.8rem, 7vw, 5rem);
-                font-weight: 900;
-                text-transform: uppercase;
-                letter-spacing: 3px;
-                white-space: nowrap;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transform: translateZ(${opts.z}px);
-                font-family: ${currentFont};
-                color: ${opts.color || 'transparent'};
-                -webkit-text-stroke: ${opts.stroke || '0px transparent'};
-                paint-order: stroke fill;
+                width: ${plateWidth + (outlineSize * 4)}px;
+                height: ${plateHeight + (outlineSize * 4)}px;
+                background: ${i === 0 ? darkenColor(brimColor, 25) : brimColor};
+                border-radius: 18px;
+                top: 50%; left: 50%;
+                transform: translate(-50%, -50%) translateZ(${i * 1.2}px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             `;
-            return div;
+            nameplate3D.appendChild(div);
         }
 
-        // ---- MEASURE TEXT ----
-        const sizerWidth = sizer.offsetWidth;
-        const sizerHeight = sizer.offsetHeight;
-        let plateWidth = sizerWidth + 80;
-        let plateHeight = sizerHeight + 50;
-        
-        if (currentTemplate === 'badge') {
-            plateWidth += 20;
-            plateHeight += 20;
-        } else if (currentTemplate === 'deskstand') {
-            plateWidth += 40;
-        }
-
-        // ---- BASE PLATE: solid rounded rectangle ----
-        const baseLayers = Math.max(6, Math.floor(thickness * 2.0));
+        // --- 2. INNER BASE PLATE (Ruby Red / Selected Color) ---
+        const baseZStart = brimLayers * 1.2;
+        const baseLayers = Math.max(4, Math.floor(baseThick * 2.0));
         const sideColor = darkenColor(currentColor, 18);
         const topColor = currentColor;
-        const bottomColor = darkenColor(currentColor, 30);
+        const bottomColor = darkenColor(currentColor, 28);
 
         for (let i = 0; i < baseLayers; i++) {
-            let col;
-            if (i === 0) col = bottomColor;
-            else if (i === baseLayers - 1) col = topColor;
-            else col = sideColor;
+            let col = (i === 0) ? bottomColor : (i === baseLayers - 1 ? topColor : sideColor);
 
             const div = document.createElement('div');
             div.className = 'layer-base ' + ((i === 0) ? 'layer-base-bottom' : (i === baseLayers - 1 ? 'layer-base-top' : ''));
@@ -172,177 +254,153 @@ document.addEventListener('DOMContentLoaded', () => {
                 width: ${plateWidth}px;
                 height: ${plateHeight}px;
                 background: ${col};
-                border-radius: 20px;
+                border-radius: 14px;
                 top: 50%; left: 50%;
-                transform: translate(-50%, -50%) translateZ(${i * 1.5}px);
+                transform: translate(-50%, -50%) translateZ(${baseZStart + (i * 1.2)}px);
             `;
-            
+
             if (currentTemplate === 'badge' && i === baseLayers - 1) {
-                div.style.border = `4px solid ${lightenColor(col, 20)}`;
+                div.style.border = `3px solid ${lightenColor(col, 20)}`;
             }
 
             nameplate3D.appendChild(div);
-            addTemplateAccessory(nameplate3D, col, i * 1.5, plateWidth, plateHeight);
         }
 
-        // ---- RAISED TEXT: lighter/contrasting on top ----
-        const textLayers = Math.max(5, Math.floor(thickness * 1.2));
-        const textTopColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#F5F0E8');
-        const textSideColor = (currentFinish === 'neon') ? '#35AA9E' : '#d4ccbb';
-        const textBottomColor = darkenColor(textSideColor, 10);
+        // --- 3. LEGO STUDS ACCENT (Iconic LEGO Brick Studs) ---
+        const baseTopZ = baseZStart + (baseLayers * 1.2);
+        if (currentTemplate === 'lego') {
+            const numStuds = Math.max(4, Math.floor(plateWidth / 35));
+            const studSpacing = plateWidth / (numStuds + 1);
 
-        const baseTopZ = baseLayers * 1.5;
+            for (let i = 1; i <= numStuds; i++) {
+                // Top row studs
+                const studTop = document.createElement('div');
+                studTop.style.cssText = `
+                    position: absolute;
+                    width: 14px; height: 14px;
+                    background: ${lightenColor(currentColor, 15)};
+                    border: 2px solid ${darkenColor(currentColor, 15)};
+                    border-radius: 50%;
+                    top: 50%; left: 50%;
+                    transform: translate(-${(plateWidth/2) - (i * studSpacing)}px, -${(plateHeight/2) - 8}px) translateZ(${baseTopZ + 2}px);
+                    box-shadow: inset 0 -2px 3px rgba(0,0,0,0.3);
+                `;
+                nameplate3D.appendChild(studTop);
+            }
+        }
+
+        // --- 4. KEYCHAIN HOLE ACCESSORY ---
+        const holeZPos = baseTopZ + 1;
+        const ringOuter = (holeSize * 3) + 12;
+        const holeOffsetX = (plateWidth / 2) + holeX + 10;
+
+        if (currentTemplate === 'lego' || currentTemplate === 'nametag') {
+            const ring = document.createElement('div');
+            ring.style.cssText = `
+                position: absolute;
+                width: ${ringOuter}px; height: ${ringOuter}px;
+                border: ${holeSize + 2}px solid ${currentColor};
+                background: rgba(0,0,0,0.8);
+                border-radius: 50%;
+                top: 50%; left: 50%;
+                transform: translate(-${holeOffsetX}px, -50%) translateZ(${holeZPos}px);
+                box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            `;
+            nameplate3D.appendChild(ring);
+        } else if (currentTemplate === 'deskstand') {
+            const stand = document.createElement('div');
+            stand.style.cssText = `
+                position: absolute;
+                width: ${plateWidth + 24}px; height: 22px;
+                background: ${darkenColor(currentColor, 25)};
+                border: 2px solid ${currentColor};
+                top: 50%; left: 50%;
+                border-radius: 8px;
+                transform: translate(-50%, ${(plateHeight/2) - 6}px) translateZ(${baseTopZ}px);
+            `;
+            nameplate3D.appendChild(stand);
+        }
+
+        // --- 5. RAISED 3D TEXT LAYERS ---
+        const textLayers = Math.max(4, Math.floor(letterThick * 1.5));
+        const textTopColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#FFFFFF');
+        const textSideColor = (currentFinish === 'neon') ? '#35AA9E' : '#d8d4cb';
+        const textBottomColor = darkenColor(textSideColor, 15);
+
         for (let i = 0; i < textLayers; i++) {
-            let col;
-            if (i === 0) col = textBottomColor;
-            else if (i === textLayers - 1) col = textTopColor;
-            else col = textSideColor;
+            let col = (i === 0) ? textBottomColor : (i === textLayers - 1 ? textTopColor : textSideColor);
 
-            const extraCls = (i === textLayers - 1) ? 'layer-text-top' : 'layer-text-side';
-            const layer = createTextLayer({
-                className: 'layer-text',
-                extraClass: extraCls,
-                z: baseTopZ + (i * 1.5),
-                color: col,
-                stroke: '0px transparent'
-            });
-            nameplate3D.appendChild(layer);
+            const div = document.createElement('div');
+            div.className = 'layer-text ' + (i === textLayers - 1 ? 'layer-text-top' : 'layer-text-side');
+            div.textContent = upperText;
+            div.style.cssText = `
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                font-size: ${textSize * 2.4}px;
+                font-weight: 900;
+                text-transform: uppercase;
+                letter-spacing: ${spaceWidth + 2}px;
+                white-space: nowrap;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transform: translateZ(${baseTopZ + (i * 1.2)}px);
+                font-family: ${currentFont};
+                color: ${col};
+                text-shadow: ${i === textLayers - 1 ? '0 2px 4px rgba(0,0,0,0.4)' : 'none'};
+                -webkit-text-stroke: ${currentTemplate === 'lego' ? '1px #111' : '0px transparent'};
+            `;
+            nameplate3D.appendChild(div);
         }
 
         apply3DRotation();
     }
 
-    // Add template-specific 3D accessories as sibling divs
-    function addTemplateAccessory(scene, color, zPos, pW, pH) {
-        if (currentTemplate === 'keyring') {
-            // Keyring hole on the left
-            const ring = document.createElement('div');
-            ring.style.cssText = `
-                position: absolute;
-                width: 30px; height: 30px;
-                border: 8px solid ${color};
-                border-radius: 50%;
-                top: 50%; left: 50%;
-                transform: translate(-${pW/2 + 25}px, -50%) translateZ(${zPos}px);
-            `;
-            scene.appendChild(ring);
-        } else if (currentTemplate === 'pettag') {
-            // Top centered D-ring loop
-            const loop = document.createElement('div');
-            loop.style.cssText = `
-                position: absolute;
-                width: 24px; height: 28px;
-                border: 8px solid ${color};
-                border-radius: 12px;
-                top: 50%; left: 50%;
-                transform: translate(-50%, -${pH/2 + 20}px) translateZ(${zPos}px);
-            `;
-            scene.appendChild(loop);
-        } else if (currentTemplate === 'deskstand') {
-            // Bottom wedge base block
-            const stand = document.createElement('div');
-            stand.style.cssText = `
-                position: absolute;
-                width: ${pW + 20}px; height: 24px;
-                background: ${color};
-                top: 50%; left: 50%;
-                border-radius: 6px;
-                transform: translate(-50%, ${pH/2 - 5}px) translateZ(${zPos}px);
-            `;
-            scene.appendChild(stand);
-        }
-    }
-
-    // --- Apply 3D Transformation ---
+    // --- Apply 3D Rotation ---
     function apply3DRotation() {
         if (nameplate3D) {
             nameplate3D.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
         }
     }
 
-    // --- Mouse & Touch Interaction for 3D Stage ---
-    let isDragging = false;
-    let startX, startY;
-    
-    if (stageCard) {
-        stageCard.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.pageX;
-            startY = e.pageY;
-            stageCard.style.cursor = 'grabbing';
-        });
-        
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-            stageCard.style.cursor = '';
-        });
-        
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const dx = e.pageX - startX;
-            const dy = e.pageY - startY;
-            rotY += dx * 0.4;
-            rotX -= dy * 0.4;
-            
-            // Limit rotX to avoid flipping upside down
-            if (rotX > 70) rotX = 70;
-            if (rotX < -70) rotX = -70;
-            
-            startX = e.pageX;
-            startY = e.pageY;
-            apply3DRotation();
-        });
-        
-        // Touch events
-        stageCard.addEventListener('touchstart', (e) => {
-            isDragging = true;
-            startX = e.touches[0].pageX;
-            startY = e.touches[0].pageY;
-        });
-        window.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-        window.addEventListener('touchmove', (e) => {
-            if (!isDragging) return;
-            const dx = e.touches[0].pageX - startX;
-            const dy = e.touches[0].pageY - startY;
-            rotY += dx * 0.6;
-            rotX -= dy * 0.6;
-            if (rotX > 70) rotX = 70;
-            if (rotX < -70) rotX = -70;
-            startX = e.touches[0].pageX;
-            startY = e.touches[0].pageY;
-            apply3DRotation();
+    // --- SCAD Model Selection Dropdown ---
+    if (scadSelect) {
+        scadSelect.addEventListener('change', (e) => {
+            currentTemplate = e.target.value;
+            saveHistoryState();
+
+            if (currentTemplate === 'lego') {
+                currentFont = "'Fredoka', sans-serif";
+                currentColor = '#D32F2F';
+                currentColorName = 'Ruby Red';
+                if (elOutlineNum) elOutlineNum.value = 4.5;
+                if (elOutlineSlider) elOutlineSlider.value = 4.5;
+            } else if (currentTemplate === 'nametag') {
+                currentFont = "'Lobster', cursive";
+                currentColor = '#2979FF';
+                currentColorName = 'Ocean Blue';
+            } else if (currentTemplate === 'deskstand') {
+                currentFont = "'Orbitron', sans-serif";
+                currentColor = '#E5C158';
+                currentColorName = 'Silk Gold';
+            } else if (currentTemplate === 'badge') {
+                currentFont = "'Righteous', cursive";
+                currentColor = '#7B1FA2';
+                currentColorName = 'Royal Purple';
+            }
+            updatePreview();
         });
     }
 
-    if (btnResetView) {
-        btnResetView.addEventListener('click', () => {
-            rotX = 15;
-            rotY = -20;
-            apply3DRotation();
-        });
-    }
-
-    // --- Template Selector Event Listeners ---
-    if (templateOptions) {
-        templateOptions.querySelectorAll('.template-option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                templateOptions.querySelectorAll('.template-option').forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentTemplate = opt.getAttribute('data-template');
-                updatePreview();
-            });
-        });
-    }
-
-    // --- Font Selection (Font Pills) ---
+    // --- Font Selection ---
     if (fontOptions) {
         fontOptions.querySelectorAll('.font-pill').forEach(pill => {
             pill.addEventListener('click', () => {
                 fontOptions.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
                 pill.classList.add('active');
                 currentFont = pill.getAttribute('data-font');
+                saveHistoryState();
                 updatePreview();
             });
         });
@@ -357,6 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 currentColor = swatch.getAttribute('data-color');
                 currentColorName = swatch.getAttribute('data-name');
                 currentRate = parseFloat(swatch.getAttribute('data-rate'));
+                saveHistoryState();
                 updatePreview();
             });
         });
@@ -369,27 +428,108 @@ document.addEventListener('DOMContentLoaded', () => {
                 finishOptions.querySelectorAll('.finish-option').forEach(o => o.classList.remove('active'));
                 opt.classList.add('active');
                 currentFinish = opt.getAttribute('data-finish');
+                saveHistoryState();
                 updatePreview();
             });
         });
     }
 
-    // --- Reset View ---
+    // --- Text Input Listener ---
+    inputName.addEventListener('input', () => {
+        saveHistoryState();
+        updatePreview();
+    });
+
+    // --- Action Bar: Reset Defaults ---
+    if (btnResetScad) {
+        btnResetScad.addEventListener('click', () => {
+            inputName.value = 'LEGO';
+            if (elOutlineNum) elOutlineNum.value = 4.5;
+            if (elOutlineSlider) elOutlineSlider.value = 4.5;
+            if (elBaseThickNum) elBaseThickNum.value = 1.5;
+            if (elBaseThickSlider) elBaseThickSlider.value = 1.5;
+            if (elTextSizeNum) elTextSizeNum.value = 18;
+            if (elTextSizeSlider) elTextSizeSlider.value = 18;
+            if (elSpaceWidthNum) elSpaceWidthNum.value = 1.0;
+            if (elSpaceWidthSlider) elSpaceWidthSlider.value = 1.0;
+            if (inputThickness) inputThickness.value = 3.0;
+            if (elLetterThickSlider) elLetterThickSlider.value = 3.0;
+            if (elHoleSizeNum) elHoleSizeNum.value = 5.0;
+            if (elHoleSizeSlider) elHoleSizeSlider.value = 5.0;
+            if (elHoleXNum) elHoleXNum.value = 3.0;
+            if (elHoleXSlider) elHoleXSlider.value = 3.0;
+
+            rotX = 18;
+            rotY = -22;
+            saveHistoryState();
+            updatePreview();
+        });
+    }
+
+    // --- Action Bar: Undo ---
+    if (btnUndoScad) {
+        btnUndoScad.addEventListener('click', () => {
+            if (stateHistory.length > 1) {
+                stateHistory.pop(); // Remove current
+                const prev = stateHistory[stateHistory.length - 1];
+                if (prev) {
+                    if (scadSelect) scadSelect.value = prev.template;
+                    currentTemplate = prev.template;
+                    inputName.value = prev.text;
+                    currentFont = prev.font;
+                    currentColor = prev.color;
+                    currentColorName = prev.colorName;
+                    currentFinish = prev.finish;
+
+                    if (elOutlineNum) elOutlineNum.value = prev.outline;
+                    if (elOutlineSlider) elOutlineSlider.value = prev.outline;
+                    if (elBaseThickNum) elBaseThickNum.value = prev.baseThick;
+                    if (elBaseThickSlider) elBaseThickSlider.value = prev.baseThick;
+                    if (elTextSizeNum) elTextSizeNum.value = prev.textSize;
+                    if (elTextSizeSlider) elTextSizeSlider.value = prev.textSize;
+                    if (elSpaceWidthNum) elSpaceWidthNum.value = prev.spaceWidth;
+                    if (elSpaceWidthSlider) elSpaceWidthSlider.value = prev.spaceWidth;
+                    if (inputThickness) inputThickness.value = prev.letterThick;
+                    if (elLetterThickSlider) elLetterThickSlider.value = prev.letterThick;
+                    if (elHoleSizeNum) elHoleSizeNum.value = prev.holeSize;
+                    if (elHoleSizeSlider) elHoleSizeSlider.value = prev.holeSize;
+                    if (elHoleXNum) elHoleXNum.value = prev.holeX;
+                    if (elHoleXSlider) elHoleXSlider.value = prev.holeX;
+
+                    updatePreview();
+                }
+            }
+        });
+    }
+
+    // --- Action Bar: ✨ Generate Button ---
+    if (btnGenerateScad) {
+        btnGenerateScad.addEventListener('click', () => {
+            if (stageCard) {
+                stageCard.classList.add('stage-generating');
+                setTimeout(() => {
+                    stageCard.classList.remove('stage-generating');
+                }, 600);
+            }
+            updatePreview();
+        });
+    }
+
+    // --- Reset Camera View ---
     if (btnResetView) {
         btnResetView.addEventListener('click', () => {
-            rotX = 15;
-            rotY = -20;
+            rotX = 18;
+            rotY = -22;
             apply3DRotation();
         });
     }
 
-    // ===== Smooth 3D Orbit Drag =====
+    // ===== Smooth Mouse & Touch 3D Orbit Controls =====
     if (stageCard && nameplate3D) {
         let isDragging = false;
         let startX = 0, startY = 0;
-        let startRotX = 15, startRotY = -20;
+        let startRotX = 18, startRotY = -22;
 
-        // Mouse
         stageCard.addEventListener('mousedown', (e) => {
             isDragging = true;
             startX = e.clientX;
@@ -403,8 +543,8 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!isDragging) return;
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
-            rotY = startRotY + (deltaX * 0.4);
-            rotX = Math.max(-60, Math.min(60, startRotX - (deltaY * 0.4)));
+            rotY = startRotY + (deltaX * 0.45);
+            rotX = Math.max(-65, Math.min(65, startRotX - (deltaY * 0.45)));
             apply3DRotation();
         });
 
@@ -415,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // Touch
+        // Touch Interaction
         stageCard.addEventListener('touchstart', (e) => {
             if (e.touches.length === 1) {
                 isDragging = true;
@@ -431,8 +571,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const touch = e.touches[0];
             const deltaX = touch.clientX - startX;
             const deltaY = touch.clientY - startY;
-            rotY = startRotY + (deltaX * 0.5);
-            rotX = Math.max(-60, Math.min(60, startRotX - (deltaY * 0.5)));
+            rotY = startRotY + (deltaX * 0.55);
+            rotX = Math.max(-65, Math.min(65, startRotX - (deltaY * 0.55)));
             apply3DRotation();
             if (e.cancelable) e.preventDefault();
         }, { passive: false });
@@ -441,10 +581,6 @@ document.addEventListener('DOMContentLoaded', () => {
             isDragging = false;
         });
     }
-
-    // Slider & text input
-    inputName.addEventListener('input', updatePreview);
-    inputThickness.addEventListener('input', updatePreview);
 
     // --- SVG Snapshot Generator for Orders & Cart ---
     function generateSnapshotSVG() {

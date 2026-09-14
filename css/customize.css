@@ -405,6 +405,316 @@
     filter: drop-shadow(0 0 12px rgba(112,255,250,0.8)) !important;
 }
 
+/* ============================================================
+   MAKERWORLD PARAMETRIC SCAD MODEL MAKER STYLES
+   ============================================================ */
+.scad-header-bar {
+    background: rgba(20, 18, 30, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 1.2rem;
+    margin-bottom: 1.2rem;
+}
+.scad-title-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+.scad-icon {
+    font-size: 1.8rem;
+    background: rgba(0, 145, 255, 0.15);
+    padding: 6px 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 145, 255, 0.3);
+}
+.scad-badge {
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: #0091FF;
+    display: block;
+    margin-bottom: 2px;
+}
+.scad-model-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--c-text);
+}
+.scad-select-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.scad-select-wrapper label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--c-text-muted);
+}
+.scad-select-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: var(--c-bg-page);
+    border: 1.5px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 0 12px;
+    transition: all 0.2s;
+}
+.scad-select-box:hover {
+    border-color: #0091FF;
+    box-shadow: 0 0 12px rgba(0,145,255,0.2);
+}
+.scad-file-icon {
+    font-size: 1rem;
+    margin-right: 8px;
+    opacity: 0.8;
+}
+.scad-dropdown {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--c-text);
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 10px 0;
+    cursor: pointer;
+}
+
+/* Accordion Container */
+.scad-accordion-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+}
+.scad-accordion-item {
+    background: var(--c-bg-page);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+.scad-accordion-item:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+}
+.scad-accordion-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: rgba(255,255,255,0.02);
+    border: none;
+    outline: none;
+    color: var(--c-text);
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s;
+}
+.scad-accordion-header:hover {
+    background: rgba(255,255,255,0.05);
+}
+.acc-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+}
+.acc-chevron {
+    font-size: 0.9rem;
+    transition: transform 0.25s ease;
+    color: var(--c-text-muted);
+}
+.scad-accordion-item.open .acc-chevron {
+    transform: rotate(180deg);
+}
+.scad-accordion-body {
+    display: none;
+    padding: 14px 16px 16px;
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+.scad-accordion-item.open .scad-accordion-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+/* Param Fields & Stepper Control */
+.scad-param-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+.param-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.param-label-row label, .scad-param-field > label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--c-text);
+}
+.param-hint, .param-sublabel {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: var(--c-text-muted);
+    margin-left: 4px;
+}
+.scad-text-input {
+    width: 100%;
+    background: rgba(0,0,0,0.25);
+    border: 1.5px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: var(--c-text);
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+.scad-text-input:focus {
+    border-color: #0091FF;
+    box-shadow: 0 0 10px rgba(0,145,255,0.25);
+}
+
+/* Stepper Box (- number +) */
+.stepper-input-group {
+    display: flex;
+    align-items: center;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    overflow: hidden;
+}
+.stepper-btn {
+    width: 30px;
+    height: 30px;
+    background: rgba(255,255,255,0.06);
+    border: none;
+    color: var(--c-text);
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.stepper-btn:hover {
+    background: rgba(0, 145, 255, 0.3);
+    color: #fff;
+}
+.stepper-input-group input[type="number"] {
+    width: 54px;
+    height: 30px;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    color: var(--c-text);
+    font-size: 0.88rem;
+    font-weight: 800;
+    -moz-appearance: textfield;
+}
+.stepper-input-group input[type="number"]::-webkit-outer-spin-button,
+.stepper-input-group input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Slider Track */
+.scad-slider {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.12);
+    outline: none;
+    margin-top: 4px;
+}
+.scad-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #0091FF;
+    border: 2px solid #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+    transition: transform 0.15s;
+}
+.scad-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.25);
+}
+
+/* MakerWorld Action Bar */
+.scad-action-bar {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+}
+.scad-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: var(--c-bg-page);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--c-text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.scad-icon-btn:hover {
+    background: rgba(255,255,255,0.08);
+    transform: translateY(-2px);
+}
+.scad-generate-btn {
+    flex: 1;
+    height: 44px;
+    background: linear-gradient(135deg, #0091FF 0%, #0064D6 100%);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(0, 145, 255, 0.35);
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.scad-generate-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 145, 255, 0.5);
+    background: linear-gradient(135deg, #1ab0ff 0%, #0072f0 100%);
+}
+.scad-generate-btn:active {
+    transform: translateY(0);
+}
+
+/* Stage Generation Loading Effect */
+.stage-generating #nameplate-3d {
+    animation: scadPulse 0.4s ease-in-out infinite alternate;
+}
+@keyframes scadPulse {
+    0% { filter: brightness(1) scale(0.98); }
+    100% { filter: brightness(1.2) scale(1.02); }
+}
+
 /* --- Mobile Responsive --- */
 @media (max-width: 768px) {
     .customizer-stage-card {
@@ -427,3 +737,4 @@
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
