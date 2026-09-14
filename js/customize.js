@@ -285,7 +285,91 @@ document.addEventListener('DOMContentLoaded', () => {
         return [start, end];
     }
 
-    // High-Resolution Multi-Contour Boundary Follower
+    // Marching Squares Vector Contour Tracer with Full Hole Topology Support
+    function marchingSquaresContours(isSolid, minX, maxX, minY, maxY, step = 1) {
+        const segments = [];
+        for (let y = minY; y <= maxY; y += step) {
+            for (let x = minX; x <= maxX; x += step) {
+                const tl = isSolid(x, y) ? 8 : 0;
+                const tr = isSolid(x + step, y) ? 4 : 0;
+                const br = isSolid(x + step, y + step) ? 2 : 0;
+                const bl = isSolid(x, y + step) ? 1 : 0;
+                const caseId = tl | tr | br | bl;
+                if (caseId === 0 || caseId === 15) continue;
+
+                const N = { x: x + step * 0.5, y: y };
+                const E = { x: x + step,       y: y + step * 0.5 };
+                const S = { x: x + step * 0.5, y: y + step };
+                const W = { x: x,              y: y + step * 0.5 };
+
+                switch (caseId) {
+                    case 1:  segments.push({ p1: S, p2: W }); break;
+                    case 2:  segments.push({ p1: E, p2: S }); break;
+                    case 3:  segments.push({ p1: E, p2: W }); break;
+                    case 4:  segments.push({ p1: N, p2: E }); break;
+                    case 5:
+                        segments.push({ p1: N, p2: E });
+                        segments.push({ p1: S, p2: W });
+                        break;
+                    case 6:  segments.push({ p1: N, p2: S }); break;
+                    case 7:  segments.push({ p1: N, p2: W }); break;
+                    case 8:  segments.push({ p1: W, p2: N }); break;
+                    case 9:  segments.push({ p1: S, p2: N }); break;
+                    case 10:
+                        segments.push({ p1: W, p2: N });
+                        segments.push({ p1: E, p2: S });
+                        break;
+                    case 11: segments.push({ p1: E, p2: N }); break;
+                    case 12: segments.push({ p1: W, p2: E }); break;
+                    case 13: segments.push({ p1: S, p2: E }); break;
+                    case 14: segments.push({ p1: W, p2: S }); break;
+                }
+            }
+        }
+
+        const key = p => Math.round(p.x * 10) + ',' + Math.round(p.y * 10);
+        const segMap = new Map();
+        segments.forEach(seg => {
+            const k = key(seg.p1);
+            if (!segMap.has(k)) segMap.set(k, []);
+            segMap.get(k).push(seg);
+        });
+
+        const used = new Set();
+        const polygons = [];
+
+        segments.forEach(firstSeg => {
+            if (used.has(firstSeg)) return;
+            const poly = [firstSeg.p1];
+            let cur = firstSeg;
+            used.add(cur);
+
+            let count = 0;
+            while (count++ < 30000) {
+                poly.push(cur.p2);
+                const nextKey = key(cur.p2);
+                const candidates = segMap.get(nextKey);
+                let next = null;
+                if (candidates) {
+                    for (let cand of candidates) {
+                        if (!used.has(cand)) {
+                            next = cand;
+                            break;
+                        }
+                    }
+                }
+                if (!next) break;
+                used.add(next);
+                cur = next;
+                if (key(cur.p2) === key(poly[0])) break;
+            }
+            if (poly.length >= 4) polygons.push(poly);
+        });
+
+        return polygons;
+    }
+
+    // High-Resolution Multi-Contour & Hole Extractor
     function extractTextContours(text, fontStr) {
         const W = 2200;
         const H = 600;
@@ -319,78 +403,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (minX >= maxX || minY >= maxY) {
-            return { paths: [], bounds: { minX: 0, maxX: 100, minY: 0, maxY: 30 } };
+            return { paths: [], outerPaths: [], exPolys: [], bounds: { minX: 0, maxX: 100, minY: 0, maxY: 30 } };
         }
 
-        minX = Math.max(1, minX - 4);
-        maxX = Math.min(W - 2, maxX + 4);
-        minY = Math.max(1, minY - 4);
-        maxY = Math.min(H - 2, maxY + 4);
+        minX = Math.max(1, minX - 6);
+        maxX = Math.min(W - 3, maxX + 6);
+        minY = Math.max(1, minY - 6);
+        maxY = Math.min(H - 3, maxY + 6);
 
         const isSolid = (x, y) => {
             if (x < 0 || x >= W || y < 0 || y >= H) return false;
             return data[(y * W + x) * 4 + 3] > 110;
         };
 
-        const visited = new Uint8Array(W * H);
-        const dx = [-1,  0,  1, 1, 1, 0, -1, -1];
-        const dy = [-1, -1, -1, 0, 1, 1,  1,  0];
-
-        const rawContours = [];
-
-        for (let y = minY; y <= maxY; y++) {
-            for (let x = minX; x <= maxX; x++) {
-                const idx = y * W + x;
-                if (visited[idx]) continue;
-
-                const solid = isSolid(x, y);
-                const prevSolid = isSolid(x - 1, y);
-
-                if ((solid && !prevSolid) || (!solid && prevSolid)) {
-                    // Follow boundary
-                    const startX = solid ? x : x - 1;
-                    const prevX = solid ? x - 1 : x;
-                    const pts = [];
-                    let curX = startX, curY = y;
-                    let pX = prevX, pY = y;
-                    let steps = 0;
-                    const maxSteps = (maxX - minX + 10) * (maxY - minY + 10);
-
-                    while (steps++ < maxSteps) {
-                        pts.push({ x: curX, y: curY });
-                        visited[curY * W + curX] = 1;
-
-                        let startDir = 0;
-                        for (let i = 0; i < 8; i++) {
-                            if (curX + dx[i] === pX && curY + dy[i] === pY) {
-                                startDir = (i + 1) % 8;
-                                break;
-                            }
-                        }
-
-                        let found = false;
-                        for (let i = 0; i < 8; i++) {
-                            const dir = (startDir + i) % 8;
-                            const nx = curX + dx[dir];
-                            const ny = curY + dy[dir];
-                            if (isSolid(nx, ny)) {
-                                pX = curX + dx[(dir + 7) % 8];
-                                pY = curY + dy[(dir + 7) % 8];
-                                curX = nx;
-                                curY = ny;
-                                found = true;
-                                break;
-                            }
-                        }
-                        if (!found || (curX === startX && curY === y)) break;
-                    }
-
-                    if (pts.length >= 8) {
-                        rawContours.push(pts);
-                    }
-                }
-            }
-        }
+        const rawPolygons = marchingSquaresContours(isSolid, minX, maxX, minY, maxY, 1);
 
         // Scale to physical millimeters (target text height: 18mm)
         const textH = Math.max(10, maxY - minY);
@@ -401,11 +427,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const clipperPaths = [];
 
-        rawContours.forEach(pts => {
-            // Simplify with epsilon 1.2px
-            const simp = simplifyPoly(pts, 1.2);
+        rawPolygons.forEach(pts => {
+            const simp = simplifyPoly(pts, 0.8);
             if (simp.length < 4) return;
-            // Chaikin smooth to make curves silky smooth
             const smoothed = chaikinSmooth(simp, 2);
 
             const cPath = smoothed.map(p => ({
@@ -413,13 +437,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 Y: Math.round(-(p.y - midY) * scale * CLIPPER_SCALE) // Invert Y for 3D coordinate system
             }));
 
-            if (cPath.length >= 3) {
+            if (cPath.length >= 3 && Math.abs(ClipperLib.Clipper.Area(cPath)) > 30000) {
                 clipperPaths.push(cPath);
             }
         });
 
+        // Use Clipper with pftEvenOdd to accurately identify outer boundaries and inner holes
+        const normalizer = new ClipperLib.Clipper();
+        normalizer.AddPaths(clipperPaths, ClipperLib.PolyType.ptSubject, true);
+        const normTree = new ClipperLib.PolyTree();
+        normalizer.Execute(ClipperLib.ClipType.ctUnion, normTree, ClipperLib.PolyFillType.pftEvenOdd, ClipperLib.PolyFillType.pftEvenOdd);
+        const exPolys = ClipperLib.JS.PolyTreeToExPolygons(normTree);
+
+        const allPaths = [];
+        const outerPaths = [];
+
+        exPolys.forEach(exp => {
+            if (!exp.outer || exp.outer.length < 3) return;
+            // Outers must have orientation true (clockwise)
+            if (!ClipperLib.Clipper.Orientation(exp.outer)) {
+                exp.outer.reverse();
+            }
+            allPaths.push(exp.outer);
+            outerPaths.push(exp.outer);
+
+            if (exp.holes && exp.holes.length > 0) {
+                exp.holes.forEach(hole => {
+                    if (!hole || hole.length < 3) return;
+                    // Holes must have orientation false (counter-clockwise)
+                    if (ClipperLib.Clipper.Orientation(hole)) {
+                        hole.reverse();
+                    }
+                    allPaths.push(hole);
+                });
+            }
+        });
+
         return {
-            paths: clipperPaths,
+            paths: allPaths,
+            outerPaths: outerPaths,
+            exPolys: exPolys,
             scale: scale,
             bounds: {
                 width: (maxX - minX) * scale,
@@ -428,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // Convert Clipper ExPolygons to THREE.Shape array
+    // Convert Clipper ExPolygons to THREE.Shape array with holes
     function exPolygonsToThreeShapes(exPolygons, invScale = 0.001) {
         const shapes = [];
         if (!exPolygons || !exPolygons.length) return shapes;
@@ -477,7 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const fontStr = `${currentFont}, 'Fredoka', 'Lilita One', 'Montserrat', sans-serif`;
-        const { paths: textPaths } = extractTextContours(text, fontStr);
+        const { paths: textPaths, outerPaths, exPolys } = extractTextContours(text, fontStr);
 
         if (!textPaths || textPaths.length === 0) {
             return group;
@@ -488,13 +545,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Clean & simplify input paths
         const cleanTextPaths = ClipperLib.Clipper.CleanPolygons(textPaths, 0.1 * CLIPPER_SCALE);
+        const cleanOuterPaths = ClipperLib.Clipper.CleanPolygons(outerPaths && outerPaths.length ? outerPaths : textPaths, 0.1 * CLIPPER_SCALE);
 
         // ------------------------------------------------------------
         // 1. RED BASE PLATE (0.0mm -> 3.2mm, Height = 3.2mm)
+        // Solid backing behind letters: offset outer letter contours
         // ------------------------------------------------------------
         const redOutlineMm = Math.max(4.0, (params.outlineSize || 4.5) * 1.15);
         const coRed = new ClipperLib.ClipperOffset(2.0, 0.25);
-        coRed.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        coRed.AddPaths(cleanOuterPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
         const redOffsetPaths = new ClipperLib.Paths();
         coRed.Execute(redOffsetPaths, redOutlineMm * CLIPPER_SCALE);
 
@@ -623,13 +682,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // ------------------------------------------------------------
         // 4. WHITE RAISED LETTERS (5.2mm -> 6.0mm, Height = 0.8mm)
+        // Extrude shapes with exact inner holes for O, A, B, D, P, R, etc.
         // ------------------------------------------------------------
-        const textClipper = new ClipperLib.Clipper();
-        textClipper.AddPaths(cleanTextPaths, ClipperLib.PolyType.ptSubject, true);
-        const textPolyTree = new ClipperLib.PolyTree();
-        textClipper.Execute(ClipperLib.ClipType.ctUnion, textPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
-        const whiteExPolygons = ClipperLib.JS.PolyTreeToExPolygons(textPolyTree);
-        const whiteShapes = exPolygonsToThreeShapes(whiteExPolygons, invScale);
+        const whiteShapes = exPolygonsToThreeShapes(exPolys, invScale);
 
         if (whiteShapes.length > 0) {
             const whiteGeo = new THREE.ExtrudeGeometry(whiteShapes, {
