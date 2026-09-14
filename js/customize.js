@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnOrder = document.getElementById('btn-order-custom');
     const btnResetScad = document.getElementById('btn-scad-reset');
     const btnUndoScad = document.getElementById('btn-scad-undo');
-    const btnGenerateScad = document.getElementById('btn-scad-generate');
+    const btnDownloadStlPanel = document.getElementById('btn-download-stl-panel');
 
     if (!canvas || typeof THREE === 'undefined') {
         console.error('Three.js or target canvas missing.');
@@ -369,10 +369,10 @@ document.addEventListener('DOMContentLoaded', () => {
         return polygons;
     }
 
-    // High-Resolution Multi-Contour & Hole Extractor
+    // High-Resolution Multi-Contour & Hole Extractor with Subpixel Density
     function extractTextContours(text, fontStr) {
-        const W = 2200;
-        const H = 600;
+        const W = 2800;
+        const H = 800;
         const cvs = document.createElement('canvas');
         cvs.width = W;
         cvs.height = H;
@@ -382,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = `italic 900 160px ${fontStr}`;
+        ctx.font = `italic 900 220px ${fontStr}`;
         ctx.fillText(text, W / 2, H / 2);
 
         const imgData = ctx.getImageData(0, 0, W, H);
@@ -406,14 +406,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return { paths: [], outerPaths: [], exPolys: [], bounds: { minX: 0, maxX: 100, minY: 0, maxY: 30 } };
         }
 
-        minX = Math.max(1, minX - 6);
-        maxX = Math.min(W - 3, maxX + 6);
-        minY = Math.max(1, minY - 6);
-        maxY = Math.min(H - 3, maxY + 6);
+        minX = Math.max(1, minX - 8);
+        maxX = Math.min(W - 3, maxX + 8);
+        minY = Math.max(1, minY - 8);
+        maxY = Math.min(H - 3, maxY + 8);
 
         const isSolid = (x, y) => {
             if (x < 0 || x >= W || y < 0 || y >= H) return false;
-            return data[(y * W + x) * 4 + 3] > 110;
+            return data[(y * W + x) * 4 + 3] > 105;
         };
 
         const rawPolygons = marchingSquaresContours(isSolid, minX, maxX, minY, maxY, 1);
@@ -428,9 +428,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const clipperPaths = [];
 
         rawPolygons.forEach(pts => {
-            const simp = simplifyPoly(pts, 0.8);
+            // Fine tolerance to preserve smooth curvatures
+            const simp = simplifyPoly(pts, 0.4);
             if (simp.length < 4) return;
-            const smoothed = chaikinSmooth(simp, 2);
+            // 3-iteration Chaikin smoothing for silky curves
+            const smoothed = chaikinSmooth(simp, 3);
 
             const cPath = smoothed.map(p => ({
                 X: Math.round((p.x - midX) * scale * CLIPPER_SCALE),
@@ -454,7 +456,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         exPolys.forEach(exp => {
             if (!exp.outer || exp.outer.length < 3) return;
-            // Outers must have orientation true (clockwise)
             if (!ClipperLib.Clipper.Orientation(exp.outer)) {
                 exp.outer.reverse();
             }
@@ -464,7 +465,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (exp.holes && exp.holes.length > 0) {
                 exp.holes.forEach(hole => {
                     if (!hole || hole.length < 3) return;
-                    // Holes must have orientation false (counter-clockwise)
                     if (ClipperLib.Clipper.Orientation(hole)) {
                         hole.reverse();
                     }
@@ -483,6 +483,33 @@ document.addEventListener('DOMContentLoaded', () => {
                 height: (maxY - minY) * scale
             }
         };
+    }
+
+    // High-Order Corner Smoothing for 2D Polygons to Eliminate All Facets & Creases
+    function smoothExPolygons(exPolygons, iterations = 2) {
+        if (!exPolygons || !exPolygons.length) return [];
+        return exPolygons.map(exp => {
+            if (!exp.outer || exp.outer.length < 3) return exp;
+            const outPts = exp.outer.map(p => ({ x: p.X, y: p.Y }));
+            const simpOuter = simplifyPoly(outPts, 35); // Filter micro-noise
+            const smoothedOut = chaikinSmooth(simpOuter, iterations).map(p => ({
+                X: Math.round(p.x),
+                Y: Math.round(p.y)
+            }));
+            const smoothedHoles = (exp.holes || []).map(hole => {
+                if (!hole || hole.length < 3) return hole;
+                const hPts = hole.map(p => ({ x: p.X, y: p.Y }));
+                const simpHole = simplifyPoly(hPts, 35);
+                return chaikinSmooth(simpHole, iterations).map(p => ({
+                    X: Math.round(p.x),
+                    Y: Math.round(p.y)
+                }));
+            });
+            return {
+                outer: smoothedOut,
+                holes: smoothedHoles
+            };
+        });
     }
 
     // Convert Clipper ExPolygons to THREE.Shape array with holes
@@ -542,6 +569,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const CLIPPER_SCALE = 1000;
         const invScale = 1 / CLIPPER_SCALE;
+        const arcTol = 0.04 * CLIPPER_SCALE; // 40 units = 0.04mm arc tolerance
 
         // Clean & simplify input paths
         const cleanTextPaths = ClipperLib.Clipper.CleanPolygons(textPaths, 0.1 * CLIPPER_SCALE);
@@ -552,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Solid backing behind letters: offset outer letter contours
         // ------------------------------------------------------------
         const redOutlineMm = Math.max(4.0, (params.outlineSize || 4.5) * 1.15);
-        const coRed = new ClipperLib.ClipperOffset(2.0, 0.25);
+        const coRed = new ClipperLib.ClipperOffset(2.0, arcTol);
         coRed.AddPaths(cleanOuterPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
         const redOffsetPaths = new ClipperLib.Paths();
         coRed.Execute(redOffsetPaths, redOutlineMm * CLIPPER_SCALE);
@@ -577,9 +605,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const eyeletX = redMinX - (eyeletOuterR * 0.70) + ((params.holeX || 3.0) * CLIPPER_SCALE * 0.5);
         const eyeletY = redCenterY + ((params.holeY || 0.0) * CLIPPER_SCALE * 0.5);
 
-        // Create 48-segment circular eyelet
+        // Create 64-segment ultra-round circular eyelet
         const eyeletOuterCircle = [];
-        const numEyeletPts = 48;
+        const numEyeletPts = 64;
         for (let i = 0; i < numEyeletPts; i++) {
             const angle = (i / numEyeletPts) * Math.PI * 2;
             eyeletOuterCircle.push({
@@ -594,8 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
         redClipper.AddPath(eyeletOuterCircle, ClipperLib.PolyType.ptClip, true);
         const redPolyTree = new ClipperLib.PolyTree();
         redClipper.Execute(ClipperLib.ClipType.ctUnion, redPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
-        const redExPolygons = ClipperLib.JS.PolyTreeToExPolygons(redPolyTree);
-
+        const rawRedExPolygons = ClipperLib.JS.PolyTreeToExPolygons(redPolyTree);
+        const redExPolygons = smoothExPolygons(rawRedExPolygons, 3); // 3-stage smoothing eliminates all creases
         const redShapes = exPolygonsToThreeShapes(redExPolygons, invScale);
 
         // Add 3D Keychain Through-Hole to the red base
@@ -609,9 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const redGeo = new THREE.ExtrudeGeometry(redShapes, {
                 depth: 3.2,
                 bevelEnabled: true,
-                bevelThickness: 0.25,
-                bevelSize: 0.25,
-                bevelSegments: 3
+                bevelThickness: 0.28,
+                bevelSize: 0.28,
+                bevelSegments: 4,
+                curveSegments: 36
             });
             const redMesh = new THREE.Mesh(redGeo, getBaseMaterial()); // Ruby Red (User Selected)
             redMesh.position.z = 0.0;
@@ -624,20 +653,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. YELLOW ACCENT BRIM (3.2mm -> 4.2mm, Height = 1.0mm)
         // ------------------------------------------------------------
         const yellowOutlineMm = Math.max(2.4, redOutlineMm - 1.8);
-        const coYellow = new ClipperLib.ClipperOffset(2.0, 0.25);
+        const coYellow = new ClipperLib.ClipperOffset(2.0, arcTol);
         coYellow.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
         const yellowPolyTree = new ClipperLib.PolyTree();
         coYellow.Execute(yellowPolyTree, yellowOutlineMm * CLIPPER_SCALE);
-        const yellowExPolygons = ClipperLib.JS.PolyTreeToExPolygons(yellowPolyTree);
+        const rawYellowExPolygons = ClipperLib.JS.PolyTreeToExPolygons(yellowPolyTree);
+        const yellowExPolygons = smoothExPolygons(rawYellowExPolygons, 3);
         const yellowShapes = exPolygonsToThreeShapes(yellowExPolygons, invScale);
 
         if (yellowShapes.length > 0) {
             const yellowGeo = new THREE.ExtrudeGeometry(yellowShapes, {
                 depth: 1.0,
                 bevelEnabled: true,
-                bevelThickness: 0.15,
-                bevelSize: 0.15,
-                bevelSegments: 2
+                bevelThickness: 0.18,
+                bevelSize: 0.18,
+                bevelSegments: 3,
+                curveSegments: 36
             });
             const yellowMat = new THREE.MeshStandardMaterial({
                 color: 0xFFD700, // Vibrant LEGO Yellow
@@ -654,20 +685,22 @@ document.addEventListener('DOMContentLoaded', () => {
         // 3. BLACK OUTLINE LAYER (4.2mm -> 5.2mm, Height = 1.0mm)
         // ------------------------------------------------------------
         const blackOutlineMm = Math.max(1.1, yellowOutlineMm - 1.4);
-        const coBlack = new ClipperLib.ClipperOffset(2.0, 0.25);
+        const coBlack = new ClipperLib.ClipperOffset(2.0, arcTol);
         coBlack.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
         const blackPolyTree = new ClipperLib.PolyTree();
         coBlack.Execute(blackPolyTree, blackOutlineMm * CLIPPER_SCALE);
-        const blackExPolygons = ClipperLib.JS.PolyTreeToExPolygons(blackPolyTree);
+        const rawBlackExPolygons = ClipperLib.JS.PolyTreeToExPolygons(blackPolyTree);
+        const blackExPolygons = smoothExPolygons(rawBlackExPolygons, 3);
         const blackShapes = exPolygonsToThreeShapes(blackExPolygons, invScale);
 
         if (blackShapes.length > 0) {
             const blackGeo = new THREE.ExtrudeGeometry(blackShapes, {
                 depth: 1.0,
                 bevelEnabled: true,
-                bevelThickness: 0.15,
-                bevelSize: 0.15,
-                bevelSegments: 2
+                bevelThickness: 0.18,
+                bevelSize: 0.18,
+                bevelSegments: 3,
+                curveSegments: 36
             });
             const blackMat = new THREE.MeshStandardMaterial({
                 color: 0x141414, // Solid Jet Black
@@ -684,15 +717,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // 4. WHITE RAISED LETTERS (5.2mm -> 6.0mm, Height = 0.8mm)
         // Extrude shapes with exact inner holes for O, A, B, D, P, R, etc.
         // ------------------------------------------------------------
-        const whiteShapes = exPolygonsToThreeShapes(exPolys, invScale);
+        const smoothedWhiteExPolys = smoothExPolygons(exPolys, 2);
+        const whiteShapes = exPolygonsToThreeShapes(smoothedWhiteExPolys, invScale);
 
         if (whiteShapes.length > 0) {
             const whiteGeo = new THREE.ExtrudeGeometry(whiteShapes, {
                 depth: 0.8,
                 bevelEnabled: true,
-                bevelThickness: 0.12,
-                bevelSize: 0.12,
-                bevelSegments: 2
+                bevelThickness: 0.15,
+                bevelSize: 0.15,
+                bevelSegments: 3,
+                curveSegments: 36
             });
             const whiteMat = new THREE.MeshStandardMaterial({
                 color: 0xFFFFFF, // Pure Solid White
@@ -1235,10 +1270,8 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
         });
     }
 
-    if (btnGenerateScad) {
-        btnGenerateScad.addEventListener('click', () => {
-            renderSolidModel();
-        });
+    if (btnDownloadStlPanel) {
+        btnDownloadStlPanel.addEventListener('click', downloadSTL);
     }
 
     // Cart Integration
