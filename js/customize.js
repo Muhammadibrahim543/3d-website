@@ -1,5 +1,6 @@
-﻿// ============================================================
-// MAKERWORLD OPENSCAD PARAMETRIC 3D MODEL MAKER ENGINE (js/customize.js)
+// ============================================================
+// MAKERWORLD / OPENSCAD REAL 3D SOLID CAD ENGINE (Three.js WebGL)
+// Kira's Creation Soft-3D Studio // High-Fidelity Parametric Customizer
 // ============================================================
 
 window.toggleScadAccordion = function(id) {
@@ -10,14 +11,14 @@ window.toggleScadAccordion = function(id) {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Inputs & Control Elements
+    // --- UI Control Handles ---
     const inputName = document.getElementById('cust-text');
     const scadSelect = document.getElementById('scad-model-select');
     const fontOptions = document.getElementById('font-options');
     const colorSwatches = document.getElementById('color-swatches');
     const finishOptions = document.getElementById('finish-options');
 
-    // Stepper & Slider Element Handles
+    // Steppers & Sliders
     const elOutlineNum = document.getElementById('scad-outline-size');
     const elOutlineSlider = document.getElementById('scad-outline-slider');
 
@@ -43,42 +44,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const elHoleYNum = document.getElementById('scad-hole-y');
     const elHoleYSlider = document.getElementById('scad-hole-y-slider');
 
-    // 3D Scene Handles
-    const nameplate3D = document.getElementById('nameplate-3d');
+    // Action & Stage Handles
     const stageCard = document.getElementById('customizer-stage-card');
+    const canvas = document.getElementById('three-canvas');
+    const spinner = document.getElementById('three-loading-spinner');
     const btnResetView = document.getElementById('btn-reset-view');
+    const btnExportStl = document.getElementById('btn-export-stl');
+    const btnViewScad = document.getElementById('btn-view-scad');
     const templateBadge = document.getElementById('stage-template-badge');
 
-    // Pricing & Actions
+    // Modal Handles
+    const scadModal = document.getElementById('scad-modal');
+    const btnCloseScadModal = document.getElementById('btn-close-scad-modal');
+    const scadCodeArea = document.getElementById('scad-code-area');
+    const btnCopyScad = document.getElementById('btn-copy-scad');
+    const btnDownloadScad = document.getElementById('btn-download-scad');
+
+    // Pricing & Cart Handles
     const displayPrice = document.getElementById('cust-price');
     const displaySpecs = document.getElementById('cust-specs');
+    const btnAddToCart = document.getElementById('btn-add-cart-custom');
     const btnOrder = document.getElementById('btn-order-custom');
+    const btnSavePreset = document.getElementById('btn-save-preset-custom');
     const btnResetScad = document.getElementById('btn-scad-reset');
     const btnUndoScad = document.getElementById('btn-scad-undo');
     const btnGenerateScad = document.getElementById('btn-scad-generate');
 
-    if (!inputName || !nameplate3D) return;
+    if (!canvas || typeof THREE === 'undefined') {
+        console.error('Three.js or target canvas missing.');
+        return;
+    }
 
-    // State Variables
-    let currentTemplate = 'lego'; // 'lego', 'nametag', 'deskstand', 'badge'
-    let currentFont = "'Fredoka', sans-serif";
+    // --- State Variables ---
+    let currentTemplate = 'lego';
+    let currentFontKey = 'helvetiker';
     let currentColor = '#D32F2F';
     let currentColorName = 'Ruby Red';
     let currentRate = 7.0;
     let currentFinish = 'standard';
 
-    // Camera 3D Orbit Angles
-    let rotX = 22;
-    let rotY = 22;
-
-    // History Stack for Undo
+    let currentModelGroup = null;
     let stateHistory = [];
 
     function saveHistoryState() {
         stateHistory.push({
             template: currentTemplate,
-            text: inputName.value,
-            font: currentFont,
+            text: inputName ? inputName.value : 'LEGO',
+            font: currentFontKey,
             color: currentColor,
             colorName: currentColorName,
             finish: currentFinish,
@@ -94,692 +106,1074 @@ document.addEventListener('DOMContentLoaded', () => {
         if (stateHistory.length > 25) stateHistory.shift();
     }
 
-    // --- Helper: Darken Hex Color ---
-    function darkenColor(hex, percent) {
-        let num = parseInt(hex.replace('#', ''), 16),
-            amt = Math.round(2.55 * percent),
-            R = (num >> 16) - amt,
-            G = (num >> 8 & 0x00FF) - amt,
-            B = (num & 0x0000FF) - amt;
-        return '#' + (0x1000000 + (R<255?R<1?0:R:255)*0x10000 + (G<255?G<1?0:G:255)*0x100 + (B<255?B<1?0:B:255)).toString(16).padStart(6, '0');
+    // ============================================================
+    // 1. THREE.JS SCENE, CAMERA, RENDERER & ORBIT CONTROLS
+    // ============================================================
+    const scene = new THREE.Scene();
+
+    const stageWidth = stageCard.clientWidth || 560;
+    const stageHeight = stageCard.clientHeight || 480;
+
+    const camera = new THREE.PerspectiveCamera(38, stageWidth / stageHeight, 1, 1000);
+    const defaultCamPos = new THREE.Vector3(0, -90, 150);
+    camera.position.copy(defaultCamPos);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({
+        canvas: canvas,
+        antialias: true,
+        alpha: true,
+        preserveDrawingBuffer: true
+    });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(stageWidth, stageHeight);
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.maxPolarAngle = Math.PI / 2 + 0.15; // Don't let user look underneath build plate
+    controls.minDistance = 35;
+    controls.maxDistance = 320;
+    controls.target.set(0, 0, 0);
+
+    // Resize Handler
+    function onWindowResize() {
+        const w = stageCard.clientWidth || 560;
+        const h = stageCard.clientHeight || 480;
+        camera.aspect = w / h;
+        camera.updateProjectionMatrix();
+        renderer.setSize(w, h);
+    }
+    window.addEventListener('resize', onWindowResize);
+
+    // ============================================================
+    // 2. STUDIO LIGHTING & BAMBU-STYLE BUILD PLATE
+    // ============================================================
+    // Ambient light - balanced for true color saturation
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambientLight);
+
+    // Key light (warm studio key)
+    const keyLight = new THREE.DirectionalLight(0xfff6ec, 1.15);
+    keyLight.position.set(65, 85, 120);
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.width = 1024;
+    keyLight.shadow.mapSize.height = 1024;
+    keyLight.shadow.camera.near = 10;
+    keyLight.shadow.camera.far = 400;
+    const shadowD = 90;
+    keyLight.shadow.camera.left = -shadowD;
+    keyLight.shadow.camera.right = shadowD;
+    keyLight.shadow.camera.top = shadowD;
+    keyLight.shadow.camera.bottom = -shadowD;
+    keyLight.shadow.bias = -0.0005;
+    scene.add(keyLight);
+
+    // Fill light (cool fill for depth)
+    const fillLight = new THREE.DirectionalLight(0xc8dcff, 0.45);
+    fillLight.position.set(-70, -50, 80);
+    scene.add(fillLight);
+
+    // Rim light (highlight bevels and silhouette)
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    rimLight.position.set(0, -90, -30);
+    scene.add(rimLight);
+
+    // Bambu-Style Textured Build Plate
+    const buildPlateGroup = new THREE.Group();
+
+    // Subtle plate bed rectangle
+    const bedGeo = new THREE.PlaneGeometry(180, 150);
+    const bedMat = new THREE.MeshStandardMaterial({
+        color: 0x14121a,
+        roughness: 0.95,
+        metalness: 0.1
+    });
+    const bedMesh = new THREE.Mesh(bedGeo, bedMat);
+    bedMesh.position.z = -0.3;
+    bedMesh.receiveShadow = true;
+    buildPlateGroup.add(bedMesh);
+
+    // Grid helper on plate
+    const grid = new THREE.GridHelper(160, 16, 0x443b5e, 0x221d30);
+    grid.rotation.x = Math.PI / 2;
+    grid.position.z = -0.15;
+    buildPlateGroup.add(grid);
+
+    scene.add(buildPlateGroup);
+
+    // ============================================================
+    // 3. FONT MANAGEMENT (Instant Pre-Compiled Typefaces)
+    // ============================================================
+    const fontLoader = new THREE.FontLoader();
+    const fonts = {};
+
+    if (window.FONT_HELVETIKER_BOLD) {
+        fonts['helvetiker'] = fontLoader.parse(window.FONT_HELVETIKER_BOLD);
+    }
+    if (window.FONT_OPTIMER_BOLD) {
+        fonts['optimer'] = fontLoader.parse(window.FONT_OPTIMER_BOLD);
     }
 
-    // --- Helper: Lighten Hex Color ---
-    function lightenColor(hex, percent) {
-        let num = parseInt(hex.replace('#', ''), 16),
-            amt = Math.round(2.55 * percent),
-            R = Math.min(255, (num >> 16) + amt),
-            G = Math.min(255, (num >> 8 & 0x00FF) + amt),
-            B = Math.min(255, (num & 0x0000FF) + amt);
-        return '#' + (0x1000000 + R*0x10000 + G*0x100 + B).toString(16).padStart(6, '0');
+    function getActiveFont() {
+        return fonts[currentFontKey] || fonts['helvetiker'];
     }
 
-    // --- Helper: Synchronize Stepper & Range Slider Pairs ---
-    function setupParamSync(numEl, sliderEl, minusBtnId, plusBtnId) {
-        if (!numEl) return;
-        const minusBtn = document.getElementById(minusBtnId);
-        const plusBtn = document.getElementById(plusBtnId);
-
-        function applyVal(val) {
-            let v = parseFloat(val);
-            const min = parseFloat(numEl.min || 0);
-            const max = parseFloat(numEl.max || 100);
-            if (isNaN(v)) v = min;
-            if (v < min) v = min;
-            if (v > max) v = max;
-
-            numEl.value = v;
-            if (sliderEl) sliderEl.value = v;
-
-            saveHistoryState();
-            updatePreview();
-        }
-
-        numEl.addEventListener('input', () => applyVal(numEl.value));
-        if (sliderEl) {
-            sliderEl.addEventListener('input', () => applyVal(sliderEl.value));
-        }
-
-        if (minusBtn) {
-            minusBtn.addEventListener('click', () => {
-                const step = parseFloat(numEl.step || 1);
-                applyVal(parseFloat(numEl.value || 0) - step);
+    // ============================================================
+    // 4. PBR MATERIAL FACTORY
+    // ============================================================
+    function getBaseMaterial() {
+        const col = new THREE.Color(currentColor);
+        if (currentFinish === 'silk') {
+            return new THREE.MeshStandardMaterial({
+                color: col,
+                roughness: 0.22,
+                metalness: 0.68
+            });
+        } else if (currentFinish === 'satin') {
+            return new THREE.MeshPhysicalMaterial({
+                color: col,
+                roughness: 0.24,
+                metalness: 0.12,
+                clearcoat: 0.85,
+                clearcoatRoughness: 0.15
+            });
+        } else if (currentFinish === 'neon') {
+            return new THREE.MeshStandardMaterial({
+                color: col,
+                roughness: 0.35,
+                emissive: col,
+                emissiveIntensity: 0.18
             });
         }
-        if (plusBtn) {
-            plusBtn.addEventListener('click', () => {
-                const step = parseFloat(numEl.step || 1);
-                applyVal(parseFloat(numEl.value || 0) + step);
+        // Standard Matte PLA
+        return new THREE.MeshStandardMaterial({
+            color: col,
+            roughness: 0.65,
+            metalness: 0.05
+        });
+    }
+
+    function getLegoAccentMaterial() {
+        return new THREE.MeshStandardMaterial({
+            color: 0xE5C158, // Vibrant LEGO Yellow
+            roughness: 0.40,
+            metalness: 0.05
+        });
+    }
+
+    function getTextMaterial() {
+        // High contrast crisp white or dark depending on base color
+        const isYellow = currentColor === '#E5C158';
+        const textColor = isYellow ? 0x111111 : 0xFFFFFF;
+        return new THREE.MeshStandardMaterial({
+            color: textColor,
+            roughness: 0.35,
+            metalness: 0.05
+        });
+    }
+
+    // ============================================================
+    // 5. PARAMETRIC SOLID CAD GEOMETRY GENERATORS
+    // ============================================================
+
+    // --- Helper: Compute Text 2D Shapes & Dimensions ---
+    function getTextShapesAndBounds(text, size) {
+        const font = getActiveFont();
+        if (!font) return { shapes: [], bounds: { minX: -20, maxX: 20, minY: -5, maxY: 15, width: 40, height: 20, centerY: 5 } };
+
+        const shapes = font.generateShapes(text, size);
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+
+        shapes.forEach(shape => {
+            const pts = shape.getPoints();
+            pts.forEach(pt => {
+                if (pt.x < minX) minX = pt.x;
+                if (pt.x > maxX) maxX = pt.x;
+                if (pt.y < minY) minY = pt.y;
+                if (pt.y > maxY) maxY = pt.y;
             });
+        });
+
+        if (!isFinite(minX)) {
+            minX = -20; maxX = 20; minY = -5; maxY = 15;
+        }
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+        const centerY = (minY + maxY) / 2;
+
+        return { shapes, bounds: { minX, maxX, minY, maxY, width, height, centerY } };
+    }
+
+    // --- Model 1: LEGO Keychain.scad ---
+    function buildLegoKeychain(params) {
+        const group = new THREE.Group();
+        const text = (params.text || 'LEGO').trim() || 'LEGO';
+        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
+
+        const pad = Math.max(3.5, params.outlineSize);
+        const holeSize = Math.max(3.0, params.holeSize);
+        const holeRadius = holeSize / 2;
+        const holeOuterRadius = holeRadius + pad;
+
+        // Eyelet center clearly protruding on the left
+        const eyeletDist = holeOuterRadius + pad * 0.7 + Math.max(0, params.holeX);
+        const eyeletX = bounds.minX - eyeletDist;
+        const eyeletY = bounds.centerY + params.holeY;
+
+        // Outer pill envelope around text
+        const pillLeftX = bounds.minX - pad * 0.6;
+        const pillRightX = bounds.maxX + pad * 0.8;
+        const pillH = bounds.height + pad * 2.2;
+        const pillR = pillH / 2;
+        const pillTopY = bounds.centerY + pillR;
+        const pillBotY = bounds.centerY - pillR;
+
+        // 1. Unified Base Plate Contour (Solid Red)
+        const baseShape = new THREE.Shape();
+        baseShape.moveTo(eyeletX, eyeletY + holeOuterRadius);
+        // Outer arc around eyelet (from top through left to bottom)
+        baseShape.absarc(eyeletX, eyeletY, holeOuterRadius, Math.PI / 2, -Math.PI / 2, false);
+        // Tangent line to bottom of pill
+        baseShape.lineTo(pillLeftX, pillBotY);
+        // Across bottom to right pill cap
+        baseShape.lineTo(pillRightX - pillR, pillBotY);
+        // Right rounded cap
+        baseShape.absarc(pillRightX - pillR, bounds.centerY, pillR, -Math.PI / 2, Math.PI / 2, false);
+        // Across top to left
+        baseShape.lineTo(pillLeftX, pillTopY);
+        // Tangent back to eyelet top
+        baseShape.lineTo(eyeletX, eyeletY + holeOuterRadius);
+
+        // Through-Hole for Keychain Loop
+        const holePath = new THREE.Path();
+        holePath.absarc(eyeletX, eyeletY, holeRadius, 0, Math.PI * 2, true);
+        baseShape.holes.push(holePath);
+
+        // Extrude Base Plate
+        const baseGeo = new THREE.ExtrudeGeometry(baseShape, {
+            depth: params.baseThick,
+            bevelEnabled: true,
+            bevelThickness: 0.45,
+            bevelSize: 0.4,
+            bevelSegments: 3
+        });
+        const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
+        baseMesh.castShadow = true;
+        baseMesh.receiveShadow = true;
+        group.add(baseMesh);
+
+        // 2. Yellow LEGO Accent Inset (Rounded Box strictly around text, NOT touching eyelet)
+        const aPadX = 3.5;
+        const aPadY = 3.2;
+        const aLeft = bounds.minX - aPadX;
+        const aRight = bounds.maxX + aPadX;
+        const aTop = bounds.maxY + aPadY;
+        const aBot = bounds.minY - aPadY;
+        const aCornerR = Math.min(6, (aTop - aBot) / 3);
+
+        const accentShape = new THREE.Shape();
+        accentShape.moveTo(aLeft + aCornerR, aBot);
+        accentShape.lineTo(aRight - aCornerR, aBot);
+        accentShape.absarc(aRight - aCornerR, aBot + aCornerR, aCornerR, -Math.PI / 2, 0, false);
+        accentShape.lineTo(aRight, aTop - aCornerR);
+        accentShape.absarc(aRight - aCornerR, aTop - aCornerR, aCornerR, 0, Math.PI / 2, false);
+        accentShape.lineTo(aLeft + aCornerR, aTop);
+        accentShape.absarc(aLeft + aCornerR, aTop - aCornerR, aCornerR, Math.PI / 2, Math.PI, false);
+        accentShape.lineTo(aLeft, aBot + aCornerR);
+        accentShape.absarc(aLeft + aCornerR, aBot + aCornerR, aCornerR, Math.PI, -Math.PI / 2, false);
+
+        const accentGeo = new THREE.ExtrudeGeometry(accentShape, {
+            depth: 0.7,
+            bevelEnabled: true,
+            bevelThickness: 0.25,
+            bevelSize: 0.25,
+            bevelSegments: 2
+        });
+        const accentMesh = new THREE.Mesh(accentGeo, getLegoAccentMaterial());
+        accentMesh.position.z = params.baseThick;
+        accentMesh.castShadow = true;
+        group.add(accentMesh);
+
+        // 3. Raised 3D Letters (White with beveled edges)
+        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
+            depth: params.letterThick,
+            bevelEnabled: true,
+            bevelThickness: 0.35,
+            bevelSize: 0.25,
+            bevelSegments: 3
+        });
+        const letterMesh = new THREE.Mesh(letterGeo, getTextMaterial());
+        letterMesh.position.z = params.baseThick + 0.7;
+        letterMesh.castShadow = true;
+        group.add(letterMesh);
+
+        // Center entire group at origin (0, 0, 0)
+        const totalMinX = eyeletX - holeOuterRadius;
+        const totalMaxX = pillRightX;
+        group.position.set(-(totalMinX + totalMaxX) / 2, -bounds.centerY, 0);
+
+        return group;
+    }
+
+    // --- Model 2: Customizable Name Tag.scad ---
+    function buildNameTag(params) {
+        const group = new THREE.Group();
+        const text = (params.text || 'NAME').trim() || 'NAME';
+        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
+
+        const padX = 14 + params.outlineSize * 1.8;
+        const padY = 8 + params.outlineSize * 1.4;
+        const width = Math.max(70, bounds.width + padX * 2);
+        const height = Math.max(34, bounds.height + padY * 2);
+        const cornerR = 6;
+
+        const w2 = width / 2;
+        const h2 = height / 2;
+
+        // Beveled Rounded Rectangle
+        const shape = new THREE.Shape();
+        shape.moveTo(-w2 + cornerR, -h2);
+        shape.lineTo(w2 - cornerR, -h2);
+        shape.absarc(w2 - cornerR, -h2 + cornerR, cornerR, -Math.PI / 2, 0, false);
+        shape.lineTo(w2, h2 - cornerR);
+        shape.absarc(w2 - cornerR, h2 - cornerR, cornerR, 0, Math.PI / 2, false);
+        shape.lineTo(-w2 + cornerR, h2);
+        shape.absarc(-w2 + cornerR, h2 - cornerR, cornerR, Math.PI / 2, Math.PI, false);
+        shape.lineTo(-w2, -h2 + cornerR);
+        shape.absarc(-w2 + cornerR, -h2 + cornerR, cornerR, Math.PI, -Math.PI / 2, false);
+
+        // Oval Lanyard Slot Hole (Top Center)
+        const slotW = 14;
+        const slotH = 4;
+        const slotY = h2 - 6;
+        const slotR = slotH / 2;
+        const slotPath = new THREE.Path();
+        slotPath.moveTo(-slotW / 2 + slotR, slotY - slotR);
+        slotPath.lineTo(slotW / 2 - slotR, slotY - slotR);
+        slotPath.absarc(slotW / 2 - slotR, slotY, slotR, -Math.PI / 2, Math.PI / 2, false);
+        slotPath.lineTo(-slotW / 2 + slotR, slotY + slotR);
+        slotPath.absarc(-slotW / 2 + slotR, slotY, slotR, Math.PI / 2, -Math.PI / 2, false);
+        shape.holes.push(slotPath);
+
+        const baseGeo = new THREE.ExtrudeGeometry(shape, {
+            depth: params.baseThick,
+            bevelEnabled: true,
+            bevelThickness: 0.5,
+            bevelSize: 0.5,
+            bevelSegments: 3
+        });
+        const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
+        baseMesh.castShadow = true;
+        baseMesh.receiveShadow = true;
+        group.add(baseMesh);
+
+        // Raised Text
+        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
+            depth: params.letterThick,
+            bevelEnabled: true,
+            bevelThickness: 0.3,
+            bevelSize: 0.2,
+            bevelSegments: 2
+        });
+        const letterMesh = new THREE.Mesh(letterGeo, getTextMaterial());
+        const textCenterX = (bounds.minX + bounds.maxX) / 2;
+        const textCenterY = (bounds.minY + bounds.maxY) / 2;
+        letterMesh.position.set(-textCenterX, -textCenterY - 2.5, params.baseThick);
+        letterMesh.castShadow = true;
+        group.add(letterMesh);
+
+        return group;
+    }
+
+    // --- Model 3: Desk Stand Trophy.scad ---
+    function buildDeskStand(params) {
+        const group = new THREE.Group();
+        const text = (params.text || 'TROPHY').trim() || 'TROPHY';
+        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
+
+        const plaqueW = Math.max(75, bounds.width + 30);
+        const plaqueH = Math.max(42, bounds.height + 24);
+        const footW = plaqueW + 20;
+        const footD = 34;
+        const footH = 8;
+
+        // 1. Weighted Foot Pedestal
+        const footGeo = new THREE.BoxGeometry(footW, footD, footH);
+        const footMesh = new THREE.Mesh(footGeo, getBaseMaterial());
+        footMesh.position.set(0, 0, footH / 2);
+        footMesh.castShadow = true;
+        footMesh.receiveShadow = true;
+        group.add(footMesh);
+
+        // 2. Upright Trophy Plaque with Beveled Arch
+        const pw2 = plaqueW / 2;
+        const pShape = new THREE.Shape();
+        pShape.moveTo(-pw2, 0);
+        pShape.lineTo(pw2, 0);
+        pShape.lineTo(pw2 - 4, plaqueH - 8);
+        pShape.absarc(0, plaqueH - 8, pw2 - 4, 0, Math.PI, false);
+        pShape.lineTo(-pw2, 0);
+
+        const plaqueGeo = new THREE.ExtrudeGeometry(pShape, {
+            depth: params.baseThick + 1.5,
+            bevelEnabled: true,
+            bevelThickness: 0.6,
+            bevelSize: 0.6,
+            bevelSegments: 3
+        });
+        const plaqueMesh = new THREE.Mesh(plaqueGeo, getBaseMaterial());
+        // Stand upright tilted slightly back
+        plaqueMesh.rotation.x = Math.PI / 2 - 0.14;
+        plaqueMesh.position.set(0, -2, footH - 1);
+        plaqueMesh.castShadow = true;
+        group.add(plaqueMesh);
+
+        // 3. Raised 3D Letters (Silk Gold Look)
+        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
+            depth: params.letterThick,
+            bevelEnabled: true,
+            bevelThickness: 0.35,
+            bevelSize: 0.25,
+            bevelSegments: 2
+        });
+        const goldMat = new THREE.MeshStandardMaterial({
+            color: 0xFFD700,
+            roughness: 0.25,
+            metalness: 0.75
+        });
+        const letterMesh = new THREE.Mesh(letterGeo, goldMat);
+        const textCenterX = (bounds.minX + bounds.maxX) / 2;
+        const textCenterY = (bounds.minY + bounds.maxY) / 2;
+        letterMesh.position.set(-textCenterX, (plaqueH / 2) - textCenterY - 2, params.baseThick + 1.5);
+        letterMesh.castShadow = true;
+        plaqueMesh.add(letterMesh);
+
+        // Center trophy visually at origin
+        group.position.set(0, 4, -plaqueH * 0.35);
+
+        return group;
+    }
+
+    // --- Model 4: Badge Plaque Shield.scad ---
+    function buildBadgeShield(params) {
+        const group = new THREE.Group();
+        const text = (params.text || 'SHIELD').trim() || 'SHIELD';
+        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
+
+        const shieldW = Math.max(68, bounds.width + 24 + params.outlineSize * 2);
+        const shieldH = shieldW * 1.25;
+        const sw2 = shieldW / 2;
+
+        // Shield Contour
+        const sShape = new THREE.Shape();
+        sShape.moveTo(-sw2, shieldH / 2);
+        sShape.lineTo(0, shieldH / 2 + 5);
+        sShape.lineTo(sw2, shieldH / 2);
+        sShape.quadraticCurveTo(sw2, -shieldH * 0.1, 0, -shieldH / 2);
+        sShape.quadraticCurveTo(-sw2, -shieldH * 0.1, -sw2, shieldH / 2);
+
+        // Mounting Hole
+        const holePath = new THREE.Path();
+        holePath.absarc(0, shieldH / 2 - 5, 2.5, 0, Math.PI * 2, true);
+        sShape.holes.push(holePath);
+
+        const baseGeo = new THREE.ExtrudeGeometry(sShape, {
+            depth: params.baseThick,
+            bevelEnabled: true,
+            bevelThickness: 0.55,
+            bevelSize: 0.55,
+            bevelSegments: 3
+        });
+        const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
+        baseMesh.castShadow = true;
+        baseMesh.receiveShadow = true;
+        group.add(baseMesh);
+
+        // Raised Shield Border Rim
+        const rimShape = new THREE.Shape();
+        const rScale = 0.88;
+        const rsw2 = sw2 * rScale;
+        const rsh = shieldH * rScale;
+        rimShape.moveTo(-rsw2, rsh / 2);
+        rimShape.lineTo(0, rsh / 2 + 4);
+        rimShape.lineTo(rsw2, rsh / 2);
+        rimShape.quadraticCurveTo(rsw2, -rsh * 0.1, 0, -rsh / 2);
+        rimShape.quadraticCurveTo(-rsw2, -rsh * 0.1, -rsw2, rsh / 2);
+
+        const innerHole = new THREE.Path();
+        const iScale = 0.79;
+        const isw2 = sw2 * iScale;
+        const ish = shieldH * iScale;
+        innerHole.moveTo(-isw2, ish / 2);
+        innerHole.lineTo(0, ish / 2 + 3);
+        innerHole.lineTo(isw2, ish / 2);
+        innerHole.quadraticCurveTo(isw2, -ish * 0.1, 0, -ish / 2);
+        innerHole.quadraticCurveTo(-isw2, -ish * 0.1, -isw2, ish / 2);
+        rimShape.holes.push(innerHole);
+
+        const rimGeo = new THREE.ExtrudeGeometry(rimShape, {
+            depth: 0.7,
+            bevelEnabled: true,
+            bevelThickness: 0.25,
+            bevelSize: 0.25,
+            bevelSegments: 2
+        });
+        const rimMat = new THREE.MeshStandardMaterial({ color: 0xE5C158, roughness: 0.35, metalness: 0.5 });
+        const rimMesh = new THREE.Mesh(rimGeo, rimMat);
+        rimMesh.position.z = params.baseThick;
+        rimMesh.castShadow = true;
+        group.add(rimMesh);
+
+        // Raised Text
+        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
+            depth: params.letterThick,
+            bevelEnabled: true,
+            bevelThickness: 0.35,
+            bevelSize: 0.25,
+            bevelSegments: 2
+        });
+        const letterMesh = new THREE.Mesh(letterGeo, getTextMaterial());
+        const textCenterX = (bounds.minX + bounds.maxX) / 2;
+        const textCenterY = (bounds.minY + bounds.maxY) / 2;
+        letterMesh.position.set(-textCenterX, -textCenterY - 2, params.baseThick + 0.4);
+        letterMesh.castShadow = true;
+        group.add(letterMesh);
+
+        return group;
+    }
+
+    // ============================================================
+    // 6. MODEL DISPATCHER & RENDER TRIGGER
+    // ============================================================
+    function renderSolidModel() {
+        if (spinner) spinner.style.display = 'flex';
+
+        // Read all current parameters
+        const params = {
+            text: inputName ? inputName.value.trim() : 'LEGO',
+            textSize: elTextSizeNum ? parseFloat(elTextSizeNum.value) : 18,
+            baseThick: elBaseThickNum ? parseFloat(elBaseThickNum.value) : 1.5,
+            letterThick: inputThickness ? parseFloat(inputThickness.value) : 3.0,
+            outlineSize: elOutlineNum ? parseFloat(elOutlineNum.value) : 4.5,
+            holeSize: elHoleSizeNum ? parseFloat(elHoleSizeNum.value) : 5.0,
+            holeX: elHoleXNum ? parseFloat(elHoleXNum.value) : 3.0,
+            holeY: elHoleYNum ? parseFloat(elHoleYNum.value) : 0.0,
+            spaceWidth: elSpaceWidthNum ? parseFloat(elSpaceWidthNum.value) : 1.0
+        };
+
+        // Remove previous model from scene
+        if (currentModelGroup) {
+            scene.remove(currentModelGroup);
+            // Dispose geometries and materials
+            currentModelGroup.traverse(child => {
+                if (child.isMesh) {
+                    if (child.geometry) child.geometry.dispose();
+                    if (child.material) {
+                        if (Array.isArray(child.material)) child.material.forEach(m => m.dispose());
+                        else child.material.dispose();
+                    }
+                }
+            });
+            currentModelGroup = null;
+        }
+
+        // Build new Solid 3D CAD model
+        if (currentTemplate === 'lego') {
+            currentModelGroup = buildLegoKeychain(params);
+        } else if (currentTemplate === 'nametag') {
+            currentModelGroup = buildNameTag(params);
+        } else if (currentTemplate === 'deskstand') {
+            currentModelGroup = buildDeskStand(params);
+        } else if (currentTemplate === 'badge') {
+            currentModelGroup = buildBadgeShield(params);
+        }
+
+        if (currentModelGroup) {
+            scene.add(currentModelGroup);
+        }
+
+        updatePricing(params);
+
+        if (spinner) {
+            setTimeout(() => { spinner.style.display = 'none'; }, 80);
         }
     }
 
-    // Connect All 7 Stepper-Slider Groups
-    setupParamSync(elOutlineNum, elOutlineSlider, 'btn-minus-outline', 'btn-plus-outline');
-    setupParamSync(elBaseThickNum, elBaseThickSlider, 'btn-minus-basethick', 'btn-plus-basethick');
-    setupParamSync(elTextSizeNum, elTextSizeSlider, 'btn-minus-textsize', 'btn-plus-textsize');
-    setupParamSync(elSpaceWidthNum, elSpaceWidthSlider, 'btn-minus-space', 'btn-plus-space');
-    setupParamSync(inputThickness, elLetterThickSlider, 'btn-minus-thick', 'btn-plus-thick');
-    setupParamSync(elHoleSizeNum, elHoleSizeSlider, 'btn-minus-holesize', 'btn-plus-holesize');
-    setupParamSync(elHoleXNum, elHoleXSlider, 'btn-minus-holex', 'btn-plus-holex');
-    setupParamSync(elHoleYNum, elHoleYSlider, 'btn-minus-holey', 'btn-plus-holey');
+    // Animation Loop
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
 
-    // ===== CORE: Build Parametric OpenSCAD Multi-Layer 3D Engine =====
-    function updatePreview() {
-        const text = inputName.value.trim() || 'LEGO';
-        const upperText = text.toUpperCase();
+    // ============================================================
+    // 7. PRICING & WEIGHT CALCULATION
+    // ============================================================
+    function updatePricing(params) {
+        const textLen = (params.text || 'LEGO').length;
+        const totalThick = params.baseThick + params.letterThick;
+        const volEst = Math.round(textLen * 1.8 * totalThick * (params.outlineSize * 0.4 + 1));
+        const estGrams = Math.max(12, Math.round(volEst * 0.28));
 
-        const outlineSize = parseFloat(elOutlineNum ? elOutlineNum.value : 4.5);
-        const baseThick = parseFloat(elBaseThickNum ? elBaseThickNum.value : 1.5);
-        const textSize = parseFloat(elTextSizeNum ? elTextSizeNum.value : 18);
-        const spaceWidth = parseFloat(elSpaceWidthNum ? elSpaceWidthNum.value : 1.0);
-        const letterThick = parseFloat(inputThickness ? inputThickness.value : 3.0);
-        const holeSize = parseFloat(elHoleSizeNum ? elHoleSizeNum.value : 5.0);
-        const holeX = parseFloat(elHoleXNum ? elHoleXNum.value : 3.0);
-        const holeY = parseFloat(elHoleYNum ? elHoleYNum.value : 0.0);
+        let finishMul = 1.0;
+        if (currentFinish === 'silk') finishMul = 1.25;
+        if (currentFinish === 'satin') finishMul = 1.20;
+        if (currentFinish === 'neon') finishMul = 1.30;
 
-        if (valThickness) valThickness.textContent = letterThick + 'mm';
+        const baseFee = currentTemplate === 'deskstand' ? 450 : 250;
+        const calculatedPrice = Math.round((baseFee + (estGrams * currentRate)) * finishMul);
 
-        // --- Calculate Pricing ---
-        const numLetters = text.length;
-        const letterFee = 20 * numLetters;
-        const thickMultiplier = letterThick / 3.0;
-        const brimMultiplier = 1.0 + (outlineSize * 0.05);
-        const matMultiplier = currentRate / 5.0;
+        if (displayPrice) {
+            displayPrice.textContent = `৳${calculatedPrice}`;
+        }
+        if (displaySpecs) {
+            const modelNames = {
+                lego: 'LEGO Keychain.scad',
+                nametag: 'Customizable Name Tag.scad',
+                deskstand: 'Desk Stand Trophy.scad',
+                badge: 'Badge Plaque Shield.scad'
+            };
+            displaySpecs.textContent = `${modelNames[currentTemplate]} • ${currentColorName} • ~${estGrams}g PLA • ${params.baseThick}mm Base`;
+        }
+    }
 
-        let modelName = 'LEGO Keychain.scad';
-        if (currentTemplate === 'nametag') modelName = 'Customizable Name Tag.scad';
-        else if (currentTemplate === 'deskstand') modelName = 'Desk Stand Trophy.scad';
-        else if (currentTemplate === 'badge') modelName = 'Badge Plaque Shield.scad';
-
-        const total = Math.round((140 + letterFee) * thickMultiplier * brimMultiplier * matMultiplier);
-        
-        displayPrice.textContent = 'à§³' + total.toLocaleString('en-US');
-        displaySpecs.textContent = `${modelName} â€¢ ${currentColorName} PLA â€¢ ${letterThick}mm Letter â€¢ ${outlineSize}mm Brim`;
-
-        if (templateBadge) {
-            templateBadge.textContent = `ðŸ§± ${modelName.toUpperCase()}`;
+    // ============================================================
+    // 8. STL EXPORT (Direct 3D Print File Download)
+    // ============================================================
+    function downloadSTL() {
+        if (!currentModelGroup || typeof THREE.STLExporter === 'undefined') {
+            alert('3D Mesh not ready yet.');
+            return;
         }
 
-        // Clear 3D Stage Container
-        nameplate3D.className = 'nameplate-3d finish-' + currentFinish;
-        nameplate3D.innerHTML = '';
+        const exporter = new THREE.STLExporter();
+        const result = exporter.parse(currentModelGroup, { binary: true });
+        const blob = new Blob([result], { type: 'application/octet-stream' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        const textClean = (inputName ? inputName.value : 'model').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
+        link.download = `${textClean}_${currentTemplate}_print_ready.stl`;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
 
-        // Dynamic Sizing & Positioning Parameters
-        const charWidth = (currentFont.includes('Lobster') || currentFont.includes('Pacifico')) ? 24 : 34;
-        const estTextWidth = Math.max(140, upperText.length * charWidth * (textSize / 18) + (spaceWidth * upperText.length * 4));
-        const svgW = Math.max(380, estTextWidth + (outlineSize * 24) + (holeSize * 12) + 140);
-        const svgH = Math.max(160, (textSize * 4) + (outlineSize * 16) + 50);
+    if (btnExportStl) {
+        btnExportStl.addEventListener('click', downloadSTL);
+    }
 
-        nameplate3D.style.width = svgW + 'px';
-        nameplate3D.style.height = svgH + 'px';
-
-        const cx = (svgW / 2) + 25;
-        const cy = svgH / 2;
-        const fontStyle = (currentTemplate === 'lego') ? 'italic' : 'normal';
-
-        // Keyring Hole Position
-        const holeRadiusOuter = (holeSize * 2.4) + (outlineSize * 2.2) + 8;
-        const holeRadiusInner = (holeSize * 1.6);
-        const holeXPos = (cx - estTextWidth / 2) - (holeX * 3.0) - holeRadiusOuter + 6;
-        const holeYPos = cy - (holeY * 3.0);
-
-        // Helper to append 3D SVG Layer
-        function addSvgLayer(svgContent, zPos, dropShadow = false) {
-            const div = document.createElement('div');
-            div.className = 'layer-3d-svg';
-            div.style.cssText = `
-                width: ${svgW}px;
-                height: ${svgH}px;
-                transform: translateZ(${zPos}px);
-                filter: ${dropShadow ? 'drop-shadow(0 25px 30px rgba(0,0,0,0.75))' : 'none'};
-            `;
-            div.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${svgW} ${svgH}" width="${svgW}" height="${svgH}" style="overflow:visible;">${svgContent}</svg>`;
-            nameplate3D.appendChild(div);
-        }
-
-
-        // ==========================================
-        // UNIFIED Z-LOOP â€” One combined SVG per Z-level.
-        // Ring body at EVERY Z => always same screen position as plate.
-        // ==========================================
-        const zStep = 0.4;
-        const baseLayers = Math.max(18, Math.floor(baseThick  * 12));
-        const yLayers    = 6;
-        const bLayers    = 6;
-        const textLayers = Math.max(18, Math.floor(letterThick * 12));
-        const plateEnd = baseLayers;
-        const yEnd     = plateEnd + yLayers;
-        const bEnd     = yEnd + bLayers;
-        const textEnd  = bEnd + textLayers;
-        const ringEnd  = textEnd + Math.round(textEnd * 0.3);
-        const topRGB   = (currentFinish === 'neon')  ? [112, 255, 250] :
-                         (currentFinish === 'silk')  ? [255, 243, 209] : [255, 255, 255];
+    // ============================================================
+    // 9. OPENSCAD CODE GENERATOR & MODAL
+    // ============================================================
+    function generateOpenSCADCode() {
+        const text = inputName ? inputName.value.trim() : 'LEGO';
+        const textSize = elTextSizeNum ? elTextSizeNum.value : '18';
+        const baseThick = elBaseThickNum ? elBaseThickNum.value : '1.5';
+        const letterThick = inputThickness ? inputThickness.value : '3.0';
+        const outlineSize = elOutlineNum ? elOutlineNum.value : '4.5';
+        const holeSize = elHoleSizeNum ? elHoleSizeNum.value : '5.0';
+        const holeX = elHoleXNum ? elHoleXNum.value : '3.0';
+        const holeY = elHoleYNum ? elHoleYNum.value : '0.0';
 
         if (currentTemplate === 'lego') {
-            for (let layer = 0; layer < ringEnd; layer++) {
-                const z        = layer * zStep;
-                const isBottom = (layer === 0);
-                let   svg      = '';
+            return `// ============================================================
+// Parametric LEGO Keychain — Generated by Kira's Creation Studio
+// Compatible with OpenSCAD, MakerWorld & Bambu Studio
+// ============================================================
 
-                // Ring: always present from layer 0 â†’ ringEnd
-                const ringT   = layer / (ringEnd - 1);
-                const ringCol = darkenColor(currentColor, Math.round(40 * (1 - ringT)));
-                svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${ringCol}"/>`;
+nome = "${text}";
+texto_tamanho = ${textSize};
+base_espessura = ${baseThick};
+letra_espessura = ${letterThick};
+borda_tamanho = ${outlineSize};
+buraco_diametro = ${holeSize};
+buraco_x = ${holeX};
+buraco_y = ${holeY};
+fonte = "Fredoka:style=Bold";
 
-                // Red plate + bubble text body
-                if (layer < plateEnd) {
-                    const plateT   = layer / Math.max(1, plateEnd - 1);
-                    const plateCol = darkenColor(currentColor, Math.round(38 * (1 - plateT)));
-                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="${plateCol}" stroke="${plateCol}" stroke-width="${outlineSize * 7 + 22}" stroke-linejoin="round" stroke-linecap="round">${upperText}</text>`;
-                }
-
-                // Yellow accent
-                if (layer >= plateEnd && layer < yEnd) {
-                    const yT  = (layer - plateEnd) / Math.max(1, yLayers - 1);
-                    const yCol = `rgb(${Math.round(185 + 70*yT)},${Math.round(150 + 65*yT)},0)`;
-                    svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - 1}" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 1.5 + 5}"/>`;
-                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 3 + 9}" stroke-linejoin="round" stroke-linecap="round">${upperText}</text>`;
-                }
-
-                // Black outline
-                if (layer >= yEnd && layer < bEnd) {
-                    const bT   = (layer - yEnd) / Math.max(1, bLayers - 1);
-                    const bV   = Math.round(40 * bT);
-                    const bCol = `rgb(${bV},${bV},${bV})`;
-                    svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - outlineSize * 0.6}" fill="none" stroke="${bCol}" stroke-width="3"/>`;
-                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="${bCol}" stroke="${bCol}" stroke-width="${outlineSize * 1.1 + 3}" stroke-linejoin="round" stroke-linecap="round">${upperText}</text>`;
-                }
-
-                // White raised text
-                if (layer >= bEnd && layer < textEnd) {
-                    const tT = (layer - bEnd) / Math.max(1, textLayers - 1);
-                    const tr = Math.round(70 + (topRGB[0] - 70) * tT);
-                    const tg = Math.round(70 + (topRGB[1] - 70) * tT);
-                    const tb = Math.round(70 + (topRGB[2] - 70) * tT);
-                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="rgb(${tr},${tg},${tb})" stroke="rgb(${tr},${tg},${tb})" stroke-width="1">${upperText}</text>`;
-                }
-
-                // Hole punch always last
-                svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#000"/>`;
-
-                addSvgLayer(svg, z, isBottom);
+module base_plate() {
+    difference() {
+        union() {
+            // Pill contour around text
+            offset(r = borda_tamanho) {
+                text(nome, size = texto_tamanho, font = fonte, halign = "center", valign = "center");
             }
+            // Ring eyelet for keychain
+            translate([-len(nome) * texto_tamanho * 0.38 - buraco_x, buraco_y])
+                circle(d = buraco_diametro + borda_tamanho * 2);
+        }
+        // Hollow through-hole
+        translate([-len(nome) * texto_tamanho * 0.38 - buraco_x, buraco_y])
+            circle(d = buraco_diametro);
+    }
+}
+
+// 3D Rendering (Dual Extrusion Ready)
+color("${currentColor}") linear_extrude(height = base_espessura) base_plate();
+
+color("#E5C158") translate([0, 0, base_espessura]) linear_extrude(height = 0.6)
+    offset(r = max(1, borda_tamanho - 1.5))
+        text(nome, size = texto_tamanho, font = fonte, halign = "center", valign = "center");
+
+color("#FFFFFF") translate([0, 0, base_espessura + 0.6]) linear_extrude(height = letra_espessura)
+    text(nome, size = texto_tamanho, font = fonte, halign = "center", valign = "center");
+`;
+        } else if (currentTemplate === 'nametag') {
+            return `// ============================================================
+// Customizable Name Tag.scad
+// ============================================================
+
+nome = "${text}";
+tamanho = ${textSize};
+espessura = ${baseThick};
+relevo = ${letterThick};
+borda = ${outlineSize};
+
+module tag_plate() {
+    difference() {
+        minkowski() {
+            square([len(nome)*tamanho*0.7 + borda*2, tamanho*1.8 + borda*2], center=true);
+            circle(r=5);
+        }
+        // Lanyard Slot
+        translate([0, (tamanho*1.8 + borda*2)/2 - 3])
+            minkowski() { square([10, 2], center=true); circle(r=1.5); }
+    }
+}
+
+color("${currentColor}") linear_extrude(height = espessura) tag_plate();
+color("#FFFFFF") translate([0, -2, espessura]) linear_extrude(height = relevo)
+    text(nome, size = tamanho, halign = "center", valign = "center");
+`;
+        } else if (currentTemplate === 'deskstand') {
+            return `// ============================================================
+// Desk Stand Trophy.scad
+// ============================================================
+
+title = "${text}";
+size = ${textSize};
+base_h = ${baseThick};
+
+// Pedestal
+color("${currentColor}") translate([0, 0, 4]) cube([len(title)*size*0.8 + 30, 32, 8], center=true);
+
+// Plaque
+translate([0, -2, 8]) rotate([-10, 0, 0]) {
+    color("${currentColor}") linear_extrude(height = base_h + 1.5)
+        square([len(title)*size*0.7 + 20, size*2 + 15], center=true);
+    color("#FFD700") translate([0, 0, base_h + 1.5]) linear_extrude(height = ${letterThick})
+        text(title, size = size, halign = "center", valign = "center");
+}
+`;
         } else {
-            const rectX = cx - estTextWidth / 2 - 20 - outlineSize * 2;
-            const rectY = cy - textSize * 1.3 - outlineSize * 2;
-            const rectW = estTextWidth + 40 + outlineSize * 4;
-            const rectH = textSize * 2.6 + outlineSize * 4;
-            const rx    = rectH / 2;
-            const oBase = Math.max(18, Math.floor(baseThick  * 12));
-            const oText = Math.max(18, Math.floor(letterThick * 12));
+            return `// ============================================================
+// Badge Plaque Shield.scad
+// ============================================================
 
-            for (let layer = 0; layer < oBase + oText; layer++) {
-                const z        = layer * zStep;
-                const isBottom = (layer === 0);
-                let   svg      = '';
+title = "${text}";
+size = ${textSize};
+base_h = ${baseThick};
 
-                if (layer < oBase) {
-                    const t   = layer / Math.max(1, oBase - 1);
-                    const col = darkenColor(currentColor, Math.round(38 * (1 - t)));
-                    if (currentTemplate === 'nametag') {
-                        svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}"/>`;
-                        svg += `<rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="${rx}" fill="${col}" stroke="${darkenColor(col,8)}" stroke-width="2"/>`;
-                        svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#000"/>`;
-                    } else if (currentTemplate === 'deskstand') {
-                        const pedCol = darkenColor(currentColor, Math.round(50 * (1 - t)));
-                        svg += `<rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="6" fill="${col}" stroke="${darkenColor(col,8)}" stroke-width="2"/>`;
-                        svg += `<rect x="${rectX-12}" y="${rectY+rectH-8}" width="${rectW+24}" height="28" rx="6" fill="${pedCol}" stroke="${col}" stroke-width="2.5"/>`;
-                    } else if (currentTemplate === 'badge') {
-                        const pd = `M ${rectX} ${rectY} L ${rectX+rectW} ${rectY} L ${rectX+rectW} ${rectY+rectH*0.55} Q ${rectX+rectW} ${rectY+rectH*1.1} ${rectX+rectW/2} ${rectY+rectH*1.15} Q ${rectX} ${rectY+rectH*1.1} ${rectX} ${rectY+rectH*0.55} Z`;
-                        svg += `<path d="${pd}" fill="${col}" stroke="${darkenColor(col,8)}" stroke-width="2" stroke-linejoin="round"/>`;
-                    }
-                } else {
-                    const tT = (layer - oBase) / Math.max(1, oText - 1);
-                    const tr = Math.round(70 + (topRGB[0] - 70) * tT);
-                    const tg = Math.round(70 + (topRGB[1] - 70) * tT);
-                    const tb = Math.round(70 + (topRGB[2] - 70) * tT);
-                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="rgb(${tr},${tg},${tb})" stroke="rgb(${tr},${tg},${tb})" stroke-width="1">${upperText}</text>`;
-                }
-                addSvgLayer(svg, z, isBottom);
-            }
-        }
-
-        apply3DRotation();
+module shield() {
+    difference() {
+        polygon(points=[[-35, 40], [0, 45], [35, 40], [0, -45]]);
+        translate([0, 36]) circle(r=2.5);
     }
+}
 
-    // --- Apply 3D Rotation ---
-    function apply3DRotation() {
-        if (nameplate3D) {
-            nameplate3D.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
-        }
-    }
-    // --- Apply 3D Rotation ---
-    function apply3DRotation() {
-        if (nameplate3D) {
-            nameplate3D.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+color("${currentColor}") linear_extrude(height = base_h) shield();
+color("#FFD700") translate([0, 0, base_h]) linear_extrude(height = 0.6) offset(r=-4) shield();
+color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${letterThick})
+    text(title, size = size, halign = "center", valign = "center");
+`;
         }
     }
 
-    // --- SCAD Model Selection Dropdown ---
-    if (scadSelect) {
-        scadSelect.addEventListener('change', (e) => {
-            currentTemplate = e.target.value;
-            saveHistoryState();
-
-            if (currentTemplate === 'lego') {
-                currentFont = "'Fredoka', sans-serif";
-                currentColor = '#D32F2F';
-                currentColorName = 'Ruby Red';
-                if (elOutlineNum) elOutlineNum.value = 4.5;
-                if (elOutlineSlider) elOutlineSlider.value = 4.5;
-            } else if (currentTemplate === 'nametag') {
-                currentFont = "'Lobster', cursive";
-                currentColor = '#2979FF';
-                currentColorName = 'Ocean Blue';
-            } else if (currentTemplate === 'deskstand') {
-                currentFont = "'Orbitron', sans-serif";
-                currentColor = '#E5C158';
-                currentColorName = 'Silk Gold';
-            } else if (currentTemplate === 'badge') {
-                currentFont = "'Righteous', cursive";
-                currentColor = '#7B1FA2';
-                currentColorName = 'Royal Purple';
-            }
-            updatePreview();
+    if (btnViewScad && scadModal && scadCodeArea) {
+        btnViewScad.addEventListener('click', () => {
+            scadCodeArea.value = generateOpenSCADCode();
+            scadModal.style.display = 'flex';
         });
-    }
-
-    // --- Font Selection ---
-    if (fontOptions) {
-        fontOptions.querySelectorAll('.font-pill').forEach(pill => {
-            pill.addEventListener('click', () => {
-                fontOptions.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
-                pill.classList.add('active');
-                currentFont = pill.getAttribute('data-font');
-                saveHistoryState();
-                updatePreview();
+        if (btnCloseScadModal) {
+            btnCloseScadModal.addEventListener('click', () => {
+                scadModal.style.display = 'none';
             });
+        }
+        if (btnCopyScad) {
+            btnCopyScad.addEventListener('click', () => {
+                navigator.clipboard.writeText(scadCodeArea.value).then(() => {
+                    btnCopyScad.textContent = '✅ Copied!';
+                    setTimeout(() => { btnCopyScad.textContent = '📋 Copy Code'; }, 1800);
+                });
+            });
+        }
+        if (btnDownloadScad) {
+            btnDownloadScad.addEventListener('click', () => {
+                const blob = new Blob([scadCodeArea.value], { type: 'text/plain' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${currentTemplate}_custom.scad`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            });
+        }
+    }
+
+    // ============================================================
+    // 10. CONTROLS SYNCHRONIZATION & EVENT LISTENERS
+    // ============================================================
+    function syncControl(numEl, sliderEl, callback) {
+        if (!numEl || !sliderEl) return;
+        numEl.addEventListener('input', () => {
+            sliderEl.value = numEl.value;
+            saveHistoryState();
+            callback();
+        });
+        sliderEl.addEventListener('input', () => {
+            numEl.value = sliderEl.value;
+            callback();
+        });
+        sliderEl.addEventListener('change', () => {
+            saveHistoryState();
         });
     }
 
-    // --- Color Selection ---
+    function setupStepper(minusBtnId, plusBtnId, inputEl, sliderEl, step, callback) {
+        const minusBtn = document.getElementById(minusBtnId);
+        const plusBtn = document.getElementById(plusBtnId);
+        if (minusBtn && inputEl) {
+            minusBtn.addEventListener('click', () => {
+                const cur = parseFloat(inputEl.value) || 0;
+                const min = parseFloat(inputEl.min) || 0;
+                const next = Math.max(min, cur - step);
+                inputEl.value = next.toFixed(1).replace(/\.0$/, '');
+                if (sliderEl) sliderEl.value = inputEl.value;
+                saveHistoryState();
+                callback();
+            });
+        }
+        if (plusBtn && inputEl) {
+            plusBtn.addEventListener('click', () => {
+                const cur = parseFloat(inputEl.value) || 0;
+                const max = parseFloat(inputEl.max) || 100;
+                const next = Math.min(max, cur + step);
+                inputEl.value = next.toFixed(1).replace(/\.0$/, '');
+                if (sliderEl) sliderEl.value = inputEl.value;
+                saveHistoryState();
+                callback();
+            });
+        }
+    }
+
+    // Text Input
+    if (inputName) {
+        inputName.addEventListener('input', () => {
+            renderSolidModel();
+        });
+        inputName.addEventListener('change', () => {
+            saveHistoryState();
+        });
+    }
+
+    // Steppers & Sliders Sync
+    syncControl(elOutlineNum, elOutlineSlider, renderSolidModel);
+    setupStepper('btn-minus-outline', 'btn-plus-outline', elOutlineNum, elOutlineSlider, 0.5, renderSolidModel);
+
+    syncControl(elBaseThickNum, elBaseThickSlider, renderSolidModel);
+    setupStepper('btn-minus-basethick', 'btn-plus-basethick', elBaseThickNum, elBaseThickSlider, 0.5, renderSolidModel);
+
+    syncControl(elTextSizeNum, elTextSizeSlider, renderSolidModel);
+    setupStepper('btn-minus-textsize', 'btn-plus-textsize', elTextSizeNum, elTextSizeSlider, 1.0, renderSolidModel);
+
+    syncControl(elSpaceWidthNum, elSpaceWidthSlider, renderSolidModel);
+    setupStepper('btn-minus-space', 'btn-plus-space', elSpaceWidthNum, elSpaceWidthSlider, 0.5, renderSolidModel);
+
+    syncControl(inputThickness, elLetterThickSlider, renderSolidModel);
+    setupStepper('btn-minus-thick', 'btn-plus-thick', inputThickness, elLetterThickSlider, 0.5, renderSolidModel);
+
+    syncControl(elHoleSizeNum, elHoleSizeSlider, renderSolidModel);
+    setupStepper('btn-minus-holesize', 'btn-plus-holesize', elHoleSizeNum, elHoleSizeSlider, 0.5, renderSolidModel);
+
+    syncControl(elHoleXNum, elHoleXSlider, renderSolidModel);
+    setupStepper('btn-minus-holex', 'btn-plus-holex', elHoleXNum, elHoleXSlider, 0.5, renderSolidModel);
+
+    syncControl(elHoleYNum, elHoleYSlider, renderSolidModel);
+    setupStepper('btn-minus-holey', 'btn-plus-holey', elHoleYNum, elHoleYSlider, 0.5, renderSolidModel);
+
+    // Color Swatches
     if (colorSwatches) {
-        colorSwatches.querySelectorAll('.color-swatch').forEach(swatch => {
-            swatch.addEventListener('click', () => {
-                colorSwatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-                swatch.classList.add('active');
-                currentColor = swatch.getAttribute('data-color');
-                currentColorName = swatch.getAttribute('data-name');
-                currentRate = parseFloat(swatch.getAttribute('data-rate'));
-                saveHistoryState();
-                updatePreview();
-            });
-        });
-    }
-
-    // --- Finish Selection ---
-    if (finishOptions) {
-        finishOptions.querySelectorAll('.finish-option').forEach(opt => {
-            opt.addEventListener('click', () => {
-                finishOptions.querySelectorAll('.finish-option').forEach(o => o.classList.remove('active'));
-                opt.classList.add('active');
-                currentFinish = opt.getAttribute('data-finish');
-                saveHistoryState();
-                updatePreview();
-            });
-        });
-    }
-
-    // --- Text Input Listener ---
-    inputName.addEventListener('input', () => {
-        saveHistoryState();
-        updatePreview();
-    });
-
-    // --- Action Bar: Reset Defaults ---
-    if (btnResetScad) {
-        btnResetScad.addEventListener('click', () => {
-            inputName.value = 'LEGO';
-            if (elOutlineNum) elOutlineNum.value = 4.5;
-            if (elOutlineSlider) elOutlineSlider.value = 4.5;
-            if (elBaseThickNum) elBaseThickNum.value = 1.5;
-            if (elBaseThickSlider) elBaseThickSlider.value = 1.5;
-            if (elTextSizeNum) elTextSizeNum.value = 18;
-            if (elTextSizeSlider) elTextSizeSlider.value = 18;
-            if (elSpaceWidthNum) elSpaceWidthNum.value = 1.0;
-            if (elSpaceWidthSlider) elSpaceWidthSlider.value = 1.0;
-            if (inputThickness) inputThickness.value = 3.0;
-            if (elLetterThickSlider) elLetterThickSlider.value = 3.0;
-            if (elHoleSizeNum) elHoleSizeNum.value = 5.0;
-            if (elHoleSizeSlider) elHoleSizeSlider.value = 5.0;
-            if (elHoleXNum) elHoleXNum.value = 3.0;
-            if (elHoleXSlider) elHoleXSlider.value = 3.0;
-            if (elHoleYNum) elHoleYNum.value = 0.0;
-            if (elHoleYSlider) elHoleYSlider.value = 0.0;
-
-            rotX = 18;
-            rotY = -22;
+        colorSwatches.addEventListener('click', (e) => {
+            const btn = e.target.closest('.color-swatch');
+            if (!btn) return;
+            colorSwatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            currentColor = btn.dataset.color || '#D32F2F';
+            currentColorName = btn.dataset.name || 'Ruby Red';
+            currentRate = parseFloat(btn.dataset.rate) || 7.0;
             saveHistoryState();
-            updatePreview();
+            renderSolidModel();
         });
     }
 
-    // --- Action Bar: Undo ---
+    // Surface Finishes
+    if (finishOptions) {
+        finishOptions.addEventListener('click', (e) => {
+            const btn = e.target.closest('.finish-option');
+            if (!btn) return;
+            finishOptions.querySelectorAll('.finish-option').forEach(f => f.classList.remove('active'));
+            btn.classList.add('active');
+            currentFinish = btn.dataset.finish || 'standard';
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
+    // Font Options
+    if (fontOptions) {
+        fontOptions.addEventListener('click', (e) => {
+            const pill = e.target.closest('.font-pill');
+            if (!pill) return;
+            fontOptions.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            // Toggle between helvetiker and optimer font
+            currentFontKey = currentFontKey === 'helvetiker' ? 'optimer' : 'helvetiker';
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
+    // SCAD Model Selector
+    if (scadSelect) {
+        scadSelect.addEventListener('change', () => {
+            currentTemplate = scadSelect.value;
+            const badgeTexts = {
+                lego: '🔑 KEYRING',
+                nametag: '🏷️ NAME TAG',
+                deskstand: '🏆 TROPHY',
+                badge: '🛡️ SHIELD'
+            };
+            if (templateBadge) templateBadge.textContent = badgeTexts[currentTemplate] || '🧊 3D MODEL';
+            camera.position.copy(defaultCamPos);
+            controls.target.set(0, 0, 0);
+            controls.update();
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
+    // Reset Camera View Button
+    if (btnResetView) {
+        btnResetView.addEventListener('click', () => {
+            camera.position.copy(defaultCamPos);
+            controls.target.set(0, 0, 0);
+            controls.update();
+        });
+    }
+
+    // Undo Last Change
     if (btnUndoScad) {
         btnUndoScad.addEventListener('click', () => {
             if (stateHistory.length > 1) {
-                stateHistory.pop(); // Remove current
+                stateHistory.pop(); // current
                 const prev = stateHistory[stateHistory.length - 1];
                 if (prev) {
-                    if (scadSelect) scadSelect.value = prev.template;
                     currentTemplate = prev.template;
-                    inputName.value = prev.text;
-                    currentFont = prev.font;
+                    if (scadSelect) scadSelect.value = prev.template;
+                    if (inputName) inputName.value = prev.text;
                     currentColor = prev.color;
                     currentColorName = prev.colorName;
                     currentFinish = prev.finish;
-
-                    if (elOutlineNum) elOutlineNum.value = prev.outline;
-                    if (elOutlineSlider) elOutlineSlider.value = prev.outline;
-                    if (elBaseThickNum) elBaseThickNum.value = prev.baseThick;
-                    if (elBaseThickSlider) elBaseThickSlider.value = prev.baseThick;
-                    if (elTextSizeNum) elTextSizeNum.value = prev.textSize;
-                    if (elTextSizeSlider) elTextSizeSlider.value = prev.textSize;
-                    if (elSpaceWidthNum) elSpaceWidthNum.value = prev.spaceWidth;
-                    if (elSpaceWidthSlider) elSpaceWidthSlider.value = prev.spaceWidth;
-                    if (inputThickness) inputThickness.value = prev.letterThick;
-                    if (elLetterThickSlider) elLetterThickSlider.value = prev.letterThick;
-                    if (elHoleSizeNum) elHoleSizeNum.value = prev.holeSize;
-                    if (elHoleSizeSlider) elHoleSizeSlider.value = prev.holeSize;
-                    if (elHoleXNum) elHoleXNum.value = prev.holeX;
-                    if (elHoleXSlider) elHoleXSlider.value = prev.holeX;
-                    if (elHoleYNum) elHoleYNum.value = prev.holeY || 0.0;
-                    if (elHoleYSlider) elHoleYSlider.value = prev.holeY || 0.0;
-
-                    updatePreview();
+                    if (elOutlineNum) { elOutlineNum.value = prev.outline; if (elOutlineSlider) elOutlineSlider.value = prev.outline; }
+                    if (elBaseThickNum) { elBaseThickNum.value = prev.baseThick; if (elBaseThickSlider) elBaseThickSlider.value = prev.baseThick; }
+                    if (elTextSizeNum) { elTextSizeNum.value = prev.textSize; if (elTextSizeSlider) elTextSizeSlider.value = prev.textSize; }
+                    if (inputThickness) { inputThickness.value = prev.letterThick; if (elLetterThickSlider) elLetterThickSlider.value = prev.letterThick; }
+                    renderSolidModel();
                 }
             }
         });
     }
 
-    // --- Action Bar: âœ¨ Generate Button ---
+    // Reset to Defaults
+    if (btnResetScad) {
+        btnResetScad.addEventListener('click', () => {
+            if (inputName) inputName.value = 'LEGO';
+            if (elOutlineNum) { elOutlineNum.value = '4.5'; if (elOutlineSlider) elOutlineSlider.value = '4.5'; }
+            if (elBaseThickNum) { elBaseThickNum.value = '1.5'; if (elBaseThickSlider) elBaseThickSlider.value = '1.5'; }
+            if (elTextSizeNum) { elTextSizeNum.value = '18'; if (elTextSizeSlider) elTextSizeSlider.value = '18'; }
+            if (inputThickness) { inputThickness.value = '3.0'; if (elLetterThickSlider) elLetterThickSlider.value = '3.0'; }
+            if (elHoleSizeNum) { elHoleSizeNum.value = '5.0'; if (elHoleSizeSlider) elHoleSizeSlider.value = '5.0'; }
+            if (elHoleXNum) { elHoleXNum.value = '3.0'; if (elHoleXSlider) elHoleXSlider.value = '3.0'; }
+            if (elHoleYNum) { elHoleYNum.value = '0.0'; if (elHoleYSlider) elHoleYSlider.value = '0.0'; }
+            camera.position.copy(defaultCamPos);
+            controls.target.set(0, 0, 0);
+            controls.update();
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
     if (btnGenerateScad) {
         btnGenerateScad.addEventListener('click', () => {
-            if (stageCard) {
-                stageCard.classList.add('stage-generating');
-                setTimeout(() => {
-                    stageCard.classList.remove('stage-generating');
-                }, 600);
-            }
-            updatePreview();
+            renderSolidModel();
         });
     }
 
-    // --- Reset Camera View ---
-    if (btnResetView) {
-        btnResetView.addEventListener('click', () => {
-            rotX = 18;
-            rotY = -22;
-            apply3DRotation();
-        });
-    }
+    // ============================================================
+    // 11. CART & ORDER INTEGRATION
+    // ============================================================
+    if (btnAddToCart) {
+        btnAddToCart.addEventListener('click', () => {
+            // Render one clean frame to snapshot
+            renderer.render(scene, camera);
+            const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
 
-    // ===== Smooth Mouse & Touch 3D Orbit Controls =====
-    if (stageCard && nameplate3D) {
-        let isDragging = false;
-        let startX = 0, startY = 0;
-        let startRotX = 18, startRotY = -22;
+            const priceText = displayPrice ? displayPrice.textContent.replace('৳', '') : '350';
+            const price = parseInt(priceText, 10) || 350;
 
-        stageCard.addEventListener('mousedown', (e) => {
-            isDragging = true;
-            startX = e.clientX;
-            startY = e.clientY;
-            startRotX = rotX;
-            startRotY = rotY;
-            stageCard.classList.add('grabbing');
-        });
+            const modelTitles = {
+                lego: 'LEGO Keychain.scad',
+                nametag: 'Customizable Name Tag.scad',
+                deskstand: 'Desk Stand Trophy.scad',
+                badge: 'Badge Plaque Shield.scad'
+            };
 
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            const deltaX = e.clientX - startX;
-            const deltaY = e.clientY - startY;
-            rotY = startRotY + (deltaX * 0.45);
-            rotX = Math.max(-65, Math.min(65, startRotX - (deltaY * 0.45)));
-            apply3DRotation();
-        });
-
-        window.addEventListener('mouseup', () => {
-            if (isDragging) {
-                isDragging = false;
-                stageCard.classList.remove('grabbing');
-            }
-        });
-
-        // Touch Interaction
-        stageCard.addEventListener('touchstart', (e) => {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                startX = e.touches[0].clientX;
-                startY = e.touches[0].clientY;
-                startRotX = rotX;
-                startRotY = rotY;
-            }
-        }, { passive: true });
-
-        stageCard.addEventListener('touchmove', (e) => {
-            if (!isDragging || e.touches.length !== 1) return;
-            const touch = e.touches[0];
-            const deltaX = touch.clientX - startX;
-            const deltaY = touch.clientY - startY;
-            rotY = startRotY + (deltaX * 0.55);
-            rotX = Math.max(-65, Math.min(65, startRotX - (deltaY * 0.55)));
-            apply3DRotation();
-            if (e.cancelable) e.preventDefault();
-        }, { passive: false });
-
-        stageCard.addEventListener('touchend', () => {
-            isDragging = false;
-        });
-    }
-
-    // --- SVG Snapshot Generator for Orders & Cart ---
-    function generateSnapshotSVG() {
-        const text = inputName.value.trim() || 'CUSTOM NAME';
-        const upperText = text.toUpperCase();
-        const fontEl = fontOptions ? fontOptions.querySelector('.font-pill.active') : null;
-        const fontName = fontEl ? fontEl.getAttribute('data-font') : currentFont;
-        const fontDisplayName = fontEl && fontEl.querySelector('.fp-name') ? fontEl.querySelector('.fp-name').textContent : 'Lobster';
-
-        const sizer = document.querySelector('.layer-sizer');
-        const textWidth = sizer ? (sizer.offsetWidth || (upperText.length * 28)) : (upperText.length * 28);
-        const svgWidth = Math.max(340, textWidth + 90);
-        const svgHeight = 160;
-
-        let extraAccessory = '';
-        if (currentTemplate === 'keyring') {
-            extraAccessory = `<circle cx="-${textWidth/2 + 20}" cy="0" r="9" fill="none" stroke="${currentColor}" stroke-width="10" />`;
-        } else if (currentTemplate === 'pettag') {
-            extraAccessory = `<circle cx="0" cy="-45" r="8" fill="none" stroke="${currentColor}" stroke-width="8" />`;
-        } else if (currentTemplate === 'deskstand') {
-            extraAccessory = `<rect x="-${svgWidth/2.5}" y="35" width="${svgWidth/1.25}" height="20" rx="6" fill="${currentColor}" />`;
-        }
-
-        const svgDoc = `<svg xmlns="http://www.w3.org/2000/svg" width="${svgWidth}" height="${svgHeight}" viewBox="-${svgWidth/2} -${svgHeight/2} ${svgWidth} ${svgHeight}">
-            <rect x="-${svgWidth/2}" y="-${svgHeight/2}" width="${svgWidth}" height="${svgHeight}" rx="24" fill="#181621" />
-            <g transform="translate(0, 0)">
-                ${extraAccessory}
-                <text x="0" y="0" text-anchor="middle" dominant-baseline="central" dy="0.05em" 
-                      fill="${currentColor}" stroke="${currentColor}" stroke-width="24" stroke-linejoin="round"
-                      font-family="${fontName}, sans-serif" font-size="44" font-weight="800">
-                    ${upperText}
-                </text>
-            </g>
-            <g transform="translate(-2, -4)">
-                <text x="0" y="0" text-anchor="middle" dominant-baseline="central" dy="0.05em" 
-                      fill="#F5F0E8" font-family="${fontName}, sans-serif" font-size="44" font-weight="800">
-                    ${upperText}
-                </text>
-            </g>
-        </svg>`;
-
-        return {
-            snapshotUrl: 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgDoc),
-            fontDisplayName: fontDisplayName
-        };
-    }
-
-    // --- Order & Cart Buttons ---
-    if (btnOrder) {
-        btnOrder.addEventListener('click', async () => {
-            const text = inputName.value.trim() || 'Custom Name';
-            const thickness = inputThickness.value;
-            const price = displayPrice.textContent;
-            
-            const snapData = generateSnapshotSVG();
-            const user = window.KiraAuth ? window.KiraAuth.getCurrentUser() : null;
-
-            if (user) {
-                const orderId = 'KC-' + Date.now().toString(36).toUpperCase();
-                const orderDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                const orderTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const specsStr = `${getTemplateLabel(currentTemplate)} â€¢ ${currentColorName} PLA â€¢ ${thickness}mm â€¢ ${snapData.fontDisplayName}`;
-                
-                const newOrder = {
-                    id: orderId,
-                    date: orderDate,
-                    time: orderTime,
-                    name: user.name,
-                    email: user.email,
-                    items: [], 
-                    details: `MakerLab Live Customizer Order:\n- Template: ${getTemplateLabel(currentTemplate)}\n- Name/Text: ${text}\n- Font Style: ${snapData.fontDisplayName}\n- Material: ${currentColorName} PLA (${currentFinish})\n- Thickness: ${thickness}mm\n- Price: ${price}`,
-                    status: 'Pending',
-                    estimatedPrice: price,
-                    snapshot: snapData.snapshotUrl,
-                    material: specsStr
-                };
-
-                let orders = [];
-                try {
-                    orders = JSON.parse(localStorage.getItem('kiras_orders')) || [];
-                } catch(e) {}
-                orders.unshift(newOrder);
-                localStorage.setItem('kiras_orders', JSON.stringify(orders));
-
-                const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
-                const params = new URLSearchParams({
-                    id: newOrder.id,
-                    date: newOrder.date,
-                    name: newOrder.name,
-                    email: newOrder.email,
-                    material: newOrder.material,
-                    details: newOrder.details,
-                    estimatedPrice: newOrder.estimatedPrice,
-                    status: newOrder.status
-                });
-                
-                btnOrder.innerHTML = 'â³ Processing...';
-                btnOrder.disabled = true;
-
-                try {
-                    await fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
-                } catch(err) {
-                    const beacon = new Image();
-                    beacon.src = GOOGLE_SHEET_URL + '?' + params.toString();
-                }
-
-                if (window.showToast) showToast(`Order ${orderId} placed successfully!`);
-                
-                const waMsg = `Hi Studio Kira's Creation! I have placed an INSTANT order (${orderId}):\n\nCustomer: ${user.name} (${user.email})\n\nOrder Details:\n${newOrder.details}\n\nPlease confirm my order!`;
-                
-                setTimeout(() => {
-                    window.location.href = `account.html#orders`;
-                    window.open(`https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}`, '_blank');
-                }, 1000);
-
-            } else {
-                const pendingCustomOrder = {
-                    template: getTemplateLabel(currentTemplate),
-                    text: text,
-                    font: snapData.fontDisplayName,
-                    color: currentColorName,
-                    thickness: thickness,
-                    price: price,
-                    snapshot: snapData.snapshotUrl
-                };
-
-                localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingCustomOrder));
-
-                const details = `MakerLab Live Customizer Order:\n- Template: ${getTemplateLabel(currentTemplate)}\n- Name/Text: ${text}\n- Font Style: ${snapData.fontDisplayName}\n- Base Color: ${currentColorName}\n- Thickness: ${thickness}mm\n- Quoted Price: ${price}`;
-
-                window.location.href = `contact.html?from=customizer&material=${encodeURIComponent(currentColorName + ' PLA')}&details=${encodeURIComponent(details)}`;
-            }
-        });
-    }
-
-    // Add to Cart
-    const btnAddCart = document.getElementById('btn-add-cart-custom');
-    if (btnAddCart) {
-        btnAddCart.addEventListener('click', () => {
-            const text = inputName.value.trim() || 'Custom Name';
-            const thickness = inputThickness.value;
-            const price = displayPrice.textContent;
-            const snapData = generateSnapshotSVG();
-
-            const cartItem = {
-                title: `Custom 3D ${getTemplateLabel(currentTemplate)}: "${text}"`,
-                specs: `${currentColorName} PLA â€¢ ${thickness}mm â€¢ ${snapData.fontDisplayName}`,
+            const item = {
+                id: 'custom-' + Date.now(),
+                title: `${modelTitles[currentTemplate]} ("${inputName ? inputName.value : 'Custom'}")`,
                 price: price,
                 quantity: 1,
-                image: snapData.snapshotUrl
+                image: snapshot,
+                specs: {
+                    model: modelTitles[currentTemplate],
+                    text: inputName ? inputName.value : '',
+                    color: currentColorName,
+                    finish: currentFinish,
+                    thickness: `${elBaseThickNum ? elBaseThickNum.value : 1.5}mm base + ${inputThickness ? inputThickness.value : 3.0}mm text`
+                }
             };
 
             if (window.KiraCart) {
-                KiraCart.addItem(cartItem);
+                window.KiraCart.addItem(item);
+            } else {
+                alert(`Added "${item.title}" to cart!`);
             }
         });
     }
 
-    // Save Preset
-    const btnSavePreset = document.getElementById('btn-save-preset-custom');
-    if (btnSavePreset) {
-        btnSavePreset.addEventListener('click', () => {
-            const text = inputName.value.trim() || 'Custom Name';
-            const thickness = inputThickness.value;
-            const price = displayPrice.textContent;
-            const snapData = generateSnapshotSVG();
-
-            const presetData = {
-                template: getTemplateLabel(currentTemplate),
-                text: text,
-                font: snapData.fontDisplayName,
-                fontCss: currentFont,
-                color: currentColorName,
-                colorHex: currentColor,
-                colorRate: currentRate,
-                thickness: thickness,
-                price: price,
-                snapshot: snapData.snapshotUrl
-            };
-
-            if (window.KiraAuth) {
-                KiraAuth.savePreset(presetData);
-            }
+    if (btnOrder) {
+        btnOrder.addEventListener('click', () => {
+            if (btnAddToCart) btnAddToCart.click();
+            window.location.href = 'contact.html?type=custom_order';
         });
     }
 
-    // Hydrate from URL Parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('text')) {
-        inputName.value = urlParams.get('text');
-    }
-    if (urlParams.has('thickness')) {
-        inputThickness.value = urlParams.get('thickness');
-    }
-
-    // Initial render
-    updatePreview();
-    if (document.fonts) {
-        document.fonts.ready.then(updatePreview);
-    }
+    // Save Initial State & Initial Render
+    saveHistoryState();
+    renderSolidModel();
 });

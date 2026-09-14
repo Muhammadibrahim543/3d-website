@@ -98,28 +98,23 @@
                     <!-- Stage Overlay Actions -->
                     <div class="stage-toolbar">
                         <button id="btn-reset-view" class="stage-toggle-btn" title="Reset 3D Camera Angle">🔄 Reset View</button>
+                        <button id="btn-export-stl" class="stage-toggle-btn btn-stl-highlight" title="Download Print-Ready 3D STL File">⬇️ Download STL</button>
+                        <button id="btn-view-scad" class="stage-toggle-btn" title="View & Copy Parametric OpenSCAD Code">📜 OpenSCAD Code</button>
                     </div>
-
-                    <!-- Bokeh Light Background -->
-                    <div class="bokeh-lights">
-                        <span></span><span></span><span></span>
-                        <span></span><span></span><span></span>
-                    </div>
-
-                    <!-- Dark Studio Reflection -->
-                    <div class="stage-surface" id="stage-surface"></div>
 
                     <!-- Template badge overlay -->
                     <div class="stage-template-badge" id="stage-template-badge">🔑 KEYRING</div>
 
-                    <!-- 3D Nameplate Scene Container -->
-                    <div class="nameplate-scene">
-                        <div class="nameplate-3d" id="nameplate-3d">
-                            <!-- JS will inject layers here -->
+                    <!-- Three.js 3D WebGL Canvas Viewport -->
+                    <div class="three-stage-viewport" id="three-stage-viewport">
+                        <canvas id="three-canvas"></canvas>
+                        <div id="three-loading-spinner" class="three-spinner" style="display:none;">
+                            <div class="spinner-ring"></div>
+                            <span>Generating Solid Mesh...</span>
                         </div>
                     </div>
 
-                    <div class="stage-hint">🖐️ Drag to Rotate • Scroll to Zoom</div>
+                    <div class="stage-hint">🖐️ Drag to Rotate (360°) • Scroll to Zoom • Right-Click to Pan</div>
                 </div>
 
                 <!-- Right: Parametric OpenSCAD Model Maker Controls -->
@@ -382,10 +377,35 @@
         </footer>
     </div>
 
+    <!-- SCAD Code Modal -->
+    <div id="scad-modal" class="scad-modal-backdrop" style="display:none;">
+        <div class="scad-modal-dialog">
+            <div class="scad-modal-header">
+                <h3>📜 Parametric OpenSCAD Code</h3>
+                <button type="button" class="scad-modal-close" id="btn-close-scad-modal">×</button>
+            </div>
+            <div class="scad-modal-body">
+                <p style="font-size:0.85rem; color:var(--c-text-muted); margin-bottom:0.6rem;">This standard OpenSCAD code matches your live parameters exactly. Copy or download to use in Bambu Studio / OpenSCAD desktop.</p>
+                <textarea id="scad-code-area" readonly spellcheck="false"></textarea>
+            </div>
+            <div class="scad-modal-footer">
+                <button type="button" id="btn-copy-scad" class="clay-btn btn-sm btn-coral">📋 Copy Code</button>
+                <button type="button" id="btn-download-scad" class="clay-btn btn-sm btn-cream">💾 Download .scad</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/translations.js"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/cart.js?v=6"></script>
-    <script src="js/customize.js?v=5"></script>
+    <!-- Three.js Engine & Addons -->
+    <script src="js/three/three.min.js"></script>
+    <script src="js/three/OrbitControls.js"></script>
+    <script src="js/three/STLExporter.js"></script>
+    <!-- Pre-compiled Font Typefaces -->
+    <script src="js/fonts/helvetiker_bold.js"></script>
+    <script src="js/fonts/optimer_bold.js"></script>
+    <script src="js/customize.js?v=6"></script>
 </body>
 </html>
