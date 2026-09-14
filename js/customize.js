@@ -49,6 +49,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = document.getElementById('three-canvas');
     const spinner = document.getElementById('three-loading-spinner');
     const btnResetView = document.getElementById('btn-reset-view');
+    const btnExport3mf = document.getElementById('btn-export-3mf');
     const btnExportStl = document.getElementById('btn-export-stl');
     const btnViewScad = document.getElementById('btn-view-scad');
     const templateBadge = document.getElementById('stage-template-badge');
@@ -67,6 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnOrder = document.getElementById('btn-order-custom');
     const btnResetScad = document.getElementById('btn-scad-reset');
     const btnUndoScad = document.getElementById('btn-scad-undo');
+    const btnDownload3mfPanel = document.getElementById('btn-download-3mf-panel');
     const btnDownloadStlPanel = document.getElementById('btn-download-stl-panel');
 
     if (!canvas || typeof THREE === 'undefined') {
@@ -76,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- State Variables ---
     let currentTemplate = 'lego'; // 'lego', 'nametag'
-    let currentFont = "'Montserrat', sans-serif";
+    let currentFont = "'Nunito', sans-serif";
     let currentColor = '#D01012';
     let currentColorName = 'LEGO Red';
     let currentRate = 7.0;
@@ -94,10 +96,10 @@ document.addEventListener('DOMContentLoaded', () => {
             colorName: currentColorName,
             finish: currentFinish,
             outline: elOutlineNum ? elOutlineNum.value : '4.5',
-            baseThick: elBaseThickNum ? elBaseThickNum.value : '1.5',
+            baseThick: elBaseThickNum ? elBaseThickNum.value : '3.2',
             textSize: elTextSizeNum ? elTextSizeNum.value : '18',
             spaceWidth: elSpaceWidthNum ? elSpaceWidthNum.value : '1.0',
-            letterThick: inputThickness ? inputThickness.value : '3.0',
+            letterThick: inputThickness ? inputThickness.value : '0.8',
             holeSize: elHoleSizeNum ? elHoleSizeNum.value : '5.0',
             holeX: elHoleXNum ? elHoleXNum.value : '3.0',
             holeY: elHoleYNum ? elHoleYNum.value : '0.0'
@@ -114,9 +116,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const stageHeight = stageCard.clientHeight || 480;
 
     const camera = new THREE.PerspectiveCamera(38, stageWidth / stageHeight, 1, 1000);
+    camera.up.set(0, 0, 1); // Z is UP (CAD & 3D Printing standard)
     const defaultCamPos = new THREE.Vector3(0, -95, 140);
     camera.position.copy(defaultCamPos);
-    camera.lookAt(0, 0, 0);
+    camera.lookAt(0, 0, 3);
 
     const renderer = new THREE.WebGLRenderer({
         canvas: canvas,
@@ -134,10 +137,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.maxPolarAngle = Math.PI / 2 + 0.15;
-    controls.minDistance = 35;
-    controls.maxDistance = 320;
-    controls.target.set(0, 0, 0);
+    // Allow full 360° omnidirectional inspection (0° top view to 180° underside view)
+    controls.minPolarAngle = 0.001;
+    controls.maxPolarAngle = Math.PI - 0.001;
+    controls.minAzimuthAngle = -Infinity;
+    controls.maxAzimuthAngle = Infinity;
+    controls.minDistance = 25;
+    controls.maxDistance = 350;
+    controls.target.set(0, 0, 3);
+
+    // Responsive Touch & Mouse Speeds (Smooth, natural 1:1 finger tracking & pinch)
+    controls.rotateSpeed = 0.9;
+    controls.zoomSpeed = 1.15;
+    controls.panSpeed = 0.8;
+    controls.touches = {
+        ONE: THREE.TOUCH.ROTATE,
+        TWO: THREE.TOUCH.DOLLY_PAN
+    };
+    controls.update();
 
     function onWindowResize() {
         const w = stageCard.clientWidth || 560;
@@ -147,6 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
         renderer.setSize(w, h);
     }
     window.addEventListener('resize', onWindowResize);
+    window.addEventListener('orientationchange', () => {
+        setTimeout(onWindowResize, 150);
+    });
+    if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => {
+            onWindowResize();
+        });
+        ro.observe(stageCard);
+    }
 
     // ============================================================
     // 2. STUDIO LIGHTING & BAMBU-STYLE BUILD PLATE
@@ -177,13 +203,22 @@ document.addEventListener('DOMContentLoaded', () => {
     rimLight.position.set(0, -90, -30);
     scene.add(rimLight);
 
+    // Underside inspection light (illuminates the bottom red base plate when rotated underneath)
+    const bottomLight = new THREE.DirectionalLight(0xffffff, 0.45);
+    bottomLight.position.set(0, 40, -100);
+    scene.add(bottomLight);
+
     // Build Plate
     const buildPlateGroup = new THREE.Group();
     const bedGeo = new THREE.PlaneGeometry(180, 150);
     const bedMat = new THREE.MeshStandardMaterial({
         color: 0x14121a,
         roughness: 0.95,
-        metalness: 0.1
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.75,
+        side: THREE.DoubleSide,
+        depthWrite: false
     });
     const bedMesh = new THREE.Mesh(bedGeo, bedMat);
     bedMesh.position.z = -0.3;
@@ -373,10 +408,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return polygons;
     }
 
-    // High-Resolution Multi-Contour & Hole Extractor with Subpixel Density
-    function extractTextContours(text, fontStr) {
-        const W = 2800;
-        const H = 800;
+    // High-Resolution Multi-Contour & Hole Extractor with Dynamic Letter Spacing & Sizing
+    async function extractTextContours(text, fontStr, spaceWidth = 1.0, textSize = 18) {
+        // Wait for fonts to load so canvas renders correctly
+        await document.fonts.ready;
+
+        const W = 3600;
+        const H = 900;
         const cvs = document.createElement('canvas');
         cvs.width = W;
         cvs.height = H;
@@ -386,9 +424,30 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.font = `italic 900 220px Arial, 'Helvetica Neue', 'Liberation Sans', sans-serif`;
-        try { ctx.letterSpacing = '-2px'; } catch (e) {}
+        const weight = (fontStr && fontStr.includes('Baloo')) ? '800' : '900';
+        ctx.font = `${weight} 120px ${fontStr || "'Nunito', sans-serif"}`;
+
+        // Dynamic letter spacing (1.0 = standard; 0 -> tighter; >1 -> wider)
+        const extraSpacePx = (spaceWidth - 1.0) * 14.0;
+        if ('letterSpacing' in ctx) {
+            ctx.letterSpacing = `${Math.round(extraSpacePx)}px`;
+        }
+
+        // LEGO-style italic tilt: ~12° right-leaning shear
+        // Top of letters lean right, bottom stays — matches LEGO logo aesthetic
+        const skewAngle = 12 * Math.PI / 180; // 12 degrees
+        const skew = Math.tan(skewAngle);
+        ctx.transform(1, 0, -skew, 1, (H / 2) * skew, 0);
+
+        // Cute, softly rounded pill edges matching MakerLab reference:
+        // A subtle 6px round stroke rounds all stroke caps and corner fillets
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = 6;
+        ctx.strokeStyle = '#000000';
+        ctx.strokeText(text, W / 2, H / 2);
         ctx.fillText(text, W / 2, H / 2);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
 
         const imgData = ctx.getImageData(0, 0, W, H);
         const data = imgData.data;
@@ -423,9 +482,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const rawPolygons = marchingSquaresContours(isSolid, minX, maxX, minY, maxY, 1);
 
-        // Scale to physical millimeters (target text height: 18mm)
+        // Scale to physical millimeters (target text height: dynamic textSize)
         const textH = Math.max(10, maxY - minY);
-        const scale = 18.0 / textH; // mm per pixel
+        const targetH = Math.max(8.0, textSize || 18.0);
+        const scale = targetH / textH; // mm per pixel
         const CLIPPER_SCALE = 1000;
         const midX = (minX + maxX) / 2;
         const midY = (minY + maxY) / 2;
@@ -556,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Layer 3: Black Outline (4.2mm -> 5.2mm, Height = 1.0mm)
     // Layer 4: White Raised Letters (5.2mm -> 6.0mm, Height = 0.8mm)
     // ============================================================
-    function buildLegoKeychain(params) {
+    async function buildLegoKeychain(params) {
         const group = new THREE.Group();
         const text = (params.text || 'LEGO').trim() || 'LEGO';
 
@@ -565,8 +625,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return group;
         }
 
-        const fontStr = `Arial, 'Helvetica Neue', 'Liberation Sans', sans-serif`;
-        const { paths: textPaths, outerPaths, exPolys } = extractTextContours(text, fontStr);
+        const fontStr = currentFont || "'Nunito', sans-serif";
+        const { paths: textPaths, outerPaths, exPolys } = await extractTextContours(text, fontStr, params.spaceWidth, params.textSize);
 
         if (!textPaths || textPaths.length === 0) {
             return group;
@@ -574,184 +634,194 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const CLIPPER_SCALE = 1000;
         const invScale = 1 / CLIPPER_SCALE;
-        const arcTol = 0.04 * CLIPPER_SCALE;
+        const arcTol = 0.1 * CLIPPER_SCALE; // 0.1mm arc precision — smooth, fast
 
-        // Clean & simplify input paths
-        const cleanTextPaths = ClipperLib.Clipper.CleanPolygons(textPaths, 0.1 * CLIPPER_SCALE);
-        const cleanOuterPaths = ClipperLib.Clipper.CleanPolygons(outerPaths && outerPaths.length ? outerPaths : textPaths, 0.1 * CLIPPER_SCALE);
+        // ============================================================
+        // SINGLE SOURCE OF TRUTH: exPolys
+        // ============================================================
+        // exPolys[].outer = EXACT same shapes used for white letters.
+        // ALL border layers must derive from these same shapes to
+        // guarantee font consistency. No Chaikin applied here to avoid
+        // shape mismatch between white letters and their borders.
+        const letterBase = exPolys
+            .filter(e => e && e.outer && e.outer.length >= 3)
+            .map(e => e.outer);
+
+        if (letterBase.length === 0) return group;
+
+        // Union all letter outer paths → one connected silhouette
+        const uc = new ClipperLib.Clipper();
+        uc.AddPaths(letterBase, ClipperLib.PolyType.ptSubject, true);
+        const uTree = new ClipperLib.PolyTree();
+        uc.Execute(ClipperLib.ClipType.ctUnion, uTree,
+            ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+        // Only outer paths — holes would invert the offset direction
+        const letterUnion = ClipperLib.JS.PolyTreeToExPolygons(uTree)
+            .map(e => e.outer)
+            .filter(p => p && p.length >= 3);
+
+        if (letterUnion.length === 0) return group;
+
+        // Helper: offset letterUnion and return solid ExPolygons (no holes)
+        function offsetUnion(deltaMm) {
+            const co = new ClipperLib.ClipperOffset(2.0, arcTol);
+            co.AddPaths(letterUnion, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+            const tree = new ClipperLib.PolyTree();
+            co.Execute(tree, deltaMm * CLIPPER_SCALE);
+            const exps = ClipperLib.JS.PolyTreeToExPolygons(tree);
+            return exps.map(e => ({ outer: e.outer, holes: [] }));
+        }
+
+        // outlineSize drives how thick the brim is (default 4.5mm)
+        const brimMm = params.outlineSize || 4.5;
+        // Layers offsets (from the white letter outline):
+        //   Black = brimMm - 3.0  (~1.5mm border just hugging the letters)
+        //   Yellow = brimMm - 1.5 (~3.0mm)
+        //   Red   = brimMm       (~4.5mm, the full base)
+        const blackDelta  = Math.max(0.5, brimMm - 3.0);
+        const yellowDelta = Math.max(1.5, brimMm - 1.5);
+        const redDelta    = brimMm;
+
+        // Dynamic heights (no bevel on intermediate layers for 100% planar slicer compatibility)
+        const baseThickness = Math.max(1.0, params.baseThick || 3.2);
+        const yellowThickness = 1.0;
+        const blackThickness = 1.0;
+        const letterThickness = Math.max(0.4, params.letterThick || 0.8);
 
         // ------------------------------------------------------------
-        // 1. RED BASE PLATE (0.0mm -> 3.2mm, Height = 3.2mm)
-        // Offset: 5.6mm outward from clean outer paths.
-        // Forms a unified, silky-smooth continuous capsule emblem!
+        // 1. RED BASE PLATE (0.0mm -> baseThickness)
         // ------------------------------------------------------------
-        const redOutlineMm = Math.max(5.4, (params.outlineSize || 4.5) * 1.25);
-        const coRed = new ClipperLib.ClipperOffset(2.0, arcTol);
-        coRed.AddPaths(cleanOuterPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-        const redOffsetPaths = new ClipperLib.Paths();
-        coRed.Execute(redOffsetPaths, redOutlineMm * CLIPPER_SCALE);
+        const redExPoly   = offsetUnion(redDelta);
+        const redOffsetPaths = redExPoly.map(e => e.outer);
 
-        // Bounding box of red base for seamless eyelet placement
+        // Bounding box for eyelet placement
         let redMinX = Infinity, redMaxX = -Infinity, redMinY = Infinity, redMaxY = -Infinity;
-        redOffsetPaths.forEach(path => {
-            path.forEach(pt => {
-                if (pt.X < redMinX) redMinX = pt.X;
-                if (pt.X > redMaxX) redMaxX = pt.X;
-                if (pt.Y < redMinY) redMinY = pt.Y;
-                if (pt.Y > redMaxY) redMaxY = pt.Y;
-            });
-        });
+        redOffsetPaths.forEach(path => path.forEach(pt => {
+            if (pt.X < redMinX) redMinX = pt.X;
+            if (pt.X > redMaxX) redMaxX = pt.X;
+            if (pt.Y < redMinY) redMinY = pt.Y;
+            if (pt.Y > redMaxY) redMaxY = pt.Y;
+        }));
 
-        const holeDiameterMm = Math.max(3.5, params.holeSize || 5.0);
-        const eyeletOuterRadiusMm = 6.8; // 6.8mm radius
-        const eyeletOuterR = eyeletOuterRadiusMm * CLIPPER_SCALE;
-        const eyeletInnerR = (holeDiameterMm / 2) * CLIPPER_SCALE;
+        const redCenterY = (redMinY + redMaxY) / 2;
+        const holeDiameterMm = Math.max(3.0, params.holeSize || 5.0);
+        const eyeletOuterR   = ((holeDiameterMm / 2) + 2.8) * CLIPPER_SCALE;
+        const eyeletInnerR   = (holeDiameterMm / 2) * CLIPPER_SCALE;
+        const eyeletX        = redMinX - eyeletOuterR * 0.5;
+        const eyeletY        = redCenterY;
 
-        // Eyelet circle center positioned to blend seamlessly into left contour of 'L'
-        const eyeletX = redMinX - (eyeletOuterR * 0.22) + ((params.holeX || 3.0) * CLIPPER_SCALE * 0.15);
-        const eyeletY = 0.0 + ((params.holeY || 0.0) * CLIPPER_SCALE * 0.35);
-
-        const eyeletOuterCircle = [];
-        const numEyeletPts = 64;
-        for (let i = 0; i < numEyeletPts; i++) {
-            const angle = (i / numEyeletPts) * Math.PI * 2;
-            eyeletOuterCircle.push({
-                X: Math.round(eyeletX + Math.cos(angle) * eyeletOuterR),
-                Y: Math.round(eyeletY + Math.sin(angle) * eyeletOuterR)
+        // 64-segment clean ring
+        const eyeletCircle = [];
+        for (let i = 0; i < 64; i++) {
+            const a = (i / 64) * Math.PI * 2;
+            eyeletCircle.push({
+                X: Math.round(eyeletX + Math.cos(a) * eyeletOuterR),
+                Y: Math.round(eyeletY + Math.sin(a) * eyeletOuterR)
             });
         }
 
-        // Direct Boolean Union of Red Base + Eyelet Circle
-        const redClipper = new ClipperLib.Clipper();
-        redClipper.AddPaths(redOffsetPaths, ClipperLib.PolyType.ptSubject, true);
-        redClipper.AddPath(eyeletOuterCircle, ClipperLib.PolyType.ptClip, true);
-        const redPolyTree = new ClipperLib.PolyTree();
-        redClipper.Execute(ClipperLib.ClipType.ctUnion, redPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
-        const rawRedExPolygons = ClipperLib.JS.PolyTreeToExPolygons(redPolyTree);
-        const solidRedExPolygons = rawRedExPolygons.map(exp => ({ outer: exp.outer, holes: [] }));
-        const redExPolygons = smoothExPolygons(solidRedExPolygons, 3);
-        const redShapes = exPolygonsToThreeShapes(redExPolygons, invScale);
+        // Union red base + eyelet
+        const rc = new ClipperLib.Clipper();
+        rc.AddPaths(redOffsetPaths, ClipperLib.PolyType.ptSubject, true);
+        rc.AddPath(eyeletCircle, ClipperLib.PolyType.ptClip, true);
+        const rTree = new ClipperLib.PolyTree();
+        rc.Execute(ClipperLib.ClipType.ctUnion, rTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+        const rExps  = ClipperLib.JS.PolyTreeToExPolygons(rTree);
+        const redSolid = rExps.map(e => ({ outer: e.outer, holes: [] }));
+        const redShapes = exPolygonsToThreeShapes(redSolid, invScale);
 
-        // Punch keychain eyelet through-hole
+        // Punch keychain hole
         const holePath = new THREE.Path();
         holePath.absarc(eyeletX * invScale, eyeletY * invScale, eyeletInnerR * invScale, 0, Math.PI * 2, true);
-        if (redShapes.length > 0) {
-            redShapes[0].holes.push(holePath);
-        }
+        if (redShapes.length > 0) redShapes[0].holes.push(holePath);
 
         if (redShapes.length > 0) {
-            const redGeo = new THREE.ExtrudeGeometry(redShapes, {
-                depth: 3.2,
-                bevelEnabled: true,
-                bevelThickness: 0.30,
-                bevelSize: 0.30,
-                bevelSegments: 4,
-                curveSegments: 48
+            // bevelEnabled: false guarantees completely flat top at Z = baseThickness (e.g. 3.20mm)
+            const geo = new THREE.ExtrudeGeometry(redShapes, {
+                depth: baseThickness, bevelEnabled: false, curveSegments: 64
             });
-            const redMesh = new THREE.Mesh(redGeo, getBaseMaterial()); // LEGO Red
-            redMesh.position.z = 0.0;
-            redMesh.castShadow = true;
-            redMesh.receiveShadow = true;
-            group.add(redMesh);
+            const mesh = new THREE.Mesh(geo, getBaseMaterial());
+            mesh.name = "1_Base_Red";
+            mesh.userData = {
+                colorHex: currentColor || '#D01012',
+                colorIdx: 0,
+                layerName: 'Base Plate',
+                extruder: 1
+            };
+            mesh.position.z = 0.0;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            group.add(mesh);
         }
 
         // ------------------------------------------------------------
-        // 2. YELLOW ACCENT BRIM (3.2mm -> 4.2mm, Height = 1.0mm)
-        // Offset: 3.8mm outward from clean outer paths.
-        // Sits inside Red Base with an even 1.8mm margin!
+        // 2. YELLOW ACCENT BRIM (baseThickness -> baseThickness + 1.0mm)
         // ------------------------------------------------------------
-        const yellowOutlineMm = Math.max(3.6, redOutlineMm - 1.8);
-        const coYellow = new ClipperLib.ClipperOffset(2.0, arcTol);
-        coYellow.AddPaths(cleanOuterPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-        const yellowPolyTree = new ClipperLib.PolyTree();
-        coYellow.Execute(yellowPolyTree, yellowOutlineMm * CLIPPER_SCALE);
-        const rawYellowExPolygons = ClipperLib.JS.PolyTreeToExPolygons(yellowPolyTree);
-        const solidYellowExPolygons = rawYellowExPolygons.map(exp => ({ outer: exp.outer, holes: [] }));
-        const yellowExPolygons = smoothExPolygons(solidYellowExPolygons, 3);
-        const yellowShapes = exPolygonsToThreeShapes(yellowExPolygons, invScale);
-
+        const yellowShapes = exPolygonsToThreeShapes(offsetUnion(yellowDelta), invScale);
         if (yellowShapes.length > 0) {
-            const yellowGeo = new THREE.ExtrudeGeometry(yellowShapes, {
-                depth: 1.0,
-                bevelEnabled: true,
-                bevelThickness: 0.18,
-                bevelSize: 0.18,
-                bevelSegments: 3,
-                curveSegments: 48
+            const geo = new THREE.ExtrudeGeometry(yellowShapes, {
+                depth: yellowThickness, bevelEnabled: false, curveSegments: 64
             });
-            const yellowMat = new THREE.MeshStandardMaterial({
-                color: 0xFED100, // Authentic LEGO Bright Sunny Yellow
-                roughness: 0.30,
-                metalness: 0.04
-            });
-            const yellowMesh = new THREE.Mesh(yellowGeo, yellowMat);
-            yellowMesh.position.z = 3.2; // 3.2mm Elevation
-            yellowMesh.castShadow = true;
-            group.add(yellowMesh);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xFED100, roughness: 0.30, metalness: 0.04 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.name = "2_Yellow_Outline";
+            mesh.userData = {
+                colorHex: '#FFD500',
+                colorIdx: 1,
+                layerName: 'Yellow Accent',
+                extruder: 2
+            };
+            mesh.position.z = baseThickness;
+            mesh.castShadow = true;
+            group.add(mesh);
         }
 
         // ------------------------------------------------------------
-        // 3. BLACK OUTLINE LAYER (4.2mm -> 5.2mm, Height = 1.0mm)
-        // Offset: 2.0mm outward from text paths.
-        // Wraps each letter with a bold, crisp black boundary.
+        // 3. BLACK OUTLINE LAYER (baseThickness + 1.0mm -> baseThickness + 2.0mm)
         // ------------------------------------------------------------
-        const blackOutlineMm = 2.0;
-        const coBlack = new ClipperLib.ClipperOffset(2.0, arcTol);
-        coBlack.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
-        const blackPolyTree = new ClipperLib.PolyTree();
-        coBlack.Execute(blackPolyTree, blackOutlineMm * CLIPPER_SCALE);
-        const rawBlackExPolygons = ClipperLib.JS.PolyTreeToExPolygons(blackPolyTree);
-        const blackExPolygons = smoothExPolygons(rawBlackExPolygons, 3);
-        const blackShapes = exPolygonsToThreeShapes(blackExPolygons, invScale);
-
+        const blackShapes = exPolygonsToThreeShapes(offsetUnion(blackDelta), invScale);
         if (blackShapes.length > 0) {
-            const blackGeo = new THREE.ExtrudeGeometry(blackShapes, {
-                depth: 1.0,
-                bevelEnabled: true,
-                bevelThickness: 0.18,
-                bevelSize: 0.18,
-                bevelSegments: 3,
-                curveSegments: 48
+            const geo = new THREE.ExtrudeGeometry(blackShapes, {
+                depth: blackThickness, bevelEnabled: false, curveSegments: 64
             });
-            const blackMat = new THREE.MeshStandardMaterial({
-                color: 0x111111, // Solid Jet Black
-                roughness: 0.42,
-                metalness: 0.08
-            });
-            const blackMesh = new THREE.Mesh(blackGeo, blackMat);
-            blackMesh.position.z = 4.2; // 4.2mm Elevation
-            blackMesh.castShadow = true;
-            group.add(blackMesh);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.42, metalness: 0.08 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.name = "3_Black_Border";
+            mesh.userData = {
+                colorHex: '#111111',
+                colorIdx: 2,
+                layerName: 'Black Outline',
+                extruder: 3
+            };
+            mesh.position.z = baseThickness + yellowThickness;
+            mesh.castShadow = true;
+            group.add(mesh);
         }
 
         // ------------------------------------------------------------
-        // 4. WHITE RAISED LETTERS (5.2mm -> 6.0mm, Height = 0.8mm)
-        // Letters with precise holes (O, A, B, D, P, R, etc.)
+        // 4. WHITE RAISED LETTERS (baseThickness + 2.0mm -> totalHeight)
+        // Uses exPolys directly — includes proper holes for b, d, a, etc.
         // ------------------------------------------------------------
-        const smoothedWhiteExPolys = smoothExPolygons(exPolys, 2);
-        const whiteShapes = exPolygonsToThreeShapes(smoothedWhiteExPolys, invScale);
-
+        const whiteShapes = exPolygonsToThreeShapes(exPolys, invScale);
         if (whiteShapes.length > 0) {
-            const whiteGeo = new THREE.ExtrudeGeometry(whiteShapes, {
-                depth: 0.8,
-                bevelEnabled: true,
-                bevelThickness: 0.14,
-                bevelSize: 0.14,
-                bevelSegments: 3,
-                curveSegments: 36
+            const geo = new THREE.ExtrudeGeometry(whiteShapes, {
+                depth: letterThickness, bevelEnabled: false, curveSegments: 48
             });
-            const whiteMat = new THREE.MeshStandardMaterial({
-                color: 0xFFFFFF, // Pure Solid White
-                roughness: 0.28,
-                metalness: 0.02
-            });
-            const whiteMesh = new THREE.Mesh(whiteGeo, whiteMat);
-            whiteMesh.position.z = 5.2; // 5.2mm Elevation, Total = 6.0mm
-            whiteMesh.castShadow = true;
-            group.add(whiteMesh);
+            const mat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.28, metalness: 0.02 });
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.name = "4_White_Letters";
+            mesh.userData = {
+                colorHex: '#FFFFFF',
+                colorIdx: 3,
+                layerName: 'White Letters',
+                extruder: 4
+            };
+            mesh.position.z = baseThickness + yellowThickness + blackThickness;
+            mesh.castShadow = true;
+            group.add(mesh);
         }
 
-        // Auto-center the entire keychain at origin (0, 0)
+        // Auto-center at origin
         const bbox = new THREE.Box3().setFromObject(group);
         const center = new THREE.Vector3();
         bbox.getCenter(center);
@@ -821,6 +891,13 @@ document.addEventListener('DOMContentLoaded', () => {
             bevelSegments: 3
         });
         const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
+        baseMesh.name = "1_Base_Plate";
+        baseMesh.userData = {
+            colorHex: currentColor || '#D01012',
+            colorIdx: 0,
+            layerName: 'Base Plate',
+            extruder: 1
+        };
         baseMesh.position.z = 0;
         baseMesh.castShadow = true;
         baseMesh.receiveShadow = true;
@@ -852,6 +929,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     metalness: 0.05
                 });
                 const letterMesh = new THREE.Mesh(letterGeo, letterMat);
+                letterMesh.name = "2_White_Letters";
+                letterMesh.userData = {
+                    colorHex: '#FFFFFF',
+                    colorIdx: 1,
+                    layerName: 'White Letters',
+                    extruder: 2
+                };
                 letterMesh.position.z = 3.2; // Placed on top of 3.2mm base
                 letterMesh.castShadow = true;
                 group.add(letterMesh);
@@ -872,14 +956,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 7. MODEL DISPATCHER & RENDER TRIGGER
     // ============================================================
-    function renderSolidModel() {
+    async function renderSolidModel() {
         if (spinner) spinner.style.display = 'flex';
 
         const params = {
             text: inputName ? inputName.value.trim() : 'LEGO',
             textSize: elTextSizeNum ? parseFloat(elTextSizeNum.value) : 18,
-            baseThick: 3.2,
-            letterThick: 2.8,
+            baseThick: elBaseThickNum ? parseFloat(elBaseThickNum.value) : 3.2,
+            letterThick: inputThickness ? parseFloat(inputThickness.value) : 0.8,
             outlineSize: elOutlineNum ? parseFloat(elOutlineNum.value) : 4.5,
             holeSize: elHoleSizeNum ? parseFloat(elHoleSizeNum.value) : 5.0,
             holeX: elHoleXNum ? parseFloat(elHoleXNum.value) : 3.0,
@@ -902,13 +986,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (currentTemplate === 'lego') {
-            currentModelGroup = buildLegoKeychain(params);
+            currentModelGroup = await buildLegoKeychain(params);
         } else {
             currentModelGroup = buildNameTag(params);
         }
 
         if (currentModelGroup) {
             scene.add(currentModelGroup);
+
+            // Compute precise real-world dimensions in millimeters
+            const box = new THREE.Box3().setFromObject(currentModelGroup);
+            const size = new THREE.Vector3();
+            box.getSize(size);
+            params.actualWidth = size.x;  // Length (X)
+            params.actualHeight = size.y; // Breadth/Width (Y)
+            params.actualDepth = size.z;  // Total Height (Z)
         }
 
         updatePricing(params);
@@ -926,8 +1018,10 @@ document.addEventListener('DOMContentLoaded', () => {
     animate();
 
     // ============================================================
-    // 8. PRICING & WEIGHT CALCULATION
+    // 8. PRICING & WEIGHT CALCULATION WITH LIVE DIMENSIONS
     // ============================================================
+    let lastDimensions = { width: '0.0', height: '0.0', depth: '6.0' };
+
     function updatePricing(params) {
         const textLen = (params.text || 'LEGO').length;
         const estGrams = Math.max(14, Math.round(textLen * 3.8 + 6));
@@ -940,21 +1034,256 @@ document.addEventListener('DOMContentLoaded', () => {
         const baseFee = 280;
         const calculatedPrice = Math.round((baseFee + (estGrams * currentRate)) * finishMul);
 
+        const totalW = params.actualWidth ? params.actualWidth.toFixed(1) : '0.0';
+        const totalH = params.actualHeight ? params.actualHeight.toFixed(1) : '0.0';
+        const totalD = params.actualDepth ? params.actualDepth.toFixed(1) : (parseFloat(params.baseThick || 3.2) + 2.0 + parseFloat(params.letterThick || 0.8)).toFixed(1);
+        lastDimensions = { width: totalW, height: totalH, depth: totalD };
+
+        const dimBadge = document.getElementById('stage-dimensions-badge');
+        if (dimBadge) {
+            dimBadge.textContent = `📐 ${totalW} × ${totalH} × ${totalD} mm`;
+        }
+
         if (displayPrice) {
             displayPrice.textContent = `৳${calculatedPrice}`;
         }
         if (displaySpecs) {
             const modelNames = {
-                lego: 'LEGO Keychain.scad (6.0mm 4-Layer)',
+                lego: 'LEGO Keychain.scad',
                 nametag: 'Customizable Name Tag.scad'
             };
-            displaySpecs.textContent = `${modelNames[currentTemplate]} • ${currentColorName} • ~${estGrams}g PLA • 6.0mm Solid Height`;
+            displaySpecs.textContent = `${modelNames[currentTemplate]} • ${currentColorName} • ~${estGrams}g PLA • 📐 ${totalW} × ${totalH} × ${totalD} mm`;
         }
     }
 
     // ============================================================
-    // 9. STL EXPORT (Direct 3D Print File Download)
+    // 9. 3MF & STL EXPORT (Direct 3D Print File Download)
     // ============================================================
+    async function download3MF() {
+        if (!currentModelGroup) {
+            alert('3D Mesh not ready yet.');
+            return;
+        }
+        if (typeof JSZip === 'undefined') {
+            alert('JSZip library is still loading. Please try again in a moment.');
+            return;
+        }
+
+        try {
+            if (spinner) {
+                spinner.style.display = 'flex';
+                const spinnerText = spinner.querySelector('span');
+                if (spinnerText) spinnerText.textContent = 'Packaging Multi-Color 3MF...';
+            }
+
+            const zip = new JSZip();
+
+            // 1. [Content_Types].xml
+            zip.file('[Content_Types].xml', `<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>
+  <Default Extension="config" ContentType="text/xml"/>
+</Types>`);
+
+            // 2. _rels/.rels
+            zip.folder('_rels').file('.rels', `<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>
+</Relationships>`);
+
+            // Gather all solid sub-meshes
+            const meshes = [];
+            currentModelGroup.traverse(child => {
+                if (child.isMesh && child.geometry) {
+                    meshes.push(child);
+                }
+            });
+
+            if (meshes.length === 0) {
+                alert('No 3D mesh geometry found.');
+                if (spinner) spinner.style.display = 'none';
+                return;
+            }
+
+            // Sort by extruder number (1 -> Base, 2 -> Yellow, 3 -> Black, 4 -> White)
+            meshes.sort((a, b) => ((a.userData && a.userData.extruder) || 0) - ((b.userData && b.userData.extruder) || 0));
+
+            // Palette definitions
+            const colorDefs = [];
+            meshes.forEach(m => {
+                let hex = (m.userData && m.userData.colorHex) || '#DA291C';
+                if (!hex.startsWith('#')) hex = '#' + hex;
+                if (hex.length === 7) hex = hex + 'FF';
+                colorDefs.push(`      <m:color color="${hex.toUpperCase()}"/>`);
+            });
+
+            let nextId = 2;
+            const objectXmls = [];
+            const buildItems = [];
+            const configObjects = [];
+
+            meshes.forEach((mesh, index) => {
+                const objId = nextId++;
+                const name = mesh.name || `Layer_${index + 1}`;
+                const colorIdx = index;
+                const extruder = (mesh.userData && mesh.userData.extruder) || (index + 1);
+
+                // 100% Watertight Closed Manifold Mesh Welder
+                const geo = mesh.geometry;
+                const posAttr = geo.attributes.position;
+                mesh.updateMatrixWorld(true);
+                const matrix = mesh.matrixWorld;
+
+                const precision = 10000; // 0.0001 mm
+                const map = new Map();
+                const vList = [];
+                const tList = [];
+                const v = new THREE.Vector3();
+
+                if (geo.index) {
+                    const idx = geo.index;
+                    for (let i = 0; i < idx.count; i++) {
+                        v.fromBufferAttribute(posAttr, idx.getX(i));
+                        v.applyMatrix4(matrix);
+
+                        const rx = Math.round(v.x * precision);
+                        const ry = Math.round(v.y * precision);
+                        const rz = Math.round(v.z * precision);
+                        const k = `${rx}_${ry}_${rz}`;
+
+                        let vi;
+                        if (map.has(k)) {
+                            vi = map.get(k);
+                        } else {
+                            vi = vList.length;
+                            map.set(k, vi);
+                            vList.push({ x: v.x, y: v.y, z: v.z });
+                        }
+                        tList.push(vi);
+                    }
+                } else {
+                    for (let i = 0; i < posAttr.count; i++) {
+                        v.fromBufferAttribute(posAttr, i);
+                        v.applyMatrix4(matrix);
+
+                        const rx = Math.round(v.x * precision);
+                        const ry = Math.round(v.y * precision);
+                        const rz = Math.round(v.z * precision);
+                        const k = `${rx}_${ry}_${rz}`;
+
+                        let vi;
+                        if (map.has(k)) {
+                            vi = map.get(k);
+                        } else {
+                            vi = vList.length;
+                            map.set(k, vi);
+                            vList.push({ x: v.x, y: v.y, z: v.z });
+                        }
+                        tList.push(vi);
+                    }
+                }
+
+                // Filter out degenerate faces where area is 0
+                const validTriangles = [];
+                for (let i = 0; i < tList.length; i += 3) {
+                    const a = tList[i];
+                    const b = tList[i + 1];
+                    const c = tList[i + 2];
+                    if (a !== b && b !== c && a !== c) {
+                        validTriangles.push(a, b, c);
+                    }
+                }
+
+                const vXml = vList.map(pt =>
+                    `          <vertex x="${pt.x.toFixed(4)}" y="${pt.y.toFixed(4)}" z="${pt.z.toFixed(4)}"/>`
+                ).join('\n');
+
+                const tXml = [];
+                for (let i = 0; i < validTriangles.length; i += 3) {
+                    const a = validTriangles[i];
+                    const b = validTriangles[i + 1];
+                    const c = validTriangles[i + 2];
+                    tXml.push(`          <triangle v1="${a}" v2="${b}" v3="${c}" pid="1" p1="${colorIdx}"/>`);
+                }
+
+                objectXmls.push(`    <object id="${objId}" type="model" name="${name}" pid="1" pindex="${colorIdx}">
+      <mesh>
+        <vertices>
+${vXml}
+        </vertices>
+        <triangles>
+${tXml.join('\n')}
+        </triangles>
+      </mesh>
+    </object>`);
+
+                buildItems.push(`    <item objectid="${objId}"/>`);
+
+                configObjects.push(`  <object id="${objId}">
+    <metadata key="name" value="${name}"/>
+    <metadata key="extruder" value="${extruder}"/>
+  </object>`);
+            });
+
+            const rawName = (inputName ? inputName.value : 'LEGO').trim() || 'LEGO';
+            const assemblyName = `${rawName}_Keychain`;
+
+            const modelXml = `<?xml version="1.0" encoding="UTF-8"?>
+<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/07" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021">
+  <metadata name="Title">${assemblyName}</metadata>
+  <metadata name="Designer">Kira's Creation Soft-3D Studio</metadata>
+  <metadata name="Application">MakerLab Parametric Studio</metadata>
+  <resources>
+    <m:colorgroup id="1">
+${colorDefs.join('\n')}
+    </m:colorgroup>
+${objectXmls.join('\n')}
+  </resources>
+  <build>
+${buildItems.join('\n')}
+  </build>
+</model>`;
+
+            zip.folder('3D').file('3dmodel.model', modelXml);
+
+            // Bambu Studio & OrcaSlicer multi-color auto-assignment metadata
+            const modelSettingsConfig = `<?xml version="1.0" encoding="UTF-8"?>
+<config>
+${configObjects.join('\n')}
+  <plate>
+    <metadata key="plater_id" value="1"/>
+    <metadata key="plater_name" value=""/>
+    <metadata key="locked" value="false"/>
+  </plate>
+</config>`;
+
+            zip.folder('Metadata').file('model_settings.config', modelSettingsConfig);
+
+            const blob = await zip.generateAsync({
+                type: 'blob',
+                compression: 'DEFLATE',
+                compressionOptions: { level: 6 }
+            });
+
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            const textClean = rawName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'keychain';
+            link.download = `${textClean}_${currentTemplate}_multicolor.3mf`;
+            link.click();
+            URL.revokeObjectURL(link.href);
+        } catch (err) {
+            console.error('Error generating 3MF:', err);
+            alert('Failed to generate 3MF file: ' + err.message);
+        } finally {
+            if (spinner) {
+                spinner.style.display = 'none';
+                const spinnerText = spinner.querySelector('span');
+                if (spinnerText) spinnerText.textContent = 'Generating Solid Mesh...';
+            }
+        }
+    }
+
     function downloadSTL() {
         if (!currentModelGroup || typeof THREE.STLExporter === 'undefined') {
             alert('3D Mesh not ready yet.');
@@ -972,6 +1301,9 @@ document.addEventListener('DOMContentLoaded', () => {
         URL.revokeObjectURL(link.href);
     }
 
+    if (btnExport3mf) {
+        btnExport3mf.addEventListener('click', download3MF);
+    }
     if (btnExportStl) {
         btnExportStl.addEventListener('click', downloadSTL);
     }
@@ -985,15 +1317,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const holeSize = elHoleSizeNum ? elHoleSizeNum.value : '5.0';
         const holeX = elHoleXNum ? elHoleXNum.value : '3.0';
         const holeY = elHoleYNum ? elHoleYNum.value : '0.0';
+        const baseThick = elBaseThickNum ? parseFloat(elBaseThickNum.value).toFixed(1) : '3.2';
+        const letterThick = inputThickness ? parseFloat(inputThickness.value).toFixed(1) : '0.8';
+        const yellowZ = parseFloat(baseThick).toFixed(1);
+        const blackZ = (parseFloat(baseThick) + 1.0).toFixed(1);
+        const whiteZ = (parseFloat(baseThick) + 2.0).toFixed(1);
+        const totalHeight = (parseFloat(baseThick) + 2.0 + parseFloat(letterThick)).toFixed(1);
 
         if (currentTemplate === 'lego') {
             return `// ============================================================
 // Parametric LEGO Keychain — Generated by Kira's Creation Studio
-// Total Height: 6.0 mm (4 Color Layers)
-// 0.0mm -> 3.2mm: Red Base
-// 3.2mm -> 4.2mm: Yellow Accent
-// 4.2mm -> 5.2mm: Black Outline
-// 5.2mm -> 6.0mm: White Raised Text
+// Total Height: ${totalHeight} mm (4 Color Layers)
+// 0.0mm -> ${yellowZ}mm: Base Color Plate
+// ${yellowZ}mm -> ${blackZ}mm: Yellow Accent
+// ${blackZ}mm -> ${whiteZ}mm: Black Outline
+// ${whiteZ}mm -> ${totalHeight}mm: White Raised Text
 // ============================================================
 
 $fn = 60;
@@ -1010,8 +1348,8 @@ eyelet_y = ${holeY};
 eyelet_r_outer = 7.0;
 eyelet_r_inner = ${holeSize} / 2;
 
-// 1. Red Base (0.0mm -> 3.2mm, Height = 3.2mm)
-color("${currentColor}") linear_extrude(height = 3.2) {
+// 1. Base Plate (0.0mm -> ${yellowZ}mm, Height = ${baseThick}mm)
+color("${currentColor}") linear_extrude(height = ${baseThick}) {
     difference() {
         union() {
             offset(r = ${outlineSize}) text_2d();
@@ -1021,18 +1359,18 @@ color("${currentColor}") linear_extrude(height = 3.2) {
     }
 }
 
-// 2. Yellow Accent (3.2mm -> 4.2mm, Height = 1.0mm)
-color("#FFD700") translate([0, 0, 3.2]) linear_extrude(height = 1.0) {
+// 2. Yellow Accent (${yellowZ}mm -> ${blackZ}mm, Height = 1.0mm)
+color("#FFD700") translate([0, 0, ${yellowZ}]) linear_extrude(height = 1.0) {
     offset(r = max(1.5, ${outlineSize} - 1.5)) text_2d();
 }
 
-// 3. Black Outline (4.2mm -> 5.2mm, Height = 1.0mm)
-color("#111111") translate([0, 0, 4.2]) linear_extrude(height = 1.0) {
+// 3. Black Outline (${blackZ}mm -> ${whiteZ}mm, Height = 1.0mm)
+color("#111111") translate([0, 0, ${blackZ}]) linear_extrude(height = 1.0) {
     offset(r = 1.6) text_2d();
 }
 
-// 4. White Raised Text (5.2mm -> 6.0mm, Height = 0.8mm)
-color("#FFFFFF") translate([0, 0, 5.2]) linear_extrude(height = 0.8) {
+// 4. White Raised Text (${whiteZ}mm -> ${totalHeight}mm, Height = ${letterThick}mm)
+color("#FFFFFF") translate([0, 0, ${whiteZ}]) linear_extrude(height = ${letterThick}) {
     text_2d();
 }
 `;
@@ -1207,7 +1545,7 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
             if (!pill) return;
             fontOptions.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-            currentFont = pill.dataset.font || "'Fredoka', sans-serif";
+            currentFont = pill.dataset.font || "'Nunito', sans-serif";
             saveHistoryState();
             renderSolidModel();
         });
@@ -1222,8 +1560,9 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
                 nametag: '🏷️ NAME TAG'
             };
             if (templateBadge) templateBadge.textContent = badgeTexts[currentTemplate] || '🧊 3D MODEL';
+            camera.up.set(0, 0, 1);
             camera.position.copy(defaultCamPos);
-            controls.target.set(0, 0, 0);
+            controls.target.set(0, 0, 3);
             controls.update();
             saveHistoryState();
             renderSolidModel();
@@ -1233,8 +1572,9 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
     // Reset Camera View Button
     if (btnResetView) {
         btnResetView.addEventListener('click', () => {
+            camera.up.set(0, 0, 1);
             camera.position.copy(defaultCamPos);
-            controls.target.set(0, 0, 0);
+            controls.target.set(0, 0, 3);
             controls.update();
         });
     }
@@ -1267,18 +1607,24 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
         btnResetScad.addEventListener('click', () => {
             if (inputName) inputName.value = 'LEGO';
             if (elOutlineNum) { elOutlineNum.value = '4.5'; if (elOutlineSlider) elOutlineSlider.value = '4.5'; }
-            if (elBaseThickNum) { elBaseThickNum.value = '1.5'; if (elBaseThickSlider) elBaseThickSlider.value = '1.5'; }
+            if (elBaseThickNum) { elBaseThickNum.value = '3.2'; if (elBaseThickSlider) elBaseThickSlider.value = '3.2'; }
             if (elTextSizeNum) { elTextSizeNum.value = '18'; if (elTextSizeSlider) elTextSizeSlider.value = '18'; }
-            if (inputThickness) { inputThickness.value = '3.0'; if (elLetterThickSlider) elLetterThickSlider.value = '3.0'; }
+            if (inputThickness) { inputThickness.value = '0.8'; if (elLetterThickSlider) elLetterThickSlider.value = '0.8'; }
             if (elHoleSizeNum) { elHoleSizeNum.value = '5.0'; if (elHoleSizeSlider) elHoleSizeSlider.value = '5.0'; }
             if (elHoleXNum) { elHoleXNum.value = '3.0'; if (elHoleXSlider) elHoleXSlider.value = '3.0'; }
             if (elHoleYNum) { elHoleYNum.value = '0.0'; if (elHoleYSlider) elHoleYSlider.value = '0.0'; }
+            if (elSpaceWidthNum) { elSpaceWidthNum.value = '1.0'; if (elSpaceWidthSlider) elSpaceWidthSlider.value = '1.0'; }
+            camera.up.set(0, 0, 1);
             camera.position.copy(defaultCamPos);
-            controls.target.set(0, 0, 0);
+            controls.target.set(0, 0, 3);
             controls.update();
             saveHistoryState();
             renderSolidModel();
         });
+    }
+
+    if (btnDownload3mfPanel) {
+        btnDownload3mfPanel.addEventListener('click', download3MF);
     }
 
     if (btnDownloadStlPanel) {

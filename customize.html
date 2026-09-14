@@ -16,7 +16,7 @@
     <meta name="description" content="Design your own custom 3D printed nameplate and keyring live. See instant 3D preview and pricing.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700&family=Hind+Siliguri:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700&family=Hind+Siliguri:wght@400;500;600;700&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,800;1,900&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
     
     <!-- Customizer Fonts — Popular styles including Lobster, Pacifico, Orbitron, Fredoka, Chewy -->
     <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700;800&family=Bubblegum+Sans&family=Chewy&family=Comic+Neue:ital,wght@0,700;1,700&family=Crafty+Girls&family=Fredoka:wght@600;700&family=Lilita+One&family=Lobster&family=Montserrat:wght@800;900&family=Orbitron:wght@800;900&family=Pacifico&family=Righteous&display=swap" rel="stylesheet">
@@ -25,7 +25,7 @@
     <link rel="stylesheet" href="css/components.css?v=3.3">
     <link rel="stylesheet" href="css/animations.css?v=3.0">
     <link rel="stylesheet" href="css/pages.css?v=3.0">
-    <link rel="stylesheet" href="css/customize.css?v=5.0">
+    <link rel="stylesheet" href="css/customize.css?v=6.1">
 </head>
 <body>
     <div class="site-wrapper">
@@ -97,13 +97,27 @@
                 <div class="customizer-stage-card" id="customizer-stage-card">
                     <!-- Stage Overlay Actions -->
                     <div class="stage-toolbar">
-                        <button id="btn-reset-view" class="stage-toggle-btn" title="Reset 3D Camera Angle">🔄 Reset View</button>
-                        <button id="btn-export-stl" class="stage-toggle-btn btn-stl-highlight" title="Download Print-Ready 3D STL File">⬇️ Download STL</button>
-                        <button id="btn-view-scad" class="stage-toggle-btn" title="View & Copy Parametric OpenSCAD Code">📜 OpenSCAD Code</button>
+                        <button id="btn-reset-view" class="stage-toggle-btn" title="Reset 3D Camera Angle">
+                            <span class="btn-text-full">🔄 Reset View</span>
+                            <span class="btn-text-mobile">🔄 Reset</span>
+                        </button>
+                        <button id="btn-export-3mf" class="stage-toggle-btn btn-3mf-highlight" title="Download Multi-Color 3MF File (Bambu Studio / OrcaSlicer / Anycubic Slicer Ready)">
+                            <span class="btn-text-full">🌈 Download 3MF (Color)</span>
+                            <span class="btn-text-mobile">🌈 3MF (Color)</span>
+                        </button>
+                        <button id="btn-export-stl" class="stage-toggle-btn btn-stl-highlight" title="Download Print-Ready 3D STL File">
+                            <span class="btn-text-full">⬇️ STL</span>
+                            <span class="btn-text-mobile">⬇️ STL</span>
+                        </button>
+                        <button id="btn-view-scad" class="stage-toggle-btn" title="View & Copy Parametric OpenSCAD Code">
+                            <span class="btn-text-full">📜 OpenSCAD Code</span>
+                            <span class="btn-text-mobile">📜 SCAD</span>
+                        </button>
                     </div>
 
                     <!-- Template badge overlay -->
                     <div class="stage-template-badge" id="stage-template-badge">🔑 KEYRING</div>
+                    <div class="stage-dimensions-badge" id="stage-dimensions-badge" title="Live Model Dimensions (Length × Width × Height in mm)">📐 -- × -- × -- mm</div>
 
                     <!-- Three.js 3D WebGL Canvas Viewport -->
                     <div class="three-stage-viewport" id="three-stage-viewport">
@@ -114,7 +128,10 @@
                         </div>
                     </div>
 
-                    <div class="stage-hint">🖐️ Drag to Rotate (360°) • Scroll to Zoom • Right-Click to Pan</div>
+                    <div class="stage-hint">
+                        <span class="desktop-hint">🖐️ Drag to Rotate (360°) • Scroll to Zoom • Right-Click to Pan</span>
+                        <span class="mobile-hint">👆 1 Finger: Rotate 360° • ✌️ 2 Fingers: Pinch &amp; Pan</span>
+                    </div>
                 </div>
 
                 <!-- Right: Parametric OpenSCAD Model Maker Controls -->
@@ -161,8 +178,8 @@
                                     <label>Font Style</label>
                                     <div class="font-scroll-wrapper">
                                         <div class="font-scroll-strip" id="font-options">
-                                            <div class="font-pill active" data-font="'Montserrat', sans-serif"><span class="fp-preview" style="font-family:'Montserrat',sans-serif; font-style:italic; font-weight:900;">LEGO</span><span class="fp-name">LEGO 3D</span></div>
-                                            <div class="font-pill" data-font="'Baloo 2', cursive"><span class="fp-preview" style="font-family:'Baloo 2',cursive;">Abc</span><span class="fp-name">Baloo 2</span></div>
+                                            <div class="font-pill active" data-font="'Nunito', sans-serif"><span class="fp-preview" style="font-family:'Nunito',sans-serif; font-weight:900;">LEGO</span><span class="fp-name">LEGO 3D</span></div>
+                                            <div class="font-pill" data-font="'Baloo 2', cursive"><span class="fp-preview" style="font-family:'Baloo 2',cursive; font-weight:800;">Abc</span><span class="fp-name">Baloo 2</span></div>
                                             <div class="font-pill" data-font="'Lilita One', sans-serif"><span class="fp-preview" style="font-family:'Lilita One',sans-serif;">Abc</span><span class="fp-name">Lilita</span></div>
                                             <div class="font-pill" data-font="'Lobster', cursive"><span class="fp-preview" style="font-family:'Lobster',cursive;">Abc</span><span class="fp-name">Lobster</span></div>
                                             <div class="font-pill" data-font="'Chewy', cursive"><span class="fp-preview" style="font-family:'Chewy',cursive;">Abc</span><span class="fp-name">Chewy</span></div>
@@ -200,11 +217,11 @@
                                         <label for="scad-base-thick">Base Thickness (mm)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-basethick">-</button>
-                                            <input type="number" id="scad-base-thick" value="1.5" step="0.5" min="1" max="8">
+                                            <input type="number" id="scad-base-thick" value="3.2" step="0.2" min="1.0" max="8.0">
                                             <button type="button" class="stepper-btn" id="btn-plus-basethick">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-base-thick-slider" class="scad-slider" min="1" max="8" step="0.5" value="1.5">
+                                    <input type="range" id="scad-base-thick-slider" class="scad-slider" min="1.0" max="8.0" step="0.2" value="3.2">
                                 </div>
 
                                 <div class="scad-param-field">
@@ -267,12 +284,12 @@
                                         <label for="cust-thickness">Letter Thickness (mm)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-thick">-</button>
-                                            <input type="number" id="cust-thickness" value="3.0" step="0.5" min="1" max="10">
+                                            <input type="number" id="cust-thickness" value="0.8" step="0.2" min="0.4" max="4.0">
                                             <button type="button" class="stepper-btn" id="btn-plus-thick">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-letter-thick-slider" class="scad-slider" min="1" max="10" step="0.5" value="3.0">
-                                    <span id="val-thickness" style="display:none;">3.0mm</span>
+                                    <input type="range" id="scad-letter-thick-slider" class="scad-slider" min="0.4" max="4.0" step="0.2" value="0.8">
+                                    <span id="val-thickness" style="display:none;">0.8mm</span>
                                 </div>
                             </div>
                         </div>
@@ -335,7 +352,8 @@
                     <div class="scad-action-bar">
                         <button type="button" id="btn-scad-reset" class="scad-icon-btn" title="Reset to Model Defaults">🔄</button>
                         <button type="button" id="btn-scad-undo" class="scad-icon-btn" title="Undo Last Change">↩️</button>
-                        <button type="button" id="btn-download-stl-panel" class="clay-btn btn-coral btn-sm" style="flex:1; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px;" title="Download Print-Ready 3D STL file directly from browser">⬇️ Download STL File</button>
+                        <button type="button" id="btn-download-3mf-panel" class="clay-btn btn-coral btn-sm" style="flex:1.2; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px; background:linear-gradient(135deg,#e11d48,#f59e0b); color:#fff; box-shadow:0 4px 14px rgba(225,29,72,0.35);" title="Download Multi-Color 3MF File for Bambu Studio / OrcaSlicer">🌈 Download 3MF (Color)</button>
+                        <button type="button" id="btn-download-stl-panel" class="clay-btn btn-cream btn-sm" style="flex:0.8; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px;" title="Download Print-Ready 3D STL file directly from browser">⬇️ STL</button>
                     </div>
 
                     <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:1.2rem;">
@@ -401,11 +419,12 @@
     <script src="js/three/three.min.js"></script>
     <script src="js/three/OrbitControls.js"></script>
     <script src="js/three/STLExporter.js"></script>
+    <script src="js/jszip.min.js"></script>
     <!-- Pre-compiled Font Typefaces -->
     <script src="js/fonts/helvetiker_bold.js"></script>
     <script src="js/fonts/optimer_bold.js"></script>
     <!-- ClipperLib Geometric Polygon Engine for exact Minkowski offset & CSG boolean unions -->
     <script src="js/clipper.js"></script>
-    <script src="js/customize.js?v=8"></script>
+    <script src="js/customize.js?v=16"></script>
 </body>
 </html>

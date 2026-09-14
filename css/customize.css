@@ -37,6 +37,8 @@
     cursor: grab;
     user-select: none;
     -webkit-user-select: none;
+    touch-action: none;
+    -webkit-touch-callout: none;
     /* Rich dark studio backdrop */
     background: radial-gradient(ellipse at 50% 35%, #2a2636 0%, #16141d 50%, #0a090e 100%);
     border: none;
@@ -102,6 +104,8 @@
     align-items: center;
     justify-content: center;
     z-index: 1;
+    touch-action: none;
+    -webkit-touch-callout: none;
 }
 
 #three-canvas {
@@ -230,12 +234,25 @@
 /* --- Stage Toolbar --- */
 .stage-toolbar {
     position: absolute;
-    top: 14px; left: 14px;
+    top: 14px; left: 14px; right: 14px;
     display: flex;
     gap: 8px;
     z-index: 10;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 2px;
 }
+.stage-toolbar::-webkit-scrollbar {
+    display: none;
+}
+.btn-text-full { display: inline; }
+.btn-text-mobile { display: none; }
+.desktop-hint { display: inline; }
+.mobile-hint { display: none; }
+
 .stage-toggle-btn {
+    flex-shrink: 0;
     background: rgba(20, 18, 30, 0.75);
     color: rgba(255,255,255,0.7);
     border: 1px solid rgba(255,255,255,0.1);
@@ -260,6 +277,18 @@
     color: #fff;
     border-color: var(--c-accent);
 }
+.stage-toggle-btn.btn-3mf-highlight {
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.4), rgba(245, 158, 11, 0.4));
+    border: 1px solid rgba(245, 158, 11, 0.6);
+    color: #fff;
+    box-shadow: 0 0 14px rgba(245, 158, 11, 0.25);
+}
+.stage-toggle-btn.btn-3mf-highlight:hover {
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.75), rgba(245, 158, 11, 0.75));
+    border-color: #f59e0b;
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
+    transform: translateY(-1px);
+}
 
 /* Template badge overlay in stage */
 .stage-template-badge {
@@ -276,6 +305,25 @@
     backdrop-filter: blur(10px);
     z-index: 5;
     pointer-events: none;
+}
+
+/* Live model dimensions badge overlay in stage */
+.stage-dimensions-badge {
+    position: absolute;
+    bottom: 42px; right: 14px;
+    background: rgba(20,18,30,0.88);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    padding: 5px 14px;
+    border-radius: 10px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(10px);
+    z-index: 5;
+    pointer-events: none;
+    font-family: 'Consolas', 'Courier New', monospace;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 
 /* Stage hint bottom center */
@@ -802,26 +850,224 @@
     100% { filter: brightness(1.2) scale(1.02); }
 }
 
-/* --- Mobile Responsive --- */
+/* --- High-End Mobile Responsive Optimization --- */
 @media (max-width: 768px) {
-    .customizer-stage-card {
-        min-height: 340px;
-        padding: 1rem;
+    .section-heading h2 {
+        font-size: 1.6rem;
     }
+    .customizer-grid {
+        gap: 1.25rem;
+        margin-top: 1rem;
+        padding: 0;
+    }
+    .customizer-stage-card {
+        min-height: 350px;
+        height: 380px;
+        padding: 0;
+        border-radius: 20px;
+        touch-action: none;
+    }
+    .three-stage-viewport,
+    #three-canvas {
+        min-height: 0 !important;
+        height: 100% !important;
+        touch-action: none;
+    }
+    .stage-toolbar {
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        gap: 6px;
+    }
+    .stage-toggle-btn {
+        padding: 6px 10px;
+        font-size: 0.72rem;
+        border-radius: 9px;
+    }
+    .stage-template-badge {
+        bottom: auto;
+        top: 50px;
+        left: 10px;
+        font-size: 0.65rem;
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+    .stage-dimensions-badge {
+        bottom: auto;
+        top: 50px;
+        right: 10px;
+        font-size: 0.68rem;
+        padding: 4px 10px;
+        border-radius: 8px;
+    }
+    .stage-hint {
+        bottom: 8px;
+        font-size: 0.65rem;
+        padding: 3px 12px;
+        max-width: 90%;
+        text-align: center;
+        border-radius: 14px;
+    }
+    .desktop-hint { display: none; }
+    .mobile-hint { display: inline; }
+
     .customizer-controls {
         position: relative;
         top: 0;
     }
+    .clay-card.customizer-controls {
+        padding: 1.25rem 1rem !important;
+        border-radius: 20px;
+    }
+    .scad-header-bar {
+        padding: 1rem;
+        border-radius: 14px;
+        margin-bottom: 1rem;
+    }
+    .scad-title-row {
+        gap: 0.6rem;
+        margin-bottom: 0.8rem;
+    }
+    .scad-icon {
+        font-size: 1.5rem;
+        padding: 4px 8px;
+    }
+    .scad-model-name {
+        font-size: 1.05rem;
+    }
+    .scad-select-box {
+        padding: 0 10px;
+    }
+    .scad-dropdown {
+        font-size: 0.88rem;
+    }
     .template-options {
         grid-template-columns: repeat(4, 1fr);
     }
+    .scad-accordion-header {
+        padding: 11px 14px;
+        font-size: 0.88rem;
+    }
+    .scad-accordion-body {
+        padding: 12px 14px 14px;
+        gap: 1rem;
+    }
+    .stepper-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+    .stepper-input-group input[type="number"] {
+        height: 36px;
+        font-size: 0.95rem;
+    }
+    .scad-text-input {
+        font-size: 1rem;
+        padding: 9px 12px;
+    }
+    .color-swatches {
+        gap: 10px;
+    }
+    .color-swatch {
+        width: 38px;
+        height: 38px;
+    }
+    .finish-options {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+    .finish-option {
+        padding: 8px 6px;
+        font-size: 0.75rem;
+    }
+    .scad-action-bar {
+        gap: 8px;
+    }
+    .scad-icon-btn {
+        width: 42px;
+        height: 42px;
+    }
+    .scad-generate-btn {
+        font-size: 0.88rem;
+        height: 42px;
+    }
+    .scad-modal-dialog {
+        padding: 1.1rem;
+        border-radius: 16px;
+        margin: 1rem;
+    }
+    #scad-code-area {
+        height: 220px;
+        font-size: 0.78rem;
+    }
+
+    .btn-text-full { display: none !important; }
+    .btn-text-mobile { display: inline !important; }
+    .desktop-hint { display: none !important; }
+    .mobile-hint { display: inline !important; }
+
+    .customizer-stage-card {
+        min-height: 340px;
+        height: 360px;
+        border-radius: 18px;
+    }
+    .stage-toolbar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+        gap: 5px;
+    }
+    .stage-toggle-btn {
+        padding: 6px 9px;
+        font-size: 0.72rem;
+        border-radius: 8px;
+    }
+    .stage-template-badge {
+        bottom: auto;
+        top: 48px;
+        left: 8px;
+        font-size: 0.65rem;
+        padding: 4px 8px;
+        border-radius: 8px;
+    }
+    .stage-dimensions-badge {
+        bottom: auto;
+        top: 48px;
+        right: 8px;
+        font-size: 0.68rem;
+        padding: 4px 8px;
+        border-radius: 8px;
+    }
+    .stage-hint {
+        bottom: 8px;
+        font-size: 0.64rem;
+        padding: 3px 10px;
+        max-width: 94%;
+        border-radius: 12px;
+        pointer-events: none;
+    }
 }
+
 @media (max-width: 480px) {
     .customizer-stage-card {
-        min-height: 280px;
+        min-height: 310px;
+        height: 330px;
     }
     .template-options {
         grid-template-columns: repeat(2, 1fr);
+    }
+    .stage-toggle-btn {
+        padding: 5px 8px;
+        font-size: 0.68rem;
+    }
+    .stage-dimensions-badge {
+        font-size: 0.62rem;
+        padding: 3px 6px;
+    }
+    .stage-template-badge {
+        font-size: 0.62rem;
+        padding: 3px 6px;
     }
 }
 
