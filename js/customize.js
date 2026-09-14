@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // MAKERWORLD OPENSCAD PARAMETRIC 3D MODEL MAKER ENGINE (js/customize.js)
 // ============================================================
 
@@ -194,11 +194,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const total = Math.round((140 + letterFee) * thickMultiplier * brimMultiplier * matMultiplier);
         
-        displayPrice.textContent = '৳' + total.toLocaleString('en-US');
-        displaySpecs.textContent = `${modelName} • ${currentColorName} PLA • ${letterThick}mm Letter • ${outlineSize}mm Brim`;
+        displayPrice.textContent = 'à§³' + total.toLocaleString('en-US');
+        displaySpecs.textContent = `${modelName} â€¢ ${currentColorName} PLA â€¢ ${letterThick}mm Letter â€¢ ${outlineSize}mm Brim`;
 
         if (templateBadge) {
-            templateBadge.textContent = `🧱 ${modelName.toUpperCase()}`;
+            templateBadge.textContent = `ðŸ§± ${modelName.toUpperCase()}`;
         }
 
         // Clear 3D Stage Container
@@ -238,179 +238,122 @@ document.addEventListener('DOMContentLoaded', () => {
             nameplate3D.appendChild(div);
         }
 
-        // (Build plate is now in the scene CSS, not inside nameplate3D)
 
         // ==========================================
-        // 1. LEGO KEYCHAIN MODEL (AUTHENTIC MULTI-LAYER BUBBLE CONTOURS)
+        // UNIFIED Z-LOOP â€” One combined SVG per Z-level.
+        // Ring body at EVERY Z => always same screen position as plate.
         // ==========================================
+        const zStep = 0.4;
+        const baseLayers = Math.max(18, Math.floor(baseThick  * 12));
+        const yLayers    = 6;
+        const bLayers    = 6;
+        const textLayers = Math.max(18, Math.floor(letterThick * 12));
+        const plateEnd = baseLayers;
+        const yEnd     = plateEnd + yLayers;
+        const bEnd     = yEnd + bLayers;
+        const textEnd  = bEnd + textLayers;
+        const ringEnd  = textEnd + Math.round(textEnd * 0.3);
+        const topRGB   = (currentFinish === 'neon')  ? [112, 255, 250] :
+                         (currentFinish === 'silk')  ? [255, 243, 209] : [255, 255, 255];
+
         if (currentTemplate === 'lego') {
-            const baseColor = currentColor;
-            const yellowColor = '#FFD700';
-            const blackColor = '#111111';
-            const zStep = 0.35;
-            let zCurrent = 0;
+            for (let layer = 0; layer < ringEnd; layer++) {
+                const z        = layer * zStep;
+                const isBottom = (layer === 0);
+                let   svg      = '';
 
-            // ===== PHASE 1: RED BASE PLATE + BUBBLE TEXT OUTLINE =====
-            const baseCount = Math.max(25, Math.floor(baseThick * 18));
+                // Ring: always present from layer 0 â†’ ringEnd
+                const ringT   = layer / (ringEnd - 1);
+                const ringCol = darkenColor(currentColor, Math.round(40 * (1 - ringT)));
+                svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${ringCol}"/>`;
 
-            for (let i = 0; i < baseCount; i++) {
-                const isBottom = (i === 0);
-                const isTop = (i === baseCount - 1);
-                const darkness = isBottom ? 40 : Math.round(20 * (1 - i / baseCount));
-                const col = darkenColor(baseColor, darkness);
-
-                const svgContent = `
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="2" />
-                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
-                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 7 + 22}"
-                          stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
-                    ${isTop ? `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner + 1}" fill="#050505" />` : ''}
-                `;
-                addSvgLayer(svgContent, zCurrent, isBottom);
-                zCurrent += zStep;
-            }
-
-            // ===== PHASE 2: YELLOW ACCENT OUTLINE =====
-            const yellowCount = 8;
-            for (let i = 0; i < yellowCount; i++) {
-                const t = i / (yellowCount - 1);
-                const yCol = `rgb(${Math.round(180 + 75*t)},${Math.round(160 + 55*t)},0)`;
-                const svgContent = `
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - 1}" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 1.8 + 5}" />
-                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
-                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 3.5 + 9}"
-                          stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner + 1}" fill="#050505" />
-                `;
-                addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += zStep;
-            }
-
-            // ===== PHASE 3: BLACK SHADOW OUTLINE =====
-            const blackCount = 8;
-            for (let i = 0; i < blackCount; i++) {
-                const t = i / (blackCount - 1);
-                const bCol = `rgb(${Math.round(30*t)},${Math.round(30*t)},${Math.round(30*t)})`;
-                const svgContent = `
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - outlineSize}" fill="none" stroke="${bCol}" stroke-width="3" />
-                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
-                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${bCol}" stroke="${bCol}" stroke-width="${outlineSize * 1.2 + 3}"
-                          stroke-linejoin="round" stroke-linecap="round">${upperText}</text>
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner + 1}" fill="#050505" />
-                `;
-                addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += zStep;
-            }
-
-            // ===== PHASE 4: WHITE 3D TEXT (gradient from dark side to bright top) =====
-            const textCount = Math.max(25, Math.floor(letterThick * 18));
-            const topTextColor = (currentFinish === 'neon') ? '#70FFFA' : (currentFinish === 'silk' ? '#FFF3D1' : '#FFFFFF');
-            const topR = parseInt(topTextColor.slice(1,3),16);
-            const topG = parseInt(topTextColor.slice(3,5),16);
-            const topB = parseInt(topTextColor.slice(5,7),16);
-
-            for (let i = 0; i < textCount; i++) {
-                const t = i / Math.max(1, textCount - 1);
-                const r = Math.round(80 + (topR - 80) * t);
-                const g = Math.round(80 + (topG - 80) * t);
-                const b = Math.round(80 + (topB - 80) * t);
-                const col = `rgb(${r},${g},${b})`;
-
-                const svgContent = `
-                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
-                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1">${upperText}</text>
-                `;
-                addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += zStep;
-            }
-
-            // ===== PHASE 5: KEYRING EXTRUDED ABOVE PLATE =====
-            const ringBaseZ = zCurrent + 1;
-            const ringLayers = 16;
-            for (let i = 0; i < ringLayers; i++) {
-                const t = i / (ringLayers - 1);
-                const darkness = Math.round(42 * (1 - t));
-                const rCol = darkenColor(baseColor, darkness);
-                const svgContent = `
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${rCol}" stroke="${darkenColor(rCol,8)}" stroke-width="2" />
-                    <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#000000" />
-                `;
-                addSvgLayer(svgContent, ringBaseZ + i * zStep * 2, false);
-            }
-        }
-        // ==========================================
-        // 2. OTHER MODELS (NAMETAG, DESKSTAND, BADGE)
-        // ==========================================
-        else {
-            const baseColor = currentColor;
-            const baseCount = Math.max(20, Math.floor(baseThick * 15));
-            let zCurrent = 0;
-            const zStep = 0.35;
-
-            // Extruded Base Plate
-            for (let i = 0; i < baseCount; i++) {
-                const isBottom = (i === 0);
-                const isTop = (i === baseCount - 1);
-                const col = isBottom ? darkenColor(baseColor, 35) : (isTop ? baseColor : darkenColor(baseColor, 18));
-
-                const rectX = cx - estTextWidth/2 - 20 - outlineSize * 2;
-                const rectY = cy - textSize * 1.3 - outlineSize * 2;
-                const rectW = estTextWidth + 40 + outlineSize * 4;
-                const rectH = textSize * 2.6 + outlineSize * 4;
-                
-                let baseShapeSVG = '';
-
-                if (currentTemplate === 'nametag') {
-                    const rx = rectH / 2;
-                    baseShapeSVG = `
-                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}" stroke="${col}" stroke-width="${outlineSize * 2}" />
-                        <rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="${rx}" fill="${col}" stroke="${darkenColor(col, 10)}" stroke-width="${outlineSize * 2}" />
-                        <circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#14121d" />
-                    `;
-                } else if (currentTemplate === 'deskstand') {
-                    baseShapeSVG = `
-                        <rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="4" fill="${col}" stroke="${darkenColor(col, 10)}" stroke-width="${outlineSize * 2}" />
-                        <rect x="${rectX - 10}" y="${rectY + rectH - 5}" width="${rectW + 20}" height="22" rx="4" fill="${isTop ? darkenColor(baseColor, 20) : darkenColor(baseColor, 35)}" stroke="${col}" stroke-width="3" />
-                    `;
-                } else if (currentTemplate === 'badge') {
-                    const pathData = `M ${rectX} ${rectY} L ${rectX + rectW} ${rectY} L ${rectX + rectW} ${rectY + rectH * 0.55} Q ${rectX + rectW} ${rectY + rectH * 1.1} ${rectX + rectW/2} ${rectY + rectH * 1.15} Q ${rectX} ${rectY + rectH * 1.1} ${rectX} ${rectY + rectH * 0.55} Z`;
-                    baseShapeSVG = `
-                        <path d="${pathData}" fill="${col}" stroke="${darkenColor(col, 10)}" stroke-width="${outlineSize * 2}" stroke-linejoin="round" />
-                        <!-- Inner Trim (only on top layer) -->
-                        ${isTop ? `<path d="${pathData}" fill="none" stroke="${lightenColor(baseColor, 30)}" stroke-width="3" transform="scale(0.95) translate(${rectX*0.05 + rectW*0.025}, ${rectY*0.05 + rectH*0.025})" />` : ''}
-                    `;
+                // Red plate + bubble text body
+                if (layer < plateEnd) {
+                    const plateT   = layer / Math.max(1, plateEnd - 1);
+                    const plateCol = darkenColor(currentColor, Math.round(38 * (1 - plateT)));
+                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="${plateCol}" stroke="${plateCol}" stroke-width="${outlineSize * 7 + 22}" stroke-linejoin="round" stroke-linecap="round">${upperText}</text>`;
                 }
 
-                addSvgLayer(baseShapeSVG, zCurrent, isBottom);
-                zCurrent += zStep;
+                // Yellow accent
+                if (layer >= plateEnd && layer < yEnd) {
+                    const yT  = (layer - plateEnd) / Math.max(1, yLayers - 1);
+                    const yCol = `rgb(${Math.round(185 + 70*yT)},${Math.round(150 + 65*yT)},0)`;
+                    svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - 1}" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 1.5 + 5}"/>`;
+                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="none" stroke="${yCol}" stroke-width="${outlineSize * 3 + 9}" stroke-linejoin="round" stroke-linecap="round">${upperText}</text>`;
+                }
+
+                // Black outline
+                if (layer >= yEnd && layer < bEnd) {
+                    const bT   = (layer - yEnd) / Math.max(1, bLayers - 1);
+                    const bV   = Math.round(40 * bT);
+                    const bCol = `rgb(${bV},${bV},${bV})`;
+                    svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter - outlineSize * 0.6}" fill="none" stroke="${bCol}" stroke-width="3"/>`;
+                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="${bCol}" stroke="${bCol}" stroke-width="${outlineSize * 1.1 + 3}" stroke-linejoin="round" stroke-linecap="round">${upperText}</text>`;
+                }
+
+                // White raised text
+                if (layer >= bEnd && layer < textEnd) {
+                    const tT = (layer - bEnd) / Math.max(1, textLayers - 1);
+                    const tr = Math.round(70 + (topRGB[0] - 70) * tT);
+                    const tg = Math.round(70 + (topRGB[1] - 70) * tT);
+                    const tb = Math.round(70 + (topRGB[2] - 70) * tT);
+                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="rgb(${tr},${tg},${tb})" stroke="rgb(${tr},${tg},${tb})" stroke-width="1">${upperText}</text>`;
+                }
+
+                // Hole punch always last
+                svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#000"/>`;
+
+                addSvgLayer(svg, z, isBottom);
             }
+        } else {
+            const rectX = cx - estTextWidth / 2 - 20 - outlineSize * 2;
+            const rectY = cy - textSize * 1.3 - outlineSize * 2;
+            const rectW = estTextWidth + 40 + outlineSize * 4;
+            const rectH = textSize * 2.6 + outlineSize * 4;
+            const rx    = rectH / 2;
+            const oBase = Math.max(18, Math.floor(baseThick  * 12));
+            const oText = Math.max(18, Math.floor(letterThick * 12));
 
-            // Top Raised Text Layers
-            const textCount = Math.max(20, Math.floor(letterThick * 15));
-            const sideTextColor = (currentFinish === 'silk') ? '#A3862A' : '#B0B0B0';
-            const topTextColor = (currentFinish === 'silk') ? '#FFE680' : '#FFFFFF';
+            for (let layer = 0; layer < oBase + oText; layer++) {
+                const z        = layer * zStep;
+                const isBottom = (layer === 0);
+                let   svg      = '';
 
-            for (let i = 0; i < textCount; i++) {
-                const isTop = (i === textCount - 1);
-                const col = isTop ? topTextColor : sideTextColor;
-
-                const svgContent = `
-                    <text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central"
-                          font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}"
-                          letter-spacing="${spaceWidth * 2.5}px" fill="${col}" stroke="${col}" stroke-width="1.2">${upperText}</text>
-                `;
-                addSvgLayer(svgContent, zCurrent, false);
-                zCurrent += zStep;
+                if (layer < oBase) {
+                    const t   = layer / Math.max(1, oBase - 1);
+                    const col = darkenColor(currentColor, Math.round(38 * (1 - t)));
+                    if (currentTemplate === 'nametag') {
+                        svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusOuter}" fill="${col}"/>`;
+                        svg += `<rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="${rx}" fill="${col}" stroke="${darkenColor(col,8)}" stroke-width="2"/>`;
+                        svg += `<circle cx="${holeXPos}" cy="${holeYPos}" r="${holeRadiusInner}" fill="#000"/>`;
+                    } else if (currentTemplate === 'deskstand') {
+                        const pedCol = darkenColor(currentColor, Math.round(50 * (1 - t)));
+                        svg += `<rect x="${rectX}" y="${rectY}" width="${rectW}" height="${rectH}" rx="6" fill="${col}" stroke="${darkenColor(col,8)}" stroke-width="2"/>`;
+                        svg += `<rect x="${rectX-12}" y="${rectY+rectH-8}" width="${rectW+24}" height="28" rx="6" fill="${pedCol}" stroke="${col}" stroke-width="2.5"/>`;
+                    } else if (currentTemplate === 'badge') {
+                        const pd = `M ${rectX} ${rectY} L ${rectX+rectW} ${rectY} L ${rectX+rectW} ${rectY+rectH*0.55} Q ${rectX+rectW} ${rectY+rectH*1.1} ${rectX+rectW/2} ${rectY+rectH*1.15} Q ${rectX} ${rectY+rectH*1.1} ${rectX} ${rectY+rectH*0.55} Z`;
+                        svg += `<path d="${pd}" fill="${col}" stroke="${darkenColor(col,8)}" stroke-width="2" stroke-linejoin="round"/>`;
+                    }
+                } else {
+                    const tT = (layer - oBase) / Math.max(1, oText - 1);
+                    const tr = Math.round(70 + (topRGB[0] - 70) * tT);
+                    const tg = Math.round(70 + (topRGB[1] - 70) * tT);
+                    const tb = Math.round(70 + (topRGB[2] - 70) * tT);
+                    svg += `<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="central" font-family="${currentFont}" font-size="${textSize * 2.4}px" font-weight="900" font-style="${fontStyle}" letter-spacing="${spaceWidth * 2.5}px" fill="rgb(${tr},${tg},${tb})" stroke="rgb(${tr},${tg},${tb})" stroke-width="1">${upperText}</text>`;
+                }
+                addSvgLayer(svg, z, isBottom);
             }
         }
 
         apply3DRotation();
     }
 
+    // --- Apply 3D Rotation ---
+    function apply3DRotation() {
+        if (nameplate3D) {
+            nameplate3D.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+        }
+    }
     // --- Apply 3D Rotation ---
     function apply3DRotation() {
         if (nameplate3D) {
@@ -560,7 +503,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Action Bar: ✨ Generate Button ---
+    // --- Action Bar: âœ¨ Generate Button ---
     if (btnGenerateScad) {
         btnGenerateScad.addEventListener('click', () => {
             if (stageCard) {
@@ -700,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const orderId = 'KC-' + Date.now().toString(36).toUpperCase();
                 const orderDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
                 const orderTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const specsStr = `${getTemplateLabel(currentTemplate)} • ${currentColorName} PLA • ${thickness}mm • ${snapData.fontDisplayName}`;
+                const specsStr = `${getTemplateLabel(currentTemplate)} â€¢ ${currentColorName} PLA â€¢ ${thickness}mm â€¢ ${snapData.fontDisplayName}`;
                 
                 const newOrder = {
                     id: orderId,
@@ -735,7 +678,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     status: newOrder.status
                 });
                 
-                btnOrder.innerHTML = '⏳ Processing...';
+                btnOrder.innerHTML = 'â³ Processing...';
                 btnOrder.disabled = true;
 
                 try {
@@ -785,7 +728,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const cartItem = {
                 title: `Custom 3D ${getTemplateLabel(currentTemplate)}: "${text}"`,
-                specs: `${currentColorName} PLA • ${thickness}mm • ${snapData.fontDisplayName}`,
+                specs: `${currentColorName} PLA â€¢ ${thickness}mm â€¢ ${snapData.fontDisplayName}`,
                 price: price,
                 quantity: 1,
                 image: snapData.snapshotUrl
