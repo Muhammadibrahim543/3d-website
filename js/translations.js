@@ -44,6 +44,8 @@ const translations = {
         "footer_address": "58 Lower Jessore Road, Khulna Sadar, Khulna, Bangladesh",
         "footer_copyright": "© 2026 Kira's Creation. All rights reserved.",
         "lightbox_price": "Price:",
+        "share_btn": "Share",
+        "share_copied": "🔗 Product link copied to clipboard!",
 
         // Calculator
         "calc_title": "Real-Time 3D Print Cost Estimator",
@@ -647,6 +649,8 @@ const translations = {
 
         // Calculator
         "lightbox_price": "মূল্য:",
+        "share_btn": "শেয়ার",
+        "share_copied": "🔗 মডেলের লিংক কপি করা হয়েছে!",
         "calc_title": "ইনস্ট্যান্ট ৩D প্রিন্ট খরচ ক্যালকুলেটর",
         "calc_sub": "// INSTANT_PRICE_CALCULATION",
         "calc_material": "ম্যাটেরিয়াল নির্বাচন করুন",

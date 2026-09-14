@@ -42,6 +42,59 @@
             color: var(--c-primary);
             box-shadow: 0 4px 12px rgba(0,0,0,0.4);
         }
+        .portfolio-share-btn {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            color: var(--c-text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            z-index: 4;
+            transition: all 0.25s var(--bouncy-ease);
+        }
+        .portfolio-share-btn:hover {
+            background: var(--c-primary);
+            color: #FFF;
+            transform: scale(1.12);
+            box-shadow: 0 6px 16px rgba(255, 126, 103, 0.4);
+        }
+        .portfolio-share-btn:active {
+            transform: scale(0.95);
+        }
+        [data-theme="dark"] .portfolio-share-btn {
+            background: rgba(36, 33, 48, 0.92);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: var(--c-text);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+        [data-theme="dark"] .portfolio-share-btn:hover {
+            background: var(--c-primary);
+            color: #FFF;
+        }
+        @keyframes sharedCardPulse {
+            0%, 100% {
+                transform: translateY(0);
+                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+            }
+            50% {
+                transform: translateY(-6px);
+                box-shadow: 0 0 0 4px var(--c-primary), 0 16px 36px rgba(255, 126, 103, 0.45);
+            }
+        }
+        .portfolio-item.highlight-shared-product {
+            animation: sharedCardPulse 1.6s ease-in-out 3;
+            border: 2px solid var(--c-primary) !important;
+        }
         .portfolio-item {
             position: relative;
             transition: all 0.35s var(--bouncy-ease);
@@ -295,8 +348,18 @@
                         </div>
 
                         <p id="lightboxDesc" style="color:var(--c-text-muted); margin-top:1rem; font-size:0.95rem; line-height:1.6;">Description</p>
-                        <div style="margin-top:1.5rem;">
-                            <button id="btn-lightbox-add-cart" class="clay-btn btn-coral btn-block btn-sm" data-i18n="cart_add">🛒 Add Model to Cart (Contact for Quote)</button>
+                        <div style="margin-top:1.5rem; display:flex; gap:0.8rem; align-items:stretch; flex-wrap:wrap;">
+                            <button id="btn-lightbox-add-cart" class="clay-btn btn-coral btn-sm" style="flex:1; min-width:200px;" data-i18n="cart_add">🛒 Add Model to Cart (Contact for Quote)</button>
+                            <button id="btn-lightbox-share" class="clay-btn btn-secondary btn-sm" style="padding:0.65rem 1.1rem; display:inline-flex; align-items:center; justify-content:center; gap:0.5rem; white-space:nowrap;" title="Share Model / শেয়ার করুন" type="button">
+                                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                                <span id="lightboxShareText" data-i18n="share_btn">Share</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -336,7 +399,7 @@
     <script src="js/defaultProducts.js"></script>
     <script src="js/portfolio.js"></script>
     <script>
-        // Lightbox Modal Interactivity with i18n support
+        // Lightbox Modal Interactivity with i18n support & Deep-linking
         document.addEventListener('DOMContentLoaded', () => {
             const lightbox = document.getElementById('portfolioLightbox');
             const lightboxImg = document.getElementById('lightboxImg');
@@ -346,16 +409,7 @@
             const lightboxPrice = document.getElementById('lightboxPrice');
             const lightboxClose = document.getElementById('lightboxClose');
             const btnAddCart = document.getElementById('btn-lightbox-add-cart');
-
-            lightboxClose.addEventListener('click', () => {
-                lightbox.classList.remove('open');
-            });
-
-            lightbox.addEventListener('click', (e) => {
-                if (e.target === lightbox) {
-                    lightbox.classList.remove('open');
-                }
-            });
+            const btnLightboxShare = document.getElementById('btn-lightbox-share');
 
             // Load dynamic products
             let dynamicProducts = JSON.parse(localStorage.getItem('kiras_products'));
@@ -392,13 +446,176 @@
             if (needsSave) {
                 localStorage.setItem('kiras_products', JSON.stringify(dynamicProducts));
             }
-            
+
+            // Share handler with native Web Share API and Clipboard Toast fallback
+            async function handleShareProduct(p) {
+                const currentLang = localStorage.getItem('shapey_lang') || 'en';
+                const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
+                const prodTitle = (dict && p.titleI18n && dict[p.titleI18n]) ? dict[p.titleI18n] : p.name;
+                
+                // Construct clean shareable absolute URL
+                const shareUrl = new URL(window.location.origin + window.location.pathname);
+                shareUrl.searchParams.set('product', p.id);
+                const fullUrl = shareUrl.toString();
+
+                const shareData = {
+                    title: `${prodTitle} | Kira's Creation`,
+                    text: `${prodTitle} - 3D Printed Model at Kira's Creation (${p.price || ''})`,
+                    url: fullUrl
+                };
+
+                // Native share on mobile / touch / supported browsers
+                if (navigator.share) {
+                    try {
+                        await navigator.share(shareData);
+                        return;
+                    } catch (err) {
+                        if (err.name === 'AbortError') return; // User cancelled share sheet
+                    }
+                }
+
+                // Fallback: Copy URL to clipboard
+                const copySuccessMsg = (dict && dict['share_copied']) ? dict['share_copied'] : (currentLang === 'bn' ? '🔗 মডেলের লিংক কপি করা হয়েছে!' : '🔗 Product link copied to clipboard!');
+                
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(fullUrl).then(() => {
+                        if (window.showToast) {
+                            window.showToast(copySuccessMsg);
+                        } else {
+                            alert(copySuccessMsg);
+                        }
+                    }).catch(() => {
+                        fallbackCopyText(fullUrl, copySuccessMsg);
+                    });
+                } else {
+                    fallbackCopyText(fullUrl, copySuccessMsg);
+                }
+            }
+
+            function fallbackCopyText(text, successMsg) {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    if (window.showToast) {
+                        window.showToast(successMsg);
+                    } else {
+                        alert(successMsg);
+                    }
+                } catch (e) {
+                    prompt('Copy link:', text);
+                }
+                document.body.removeChild(textArea);
+            }
+
+            // Open product in Lightbox modal
+            function openLightbox(p) {
+                const currentLang = localStorage.getItem('shapey_lang') || 'en';
+                const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
+
+                lightboxTitle.textContent = (dict && p.titleI18n && dict[p.titleI18n]) ? dict[p.titleI18n] : p.name;
+                lightboxCategory.textContent = (dict && p.categoryI18n && dict[p.categoryI18n]) ? dict[p.categoryI18n] : (p.categoryLabel || p.category);
+                
+                // Price formatting
+                let priceText = p.price;
+                if (!priceText || priceText === 'Contact for Quote') {
+                     priceText = (dict && dict['btn_send_quote']) ? (currentLang === 'bn' ? 'কোটেশনের জন্য যোগাযোগ করুন' : 'Contact for Quote') : 'Contact for Quote';
+                }
+
+                if (lightboxPrice) {
+                    lightboxPrice.textContent = priceText;
+                }
+                
+                const lblPrice = document.getElementById('lightboxPriceLabel');
+                if (lblPrice) {
+                    lblPrice.textContent = (dict && dict['lightbox_price']) ? dict['lightbox_price'] : 'Price:';
+                }
+                
+                let descText = p.desc || '';
+                if (dict && p.descKey && dict[p.descKey]) {
+                    descText = dict[p.descKey];
+                }
+                
+                lightboxDesc.textContent = descText;
+                lightboxImg.src = p.image || 'images/placeholder.webp';
+                
+                if (btnAddCart) {
+                    let cartBtnText = (dict && dict['cart_add']) ? dict['cart_add'] : 'Add Model to Cart';
+                    btnAddCart.textContent = `🛒 ${cartBtnText} (${priceText})`;
+                    btnAddCart.onclick = () => {
+                        if (window.KiraCart) {
+                            KiraCart.addItem({
+                                title: p.name,
+                                specs: 'Category: ' + (p.categoryLabel || p.category),
+                                price: p.price || 'Contact for Quote',
+                                quantity: 1,
+                                image: p.image || 'images/placeholder.webp'
+                            });
+                            closeLightbox();
+                        }
+                    };
+                }
+
+                if (btnLightboxShare) {
+                    const shareLabel = (dict && dict['share_btn']) ? dict['share_btn'] : 'Share';
+                    const shareTextEl = document.getElementById('lightboxShareText');
+                    if (shareTextEl) shareTextEl.textContent = shareLabel;
+                    btnLightboxShare.onclick = (e) => {
+                        e.stopPropagation();
+                        handleShareProduct(p);
+                    };
+                }
+
+                lightbox.classList.add('open');
+
+                // Sync URL query without reloading
+                try {
+                    const url = new URL(window.location);
+                    url.searchParams.set('product', p.id);
+                    window.history.replaceState({ productId: p.id }, '', url);
+                } catch (err) {
+                    // Ignore URL state issues
+                }
+            }
+
+            function closeLightbox() {
+                lightbox.classList.remove('open');
+                try {
+                    const url = new URL(window.location);
+                    url.searchParams.delete('product');
+                    url.searchParams.delete('id');
+                    window.history.replaceState({}, '', url);
+                } catch (err) {
+                    // Ignore URL state issues
+                }
+            }
+
+            lightboxClose.addEventListener('click', closeLightbox);
+
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && lightbox.classList.contains('open')) {
+                    closeLightbox();
+                }
+            });
+
+            // Populate Gallery Grid
             const portfolioGrid = document.querySelector('.portfolio-grid');
             if (portfolioGrid && dynamicProducts.length > 0) {
                 dynamicProducts.forEach(p => {
                     const div = document.createElement('div');
                     div.className = 'clay-card portfolio-item';
                     div.setAttribute('data-category', p.category || '');
+                    div.setAttribute('data-product-id', p.id || '');
                     div.setAttribute('data-img', p.image || 'images/placeholder.webp');
                     
                     const badgeHtml = p.badge ? `<span class="portfolio-card-badge" ${p.badgeI18n ? 'data-i18n="'+p.badgeI18n+'"' : ''}>${p.badge}</span>` : '';
@@ -409,6 +626,15 @@
                     }
 
                     div.innerHTML = `
+                        <button class="portfolio-share-btn" aria-label="Share Model" title="Share Model / শেয়ার করুন" type="button">
+                            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                        </button>
                         ${badgeHtml}
                         <div class="gallery-frame">
                             <img src="${p.image || 'images/placeholder.webp'}" alt="${p.name}" loading="lazy">
@@ -422,58 +648,18 @@
                             </div>
                         </div>
                     `;
+
+                    const cardShareBtn = div.querySelector('.portfolio-share-btn');
+                    if (cardShareBtn) {
+                        cardShareBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            handleShareProduct(p);
+                        });
+                    }
                     
-                    div.addEventListener('click', () => {
-                        const currentLang = localStorage.getItem('shapey_lang') || 'en';
-                        const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
-
-                        lightboxTitle.textContent = (dict && p.titleI18n && dict[p.titleI18n]) ? dict[p.titleI18n] : p.name;
-                        lightboxCategory.textContent = (dict && p.categoryI18n && dict[p.categoryI18n]) ? dict[p.categoryI18n] : (p.categoryLabel || p.category);
-                        
-                        // Price formatting
-                        let priceText = p.price;
-                        if (!priceText || priceText === 'Contact for Quote') {
-                             priceText = (dict && dict['btn_send_quote']) ? (currentLang === 'bn' ? 'কোটেশনের জন্য যোগাযোগ করুন' : 'Contact for Quote') : 'Contact for Quote';
-                        }
-
-                        if (lightboxPrice) {
-                            lightboxPrice.textContent = priceText;
-                        }
-                        
-                        const lblPrice = document.getElementById('lightboxPriceLabel');
-                        if (lblPrice) {
-                            lblPrice.textContent = (dict && dict['lightbox_price']) ? dict['lightbox_price'] : 'Price:';
-                        }
-                        
-                        let descText = p.desc || '';
-                        if (dict && p.descKey && dict[p.descKey]) {
-                            descText = dict[p.descKey];
-                        }
-                        
-                        lightboxDesc.textContent = descText;
-                        lightboxImg.src = p.image || 'images/placeholder.webp';
-                        
-                        if (btnAddCart) {
-                            let cartBtnText = (dict && dict['cart_add']) ? dict['cart_add'] : 'Add Model to Cart';
-                            btnAddCart.textContent = `🛒 ${cartBtnText} (${priceText})`;
-                        }
-
-                        lightbox.classList.add('open');
-                        
-                        if (btnAddCart) {
-                            btnAddCart.onclick = () => {
-                                if (window.KiraCart) {
-                                    KiraCart.addItem({
-                                        title: p.name,
-                                        specs: 'Category: ' + (p.categoryLabel || p.category),
-                                        price: p.price || 'Contact for Quote',
-                                        quantity: 1,
-                                        image: p.image || 'images/placeholder.webp'
-                                    });
-                                    lightbox.classList.remove('open');
-                                }
-                            };
-                        }
+                    div.addEventListener('click', (e) => {
+                        if (e.target.closest('.portfolio-share-btn')) return;
+                        openLightbox(p);
                     });
                     
                     portfolioGrid.appendChild(div);
@@ -482,8 +668,6 @@
 
             // Portfolio Filter Logic
             const filterPills = document.querySelectorAll('.filter-pill');
-            const portfolioItems = document.querySelectorAll('.portfolio-item');
-
             filterPills.forEach(pill => {
                 pill.addEventListener('click', () => {
                     // Update active class
@@ -492,8 +676,6 @@
 
                     // Filter items
                     const filter = pill.getAttribute('data-filter');
-                    
-                    // Since items might be generated dynamically, query again to be safe
                     const currentItems = document.querySelectorAll('.portfolio-item');
                     currentItems.forEach(item => {
                         if (filter === 'all' || item.getAttribute('data-category') === filter) {
@@ -504,6 +686,33 @@
                     });
                 });
             });
+
+            // Deep-link check: Auto-open shared product (?product=... or ?id=...)
+            const params = new URLSearchParams(window.location.search);
+            const targetProductId = params.get('product') || params.get('id');
+            if (targetProductId) {
+                const targetProd = dynamicProducts.find(x => x.id === targetProductId || (x.id && x.id.toLowerCase() === targetProductId.toLowerCase()));
+                if (targetProd) {
+                    // If filter is active and not matching, reset filter to 'all'
+                    const activePill = document.querySelector('.filter-pill.active');
+                    if (activePill && activePill.getAttribute('data-filter') !== 'all' && activePill.getAttribute('data-filter') !== targetProd.category) {
+                        const allPill = document.querySelector('.filter-pill[data-filter="all"]');
+                        if (allPill) allPill.click();
+                    }
+
+                    const targetCard = document.querySelector(`.portfolio-item[data-product-id="${targetProd.id}"]`);
+                    if (targetCard) {
+                        targetCard.classList.add('highlight-shared-product');
+                        setTimeout(() => {
+                            targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 250);
+                    }
+
+                    setTimeout(() => {
+                        openLightbox(targetProd);
+                    }, 350);
+                }
+            }
         });
     </script>
 </body>

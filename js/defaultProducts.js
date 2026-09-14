@@ -1098,7 +1098,7 @@ const defaultProducts = [
                 "i18n": "g36_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳990",
         "delivery": "3-5 Days"
     },
     {
