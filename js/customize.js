@@ -1,6 +1,7 @@
 // ============================================================
 // MAKERWORLD / OPENSCAD REAL 3D SOLID CAD ENGINE (Three.js WebGL)
-// Kira's Creation Soft-3D Studio // High-Fidelity Parametric Customizer
+// Kira's Creation Soft-3D Studio // 4-Layer Parametric Bubble Customizer
+// Total Height: 6.0 mm (0->3.2 Red, 3.2->4.2 Yellow, 4.2->5.2 Black, 5.2->6.0 White)
 // ============================================================
 
 window.toggleScadAccordion = function(id) {
@@ -33,7 +34,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const inputThickness = document.getElementById('cust-thickness');
     const elLetterThickSlider = document.getElementById('scad-letter-thick-slider');
-    const valThickness = document.getElementById('val-thickness');
 
     const elHoleSizeNum = document.getElementById('scad-hole-size');
     const elHoleSizeSlider = document.getElementById('scad-hole-size-slider');
@@ -65,7 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const displaySpecs = document.getElementById('cust-specs');
     const btnAddToCart = document.getElementById('btn-add-cart-custom');
     const btnOrder = document.getElementById('btn-order-custom');
-    const btnSavePreset = document.getElementById('btn-save-preset-custom');
     const btnResetScad = document.getElementById('btn-scad-reset');
     const btnUndoScad = document.getElementById('btn-scad-undo');
     const btnGenerateScad = document.getElementById('btn-scad-generate');
@@ -76,8 +75,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- State Variables ---
-    let currentTemplate = 'lego';
-    let currentFontKey = 'helvetiker';
+    let currentTemplate = 'lego'; // 'lego', 'nametag'
+    let currentFont = "'Fredoka', sans-serif";
     let currentColor = '#D32F2F';
     let currentColorName = 'Ruby Red';
     let currentRate = 7.0;
@@ -90,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stateHistory.push({
             template: currentTemplate,
             text: inputName ? inputName.value : 'LEGO',
-            font: currentFontKey,
+            font: currentFont,
             color: currentColor,
             colorName: currentColorName,
             finish: currentFinish,
@@ -115,7 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const stageHeight = stageCard.clientHeight || 480;
 
     const camera = new THREE.PerspectiveCamera(38, stageWidth / stageHeight, 1, 1000);
-    const defaultCamPos = new THREE.Vector3(0, -90, 150);
+    const defaultCamPos = new THREE.Vector3(0, -95, 140);
     camera.position.copy(defaultCamPos);
     camera.lookAt(0, 0, 0);
 
@@ -128,19 +127,18 @@ document.addEventListener('DOMContentLoaded', () => {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(stageWidth, stageHeight);
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.05;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.maxPolarAngle = Math.PI / 2 + 0.15; // Don't let user look underneath build plate
+    controls.maxPolarAngle = Math.PI / 2 + 0.15;
     controls.minDistance = 35;
     controls.maxDistance = 320;
     controls.target.set(0, 0, 0);
 
-    // Resize Handler
     function onWindowResize() {
         const w = stageCard.clientWidth || 560;
         const h = stageCard.clientHeight || 480;
@@ -153,12 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 2. STUDIO LIGHTING & BAMBU-STYLE BUILD PLATE
     // ============================================================
-    // Ambient light - balanced for true color saturation
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.55);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
     scene.add(ambientLight);
 
-    // Key light (warm studio key)
-    const keyLight = new THREE.DirectionalLight(0xfff6ec, 1.15);
+    const keyLight = new THREE.DirectionalLight(0xfff7ed, 1.25);
     keyLight.position.set(65, 85, 120);
     keyLight.castShadow = true;
     keyLight.shadow.mapSize.width = 1024;
@@ -173,20 +169,16 @@ document.addEventListener('DOMContentLoaded', () => {
     keyLight.shadow.bias = -0.0005;
     scene.add(keyLight);
 
-    // Fill light (cool fill for depth)
-    const fillLight = new THREE.DirectionalLight(0xc8dcff, 0.45);
+    const fillLight = new THREE.DirectionalLight(0xcde0ff, 0.45);
     fillLight.position.set(-70, -50, 80);
     scene.add(fillLight);
 
-    // Rim light (highlight bevels and silhouette)
-    const rimLight = new THREE.DirectionalLight(0xffffff, 0.55);
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.65);
     rimLight.position.set(0, -90, -30);
     scene.add(rimLight);
 
-    // Bambu-Style Textured Build Plate
+    // Build Plate
     const buildPlateGroup = new THREE.Group();
-
-    // Subtle plate bed rectangle
     const bedGeo = new THREE.PlaneGeometry(180, 150);
     const bedMat = new THREE.MeshStandardMaterial({
         color: 0x14121a,
@@ -198,33 +190,14 @@ document.addEventListener('DOMContentLoaded', () => {
     bedMesh.receiveShadow = true;
     buildPlateGroup.add(bedMesh);
 
-    // Grid helper on plate
     const grid = new THREE.GridHelper(160, 16, 0x443b5e, 0x221d30);
     grid.rotation.x = Math.PI / 2;
     grid.position.z = -0.15;
     buildPlateGroup.add(grid);
-
     scene.add(buildPlateGroup);
 
     // ============================================================
-    // 3. FONT MANAGEMENT (Instant Pre-Compiled Typefaces)
-    // ============================================================
-    const fontLoader = new THREE.FontLoader();
-    const fonts = {};
-
-    if (window.FONT_HELVETIKER_BOLD) {
-        fonts['helvetiker'] = fontLoader.parse(window.FONT_HELVETIKER_BOLD);
-    }
-    if (window.FONT_OPTIMER_BOLD) {
-        fonts['optimer'] = fontLoader.parse(window.FONT_OPTIMER_BOLD);
-    }
-
-    function getActiveFont() {
-        return fonts[currentFontKey] || fonts['helvetiker'];
-    }
-
-    // ============================================================
-    // 4. PBR MATERIAL FACTORY
+    // 3. PBR MATERIAL FACTORY
     // ============================================================
     function getBaseMaterial() {
         const col = new THREE.Color(currentColor);
@@ -250,188 +223,466 @@ document.addEventListener('DOMContentLoaded', () => {
                 emissiveIntensity: 0.18
             });
         }
-        // Standard Matte PLA
         return new THREE.MeshStandardMaterial({
             color: col,
-            roughness: 0.65,
-            metalness: 0.05
-        });
-    }
-
-    function getLegoAccentMaterial() {
-        return new THREE.MeshStandardMaterial({
-            color: 0xE5C158, // Vibrant LEGO Yellow
-            roughness: 0.40,
-            metalness: 0.05
-        });
-    }
-
-    function getTextMaterial() {
-        // High contrast crisp white or dark depending on base color
-        const isYellow = currentColor === '#E5C158';
-        const textColor = isYellow ? 0x111111 : 0xFFFFFF;
-        return new THREE.MeshStandardMaterial({
-            color: textColor,
-            roughness: 0.35,
-            metalness: 0.05
+            roughness: 0.38,
+            metalness: 0.08
         });
     }
 
     // ============================================================
-    // 5. PARAMETRIC SOLID CAD GEOMETRY GENERATORS
+    // 4. HIGH-PRECISION 2D VECTOR CONTOUR TRACER & CHAIKIN SMOOTHING
     // ============================================================
+    function chaikinSmooth(pts, iterations = 2) {
+        if (!pts || pts.length < 3) return pts || [];
+        let current = pts;
+        for (let it = 0; it < iterations; it++) {
+            const next = [];
+            const len = current.length;
+            for (let i = 0; i < len; i++) {
+                const p0 = current[i];
+                const p1 = current[(i + 1) % len];
+                next.push({
+                    x: 0.75 * p0.x + 0.25 * p1.x,
+                    y: 0.75 * p0.y + 0.25 * p1.y
+                });
+                next.push({
+                    x: 0.25 * p0.x + 0.75 * p1.x,
+                    y: 0.25 * p0.y + 0.75 * p1.y
+                });
+            }
+            current = next;
+        }
+        return current;
+    }
 
-    // --- Helper: Compute Text 2D Shapes & Dimensions ---
-    function getTextShapesAndBounds(text, size) {
-        const font = getActiveFont();
-        if (!font) return { shapes: [], bounds: { minX: -20, maxX: 20, minY: -5, maxY: 15, width: 40, height: 20, centerY: 5 } };
+    function simplifyPoly(pts, epsilon = 1.0) {
+        if (!pts || pts.length <= 2) return pts || [];
+        let maxDist = 0, index = 0;
+        const start = pts[0], end = pts[pts.length - 1];
+        const dx = end.x - start.x, dy = end.y - start.y;
+        const lenSq = dx * dx + dy * dy;
 
-        const shapes = font.generateShapes(text, size);
-        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
-
-        shapes.forEach(shape => {
-            const pts = shape.getPoints();
-            pts.forEach(pt => {
-                if (pt.x < minX) minX = pt.x;
-                if (pt.x > maxX) maxX = pt.x;
-                if (pt.y < minY) minY = pt.y;
-                if (pt.y > maxY) maxY = pt.y;
-            });
-        });
-
-        if (!isFinite(minX)) {
-            minX = -20; maxX = 20; minY = -5; maxY = 15;
+        for (let i = 1; i < pts.length - 1; i++) {
+            let dist = 0;
+            if (lenSq === 0) {
+                dist = Math.hypot(pts[i].x - start.x, pts[i].y - start.y);
+            } else {
+                const t = Math.max(0, Math.min(1, ((pts[i].x - start.x) * dx + (pts[i].y - start.y) * dy) / lenSq));
+                dist = Math.hypot(pts[i].x - (start.x + t * dx), pts[i].y - (start.y + t * dy));
+            }
+            if (dist > maxDist) {
+                maxDist = dist;
+                index = i;
+            }
         }
 
-        const width = maxX - minX;
-        const height = maxY - minY;
-        const centerY = (minY + maxY) / 2;
-
-        return { shapes, bounds: { minX, maxX, minY, maxY, width, height, centerY } };
+        if (maxDist > epsilon) {
+            const left = simplifyPoly(pts.slice(0, index + 1), epsilon);
+            const right = simplifyPoly(pts.slice(index), epsilon);
+            return left.slice(0, left.length - 1).concat(right);
+        }
+        return [start, end];
     }
 
-    // --- Model 1: LEGO Keychain.scad ---
+    // High-Resolution Multi-Contour Boundary Follower
+    function extractTextContours(text, fontStr) {
+        const W = 2200;
+        const H = 600;
+        const cvs = document.createElement('canvas');
+        cvs.width = W;
+        cvs.height = H;
+        const ctx = cvs.getContext('2d', { willReadFrequently: true });
+
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = `italic 900 160px ${fontStr}`;
+        ctx.fillText(text, W / 2, H / 2);
+
+        const imgData = ctx.getImageData(0, 0, W, H);
+        const data = imgData.data;
+
+        // 1. Find tight bounding box
+        let minX = W, maxX = 0, minY = H, maxY = 0;
+        for (let y = 0; y < H; y++) {
+            const rowOffset = y * W;
+            for (let x = 0; x < W; x++) {
+                if (data[(rowOffset + x) * 4 + 3] > 80) {
+                    if (x < minX) minX = x;
+                    if (x > maxX) maxX = x;
+                    if (y < minY) minY = y;
+                    if (y > maxY) maxY = y;
+                }
+            }
+        }
+
+        if (minX >= maxX || minY >= maxY) {
+            return { paths: [], bounds: { minX: 0, maxX: 100, minY: 0, maxY: 30 } };
+        }
+
+        minX = Math.max(1, minX - 4);
+        maxX = Math.min(W - 2, maxX + 4);
+        minY = Math.max(1, minY - 4);
+        maxY = Math.min(H - 2, maxY + 4);
+
+        const isSolid = (x, y) => {
+            if (x < 0 || x >= W || y < 0 || y >= H) return false;
+            return data[(y * W + x) * 4 + 3] > 110;
+        };
+
+        const visited = new Uint8Array(W * H);
+        const dx = [-1,  0,  1, 1, 1, 0, -1, -1];
+        const dy = [-1, -1, -1, 0, 1, 1,  1,  0];
+
+        const rawContours = [];
+
+        for (let y = minY; y <= maxY; y++) {
+            for (let x = minX; x <= maxX; x++) {
+                const idx = y * W + x;
+                if (visited[idx]) continue;
+
+                const solid = isSolid(x, y);
+                const prevSolid = isSolid(x - 1, y);
+
+                if ((solid && !prevSolid) || (!solid && prevSolid)) {
+                    // Follow boundary
+                    const startX = solid ? x : x - 1;
+                    const prevX = solid ? x - 1 : x;
+                    const pts = [];
+                    let curX = startX, curY = y;
+                    let pX = prevX, pY = y;
+                    let steps = 0;
+                    const maxSteps = (maxX - minX + 10) * (maxY - minY + 10);
+
+                    while (steps++ < maxSteps) {
+                        pts.push({ x: curX, y: curY });
+                        visited[curY * W + curX] = 1;
+
+                        let startDir = 0;
+                        for (let i = 0; i < 8; i++) {
+                            if (curX + dx[i] === pX && curY + dy[i] === pY) {
+                                startDir = (i + 1) % 8;
+                                break;
+                            }
+                        }
+
+                        let found = false;
+                        for (let i = 0; i < 8; i++) {
+                            const dir = (startDir + i) % 8;
+                            const nx = curX + dx[dir];
+                            const ny = curY + dy[dir];
+                            if (isSolid(nx, ny)) {
+                                pX = curX + dx[(dir + 7) % 8];
+                                pY = curY + dy[(dir + 7) % 8];
+                                curX = nx;
+                                curY = ny;
+                                found = true;
+                                break;
+                            }
+                        }
+                        if (!found || (curX === startX && curY === y)) break;
+                    }
+
+                    if (pts.length >= 8) {
+                        rawContours.push(pts);
+                    }
+                }
+            }
+        }
+
+        // Scale to physical millimeters (target text height: 18mm)
+        const textH = Math.max(10, maxY - minY);
+        const scale = 18.0 / textH; // mm per pixel
+        const CLIPPER_SCALE = 1000;
+        const midX = (minX + maxX) / 2;
+        const midY = (minY + maxY) / 2;
+
+        const clipperPaths = [];
+
+        rawContours.forEach(pts => {
+            // Simplify with epsilon 1.2px
+            const simp = simplifyPoly(pts, 1.2);
+            if (simp.length < 4) return;
+            // Chaikin smooth to make curves silky smooth
+            const smoothed = chaikinSmooth(simp, 2);
+
+            const cPath = smoothed.map(p => ({
+                X: Math.round((p.x - midX) * scale * CLIPPER_SCALE),
+                Y: Math.round(-(p.y - midY) * scale * CLIPPER_SCALE) // Invert Y for 3D coordinate system
+            }));
+
+            if (cPath.length >= 3) {
+                clipperPaths.push(cPath);
+            }
+        });
+
+        return {
+            paths: clipperPaths,
+            scale: scale,
+            bounds: {
+                width: (maxX - minX) * scale,
+                height: (maxY - minY) * scale
+            }
+        };
+    }
+
+    // Convert Clipper ExPolygons to THREE.Shape array
+    function exPolygonsToThreeShapes(exPolygons, invScale = 0.001) {
+        const shapes = [];
+        if (!exPolygons || !exPolygons.length) return shapes;
+
+        exPolygons.forEach(exp => {
+            if (!exp.outer || exp.outer.length < 3) return;
+            const shape = new THREE.Shape();
+            const outer = exp.outer;
+            shape.moveTo(outer[0].X * invScale, outer[0].Y * invScale);
+            for (let i = 1; i < outer.length; i++) {
+                shape.lineTo(outer[i].X * invScale, outer[i].Y * invScale);
+            }
+            shape.closePath();
+
+            if (exp.holes && exp.holes.length > 0) {
+                exp.holes.forEach(hole => {
+                    if (!hole || hole.length < 3) return;
+                    const holePath = new THREE.Path();
+                    holePath.moveTo(hole[0].X * invScale, hole[0].Y * invScale);
+                    for (let i = 1; i < hole.length; i++) {
+                        holePath.lineTo(hole[i].X * invScale, hole[i].Y * invScale);
+                    }
+                    holePath.closePath();
+                    shape.holes.push(holePath);
+                });
+            }
+            shapes.push(shape);
+        });
+        return shapes;
+    }
+
+    // ============================================================
+    // 5. AUTHENTIC 4-LAYER 6.0mm LEGO KEYCHAIN GENERATOR (Clipper CAD)
+    // Layer 1: Red Base (0.0mm -> 3.2mm, Height = 3.2mm)
+    // Layer 2: Yellow Accent (3.2mm -> 4.2mm, Height = 1.0mm)
+    // Layer 3: Black Outline (4.2mm -> 5.2mm, Height = 1.0mm)
+    // Layer 4: White Raised Letters (5.2mm -> 6.0mm, Height = 0.8mm)
+    // ============================================================
     function buildLegoKeychain(params) {
         const group = new THREE.Group();
         const text = (params.text || 'LEGO').trim() || 'LEGO';
-        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
 
-        const pad = Math.max(3.5, params.outlineSize);
-        const holeSize = Math.max(3.0, params.holeSize);
-        const holeRadius = holeSize / 2;
-        const holeOuterRadius = holeRadius + pad;
+        if (typeof ClipperLib === 'undefined') {
+            console.error('ClipperLib not loaded');
+            return group;
+        }
 
-        // Eyelet center clearly protruding on the left
-        const eyeletDist = holeOuterRadius + pad * 0.7 + Math.max(0, params.holeX);
-        const eyeletX = bounds.minX - eyeletDist;
-        const eyeletY = bounds.centerY + params.holeY;
+        const fontStr = `${currentFont}, 'Fredoka', 'Lilita One', 'Montserrat', sans-serif`;
+        const { paths: textPaths } = extractTextContours(text, fontStr);
 
-        // Outer pill envelope around text
-        const pillLeftX = bounds.minX - pad * 0.6;
-        const pillRightX = bounds.maxX + pad * 0.8;
-        const pillH = bounds.height + pad * 2.2;
-        const pillR = pillH / 2;
-        const pillTopY = bounds.centerY + pillR;
-        const pillBotY = bounds.centerY - pillR;
+        if (!textPaths || textPaths.length === 0) {
+            return group;
+        }
 
-        // 1. Unified Base Plate Contour (Solid Red)
-        const baseShape = new THREE.Shape();
-        baseShape.moveTo(eyeletX, eyeletY + holeOuterRadius);
-        // Outer arc around eyelet (from top through left to bottom)
-        baseShape.absarc(eyeletX, eyeletY, holeOuterRadius, Math.PI / 2, -Math.PI / 2, false);
-        // Tangent line to bottom of pill
-        baseShape.lineTo(pillLeftX, pillBotY);
-        // Across bottom to right pill cap
-        baseShape.lineTo(pillRightX - pillR, pillBotY);
-        // Right rounded cap
-        baseShape.absarc(pillRightX - pillR, bounds.centerY, pillR, -Math.PI / 2, Math.PI / 2, false);
-        // Across top to left
-        baseShape.lineTo(pillLeftX, pillTopY);
-        // Tangent back to eyelet top
-        baseShape.lineTo(eyeletX, eyeletY + holeOuterRadius);
+        const CLIPPER_SCALE = 1000;
+        const invScale = 1 / CLIPPER_SCALE;
 
-        // Through-Hole for Keychain Loop
+        // Clean & simplify input paths
+        const cleanTextPaths = ClipperLib.Clipper.CleanPolygons(textPaths, 0.1 * CLIPPER_SCALE);
+
+        // ------------------------------------------------------------
+        // 1. RED BASE PLATE (0.0mm -> 3.2mm, Height = 3.2mm)
+        // ------------------------------------------------------------
+        const redOutlineMm = Math.max(4.0, (params.outlineSize || 4.5) * 1.15);
+        const coRed = new ClipperLib.ClipperOffset(2.0, 0.25);
+        coRed.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        const redOffsetPaths = new ClipperLib.Paths();
+        coRed.Execute(redOffsetPaths, redOutlineMm * CLIPPER_SCALE);
+
+        // Find bounding box of red offset to place keychain eyelet ring
+        let redMinX = Infinity, redMaxX = -Infinity, redMinY = Infinity, redMaxY = -Infinity;
+        redOffsetPaths.forEach(path => {
+            path.forEach(pt => {
+                if (pt.X < redMinX) redMinX = pt.X;
+                if (pt.X > redMaxX) redMaxX = pt.X;
+                if (pt.Y < redMinY) redMinY = pt.Y;
+                if (pt.Y > redMaxY) redMaxY = pt.Y;
+            });
+        });
+
+        const redCenterY = (redMinY + redMaxY) / 2;
+        const holeDiameterMm = Math.max(3.5, params.holeSize || 5.0);
+        const eyeletOuterRadiusMm = (holeDiameterMm / 2) + 2.8;
+        const eyeletOuterR = eyeletOuterRadiusMm * CLIPPER_SCALE;
+        const eyeletInnerR = (holeDiameterMm / 2) * CLIPPER_SCALE;
+
+        const eyeletX = redMinX - (eyeletOuterR * 0.70) + ((params.holeX || 3.0) * CLIPPER_SCALE * 0.5);
+        const eyeletY = redCenterY + ((params.holeY || 0.0) * CLIPPER_SCALE * 0.5);
+
+        // Create 48-segment circular eyelet
+        const eyeletOuterCircle = [];
+        const numEyeletPts = 48;
+        for (let i = 0; i < numEyeletPts; i++) {
+            const angle = (i / numEyeletPts) * Math.PI * 2;
+            eyeletOuterCircle.push({
+                X: Math.round(eyeletX + Math.cos(angle) * eyeletOuterR),
+                Y: Math.round(eyeletY + Math.sin(angle) * eyeletOuterR)
+            });
+        }
+
+        // Mathematical Boolean Union of Text Outline + Keychain Ring
+        const redClipper = new ClipperLib.Clipper();
+        redClipper.AddPaths(redOffsetPaths, ClipperLib.PolyType.ptSubject, true);
+        redClipper.AddPath(eyeletOuterCircle, ClipperLib.PolyType.ptClip, true);
+        const redPolyTree = new ClipperLib.PolyTree();
+        redClipper.Execute(ClipperLib.ClipType.ctUnion, redPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+        const redExPolygons = ClipperLib.JS.PolyTreeToExPolygons(redPolyTree);
+
+        const redShapes = exPolygonsToThreeShapes(redExPolygons, invScale);
+
+        // Add 3D Keychain Through-Hole to the red base
         const holePath = new THREE.Path();
-        holePath.absarc(eyeletX, eyeletY, holeRadius, 0, Math.PI * 2, true);
-        baseShape.holes.push(holePath);
+        holePath.absarc(eyeletX * invScale, eyeletY * invScale, eyeletInnerR * invScale, 0, Math.PI * 2, true);
+        if (redShapes.length > 0) {
+            redShapes[0].holes.push(holePath);
+        }
 
-        // Extrude Base Plate
-        const baseGeo = new THREE.ExtrudeGeometry(baseShape, {
-            depth: params.baseThick,
-            bevelEnabled: true,
-            bevelThickness: 0.45,
-            bevelSize: 0.4,
-            bevelSegments: 3
+        if (redShapes.length > 0) {
+            const redGeo = new THREE.ExtrudeGeometry(redShapes, {
+                depth: 3.2,
+                bevelEnabled: true,
+                bevelThickness: 0.25,
+                bevelSize: 0.25,
+                bevelSegments: 3
+            });
+            const redMesh = new THREE.Mesh(redGeo, getBaseMaterial()); // Ruby Red (User Selected)
+            redMesh.position.z = 0.0;
+            redMesh.castShadow = true;
+            redMesh.receiveShadow = true;
+            group.add(redMesh);
+        }
+
+        // ------------------------------------------------------------
+        // 2. YELLOW ACCENT BRIM (3.2mm -> 4.2mm, Height = 1.0mm)
+        // ------------------------------------------------------------
+        const yellowOutlineMm = Math.max(2.4, redOutlineMm - 1.8);
+        const coYellow = new ClipperLib.ClipperOffset(2.0, 0.25);
+        coYellow.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        const yellowPolyTree = new ClipperLib.PolyTree();
+        coYellow.Execute(yellowPolyTree, yellowOutlineMm * CLIPPER_SCALE);
+        const yellowExPolygons = ClipperLib.JS.PolyTreeToExPolygons(yellowPolyTree);
+        const yellowShapes = exPolygonsToThreeShapes(yellowExPolygons, invScale);
+
+        if (yellowShapes.length > 0) {
+            const yellowGeo = new THREE.ExtrudeGeometry(yellowShapes, {
+                depth: 1.0,
+                bevelEnabled: true,
+                bevelThickness: 0.15,
+                bevelSize: 0.15,
+                bevelSegments: 2
+            });
+            const yellowMat = new THREE.MeshStandardMaterial({
+                color: 0xFFD700, // Vibrant LEGO Yellow
+                roughness: 0.35,
+                metalness: 0.05
+            });
+            const yellowMesh = new THREE.Mesh(yellowGeo, yellowMat);
+            yellowMesh.position.z = 3.2; // EXACTLY 3.2mm Elevation!
+            yellowMesh.castShadow = true;
+            group.add(yellowMesh);
+        }
+
+        // ------------------------------------------------------------
+        // 3. BLACK OUTLINE LAYER (4.2mm -> 5.2mm, Height = 1.0mm)
+        // ------------------------------------------------------------
+        const blackOutlineMm = Math.max(1.1, yellowOutlineMm - 1.4);
+        const coBlack = new ClipperLib.ClipperOffset(2.0, 0.25);
+        coBlack.AddPaths(cleanTextPaths, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+        const blackPolyTree = new ClipperLib.PolyTree();
+        coBlack.Execute(blackPolyTree, blackOutlineMm * CLIPPER_SCALE);
+        const blackExPolygons = ClipperLib.JS.PolyTreeToExPolygons(blackPolyTree);
+        const blackShapes = exPolygonsToThreeShapes(blackExPolygons, invScale);
+
+        if (blackShapes.length > 0) {
+            const blackGeo = new THREE.ExtrudeGeometry(blackShapes, {
+                depth: 1.0,
+                bevelEnabled: true,
+                bevelThickness: 0.15,
+                bevelSize: 0.15,
+                bevelSegments: 2
+            });
+            const blackMat = new THREE.MeshStandardMaterial({
+                color: 0x141414, // Solid Jet Black
+                roughness: 0.45,
+                metalness: 0.10
+            });
+            const blackMesh = new THREE.Mesh(blackGeo, blackMat);
+            blackMesh.position.z = 4.2; // EXACTLY 4.2mm Elevation!
+            blackMesh.castShadow = true;
+            group.add(blackMesh);
+        }
+
+        // ------------------------------------------------------------
+        // 4. WHITE RAISED LETTERS (5.2mm -> 6.0mm, Height = 0.8mm)
+        // ------------------------------------------------------------
+        const textClipper = new ClipperLib.Clipper();
+        textClipper.AddPaths(cleanTextPaths, ClipperLib.PolyType.ptSubject, true);
+        const textPolyTree = new ClipperLib.PolyTree();
+        textClipper.Execute(ClipperLib.ClipType.ctUnion, textPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+        const whiteExPolygons = ClipperLib.JS.PolyTreeToExPolygons(textPolyTree);
+        const whiteShapes = exPolygonsToThreeShapes(whiteExPolygons, invScale);
+
+        if (whiteShapes.length > 0) {
+            const whiteGeo = new THREE.ExtrudeGeometry(whiteShapes, {
+                depth: 0.8,
+                bevelEnabled: true,
+                bevelThickness: 0.12,
+                bevelSize: 0.12,
+                bevelSegments: 2
+            });
+            const whiteMat = new THREE.MeshStandardMaterial({
+                color: 0xFFFFFF, // Pure Solid White
+                roughness: 0.30,
+                metalness: 0.05
+            });
+            const whiteMesh = new THREE.Mesh(whiteGeo, whiteMat);
+            whiteMesh.position.z = 5.2; // EXACTLY 5.2mm Elevation! Total = 6.0mm
+            whiteMesh.castShadow = true;
+            group.add(whiteMesh);
+        }
+
+        // Auto-center the entire keychain at origin (0, 0)
+        const bbox = new THREE.Box3().setFromObject(group);
+        const center = new THREE.Vector3();
+        bbox.getCenter(center);
+        group.children.forEach(child => {
+            child.position.x -= center.x;
+            child.position.y -= center.y;
         });
-        const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
-        baseMesh.castShadow = true;
-        baseMesh.receiveShadow = true;
-        group.add(baseMesh);
-
-        // 2. Yellow LEGO Accent Inset (Rounded Box strictly around text, NOT touching eyelet)
-        const aPadX = 3.5;
-        const aPadY = 3.2;
-        const aLeft = bounds.minX - aPadX;
-        const aRight = bounds.maxX + aPadX;
-        const aTop = bounds.maxY + aPadY;
-        const aBot = bounds.minY - aPadY;
-        const aCornerR = Math.min(6, (aTop - aBot) / 3);
-
-        const accentShape = new THREE.Shape();
-        accentShape.moveTo(aLeft + aCornerR, aBot);
-        accentShape.lineTo(aRight - aCornerR, aBot);
-        accentShape.absarc(aRight - aCornerR, aBot + aCornerR, aCornerR, -Math.PI / 2, 0, false);
-        accentShape.lineTo(aRight, aTop - aCornerR);
-        accentShape.absarc(aRight - aCornerR, aTop - aCornerR, aCornerR, 0, Math.PI / 2, false);
-        accentShape.lineTo(aLeft + aCornerR, aTop);
-        accentShape.absarc(aLeft + aCornerR, aTop - aCornerR, aCornerR, Math.PI / 2, Math.PI, false);
-        accentShape.lineTo(aLeft, aBot + aCornerR);
-        accentShape.absarc(aLeft + aCornerR, aBot + aCornerR, aCornerR, Math.PI, -Math.PI / 2, false);
-
-        const accentGeo = new THREE.ExtrudeGeometry(accentShape, {
-            depth: 0.7,
-            bevelEnabled: true,
-            bevelThickness: 0.25,
-            bevelSize: 0.25,
-            bevelSegments: 2
-        });
-        const accentMesh = new THREE.Mesh(accentGeo, getLegoAccentMaterial());
-        accentMesh.position.z = params.baseThick;
-        accentMesh.castShadow = true;
-        group.add(accentMesh);
-
-        // 3. Raised 3D Letters (White with beveled edges)
-        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
-            depth: params.letterThick,
-            bevelEnabled: true,
-            bevelThickness: 0.35,
-            bevelSize: 0.25,
-            bevelSegments: 3
-        });
-        const letterMesh = new THREE.Mesh(letterGeo, getTextMaterial());
-        letterMesh.position.z = params.baseThick + 0.7;
-        letterMesh.castShadow = true;
-        group.add(letterMesh);
-
-        // Center entire group at origin (0, 0, 0)
-        const totalMinX = eyeletX - holeOuterRadius;
-        const totalMaxX = pillRightX;
-        group.position.set(-(totalMinX + totalMaxX) / 2, -bounds.centerY, 0);
 
         return group;
     }
 
-    // --- Model 2: Customizable Name Tag.scad ---
+    // ============================================================
+    // 6. CUSTOMIZABLE NAME TAG GENERATOR
+    // ============================================================
     function buildNameTag(params) {
         const group = new THREE.Group();
         const text = (params.text || 'NAME').trim() || 'NAME';
-        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
 
-        const padX = 14 + params.outlineSize * 1.8;
-        const padY = 8 + params.outlineSize * 1.4;
-        const width = Math.max(70, bounds.width + padX * 2);
-        const height = Math.max(34, bounds.height + padY * 2);
-        const cornerR = 6;
+        const fontStyle = `bold 64px ${currentFont}, 'Montserrat', sans-serif`;
+        const tempCvs = document.createElement('canvas');
+        const tempCtx = tempCvs.getContext('2d');
+        tempCtx.font = fontStyle;
+        const metrics = tempCtx.measureText(text);
+        const textWidth = Math.max(70, metrics.width);
+
+        const padX = 20 + params.outlineSize * 2.5;
+        const padY = 12 + params.outlineSize * 2;
+        const scale = 0.28;
+
+        const width = (textWidth + padX * 2) * scale;
+        const height = (70 + padY * 2) * scale;
+        const cornerR = 5;
 
         const w2 = width / 2;
         const h2 = height / 2;
@@ -448,10 +699,10 @@ document.addEventListener('DOMContentLoaded', () => {
         shape.lineTo(-w2, -h2 + cornerR);
         shape.absarc(-w2 + cornerR, -h2 + cornerR, cornerR, Math.PI, -Math.PI / 2, false);
 
-        // Oval Lanyard Slot Hole (Top Center)
-        const slotW = 14;
-        const slotH = 4;
-        const slotY = h2 - 6;
+        // Lanyard Slot
+        const slotW = 12;
+        const slotH = 3.5;
+        const slotY = h2 - 5.5;
         const slotR = slotH / 2;
         const slotPath = new THREE.Path();
         slotPath.moveTo(-slotW / 2 + slotR, slotY - slotR);
@@ -462,204 +713,72 @@ document.addEventListener('DOMContentLoaded', () => {
         shape.holes.push(slotPath);
 
         const baseGeo = new THREE.ExtrudeGeometry(shape, {
-            depth: params.baseThick,
+            depth: 3.2,
             bevelEnabled: true,
-            bevelThickness: 0.5,
-            bevelSize: 0.5,
+            bevelThickness: 0.35,
+            bevelSize: 0.35,
             bevelSegments: 3
         });
         const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
+        baseMesh.position.z = 0;
         baseMesh.castShadow = true;
         baseMesh.receiveShadow = true;
         group.add(baseMesh);
 
-        // Raised Text
-        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
-            depth: params.letterThick,
-            bevelEnabled: true,
-            bevelThickness: 0.3,
-            bevelSize: 0.2,
-            bevelSegments: 2
+        // Trace Letters
+        const fontStr = `${currentFont}, 'Montserrat', sans-serif`;
+        const { paths: textPaths } = extractTextContours(text, fontStr);
+
+        if (textPaths && textPaths.length > 0) {
+            const textClipper = new ClipperLib.Clipper();
+            textClipper.AddPaths(textPaths, ClipperLib.PolyType.ptSubject, true);
+            const textPolyTree = new ClipperLib.PolyTree();
+            textClipper.Execute(ClipperLib.ClipType.ctUnion, textPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+            const letterExPolygons = ClipperLib.JS.PolyTreeToExPolygons(textPolyTree);
+            const letterShapes = exPolygonsToThreeShapes(letterExPolygons, 0.001);
+
+            if (letterShapes.length > 0) {
+                const letterGeo = new THREE.ExtrudeGeometry(letterShapes, {
+                    depth: 2.8,
+                    bevelEnabled: true,
+                    bevelThickness: 0.20,
+                    bevelSize: 0.20,
+                    bevelSegments: 2
+                });
+                const letterMat = new THREE.MeshStandardMaterial({
+                    color: 0xFFFFFF,
+                    roughness: 0.35,
+                    metalness: 0.05
+                });
+                const letterMesh = new THREE.Mesh(letterGeo, letterMat);
+                letterMesh.position.z = 3.2; // Placed on top of 3.2mm base
+                letterMesh.castShadow = true;
+                group.add(letterMesh);
+            }
+        }
+
+        const bbox = new THREE.Box3().setFromObject(group);
+        const center = new THREE.Vector3();
+        bbox.getCenter(center);
+        group.children.forEach(child => {
+            child.position.x -= center.x;
+            child.position.y -= center.y;
         });
-        const letterMesh = new THREE.Mesh(letterGeo, getTextMaterial());
-        const textCenterX = (bounds.minX + bounds.maxX) / 2;
-        const textCenterY = (bounds.minY + bounds.maxY) / 2;
-        letterMesh.position.set(-textCenterX, -textCenterY - 2.5, params.baseThick);
-        letterMesh.castShadow = true;
-        group.add(letterMesh);
-
-        return group;
-    }
-
-    // --- Model 3: Desk Stand Trophy.scad ---
-    function buildDeskStand(params) {
-        const group = new THREE.Group();
-        const text = (params.text || 'TROPHY').trim() || 'TROPHY';
-        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
-
-        const plaqueW = Math.max(75, bounds.width + 30);
-        const plaqueH = Math.max(42, bounds.height + 24);
-        const footW = plaqueW + 20;
-        const footD = 34;
-        const footH = 8;
-
-        // 1. Weighted Foot Pedestal
-        const footGeo = new THREE.BoxGeometry(footW, footD, footH);
-        const footMesh = new THREE.Mesh(footGeo, getBaseMaterial());
-        footMesh.position.set(0, 0, footH / 2);
-        footMesh.castShadow = true;
-        footMesh.receiveShadow = true;
-        group.add(footMesh);
-
-        // 2. Upright Trophy Plaque with Beveled Arch
-        const pw2 = plaqueW / 2;
-        const pShape = new THREE.Shape();
-        pShape.moveTo(-pw2, 0);
-        pShape.lineTo(pw2, 0);
-        pShape.lineTo(pw2 - 4, plaqueH - 8);
-        pShape.absarc(0, plaqueH - 8, pw2 - 4, 0, Math.PI, false);
-        pShape.lineTo(-pw2, 0);
-
-        const plaqueGeo = new THREE.ExtrudeGeometry(pShape, {
-            depth: params.baseThick + 1.5,
-            bevelEnabled: true,
-            bevelThickness: 0.6,
-            bevelSize: 0.6,
-            bevelSegments: 3
-        });
-        const plaqueMesh = new THREE.Mesh(plaqueGeo, getBaseMaterial());
-        // Stand upright tilted slightly back
-        plaqueMesh.rotation.x = Math.PI / 2 - 0.14;
-        plaqueMesh.position.set(0, -2, footH - 1);
-        plaqueMesh.castShadow = true;
-        group.add(plaqueMesh);
-
-        // 3. Raised 3D Letters (Silk Gold Look)
-        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
-            depth: params.letterThick,
-            bevelEnabled: true,
-            bevelThickness: 0.35,
-            bevelSize: 0.25,
-            bevelSegments: 2
-        });
-        const goldMat = new THREE.MeshStandardMaterial({
-            color: 0xFFD700,
-            roughness: 0.25,
-            metalness: 0.75
-        });
-        const letterMesh = new THREE.Mesh(letterGeo, goldMat);
-        const textCenterX = (bounds.minX + bounds.maxX) / 2;
-        const textCenterY = (bounds.minY + bounds.maxY) / 2;
-        letterMesh.position.set(-textCenterX, (plaqueH / 2) - textCenterY - 2, params.baseThick + 1.5);
-        letterMesh.castShadow = true;
-        plaqueMesh.add(letterMesh);
-
-        // Center trophy visually at origin
-        group.position.set(0, 4, -plaqueH * 0.35);
-
-        return group;
-    }
-
-    // --- Model 4: Badge Plaque Shield.scad ---
-    function buildBadgeShield(params) {
-        const group = new THREE.Group();
-        const text = (params.text || 'SHIELD').trim() || 'SHIELD';
-        const { shapes: fontShapes, bounds } = getTextShapesAndBounds(text, params.textSize);
-
-        const shieldW = Math.max(68, bounds.width + 24 + params.outlineSize * 2);
-        const shieldH = shieldW * 1.25;
-        const sw2 = shieldW / 2;
-
-        // Shield Contour
-        const sShape = new THREE.Shape();
-        sShape.moveTo(-sw2, shieldH / 2);
-        sShape.lineTo(0, shieldH / 2 + 5);
-        sShape.lineTo(sw2, shieldH / 2);
-        sShape.quadraticCurveTo(sw2, -shieldH * 0.1, 0, -shieldH / 2);
-        sShape.quadraticCurveTo(-sw2, -shieldH * 0.1, -sw2, shieldH / 2);
-
-        // Mounting Hole
-        const holePath = new THREE.Path();
-        holePath.absarc(0, shieldH / 2 - 5, 2.5, 0, Math.PI * 2, true);
-        sShape.holes.push(holePath);
-
-        const baseGeo = new THREE.ExtrudeGeometry(sShape, {
-            depth: params.baseThick,
-            bevelEnabled: true,
-            bevelThickness: 0.55,
-            bevelSize: 0.55,
-            bevelSegments: 3
-        });
-        const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
-        baseMesh.castShadow = true;
-        baseMesh.receiveShadow = true;
-        group.add(baseMesh);
-
-        // Raised Shield Border Rim
-        const rimShape = new THREE.Shape();
-        const rScale = 0.88;
-        const rsw2 = sw2 * rScale;
-        const rsh = shieldH * rScale;
-        rimShape.moveTo(-rsw2, rsh / 2);
-        rimShape.lineTo(0, rsh / 2 + 4);
-        rimShape.lineTo(rsw2, rsh / 2);
-        rimShape.quadraticCurveTo(rsw2, -rsh * 0.1, 0, -rsh / 2);
-        rimShape.quadraticCurveTo(-rsw2, -rsh * 0.1, -rsw2, rsh / 2);
-
-        const innerHole = new THREE.Path();
-        const iScale = 0.79;
-        const isw2 = sw2 * iScale;
-        const ish = shieldH * iScale;
-        innerHole.moveTo(-isw2, ish / 2);
-        innerHole.lineTo(0, ish / 2 + 3);
-        innerHole.lineTo(isw2, ish / 2);
-        innerHole.quadraticCurveTo(isw2, -ish * 0.1, 0, -ish / 2);
-        innerHole.quadraticCurveTo(-isw2, -ish * 0.1, -isw2, ish / 2);
-        rimShape.holes.push(innerHole);
-
-        const rimGeo = new THREE.ExtrudeGeometry(rimShape, {
-            depth: 0.7,
-            bevelEnabled: true,
-            bevelThickness: 0.25,
-            bevelSize: 0.25,
-            bevelSegments: 2
-        });
-        const rimMat = new THREE.MeshStandardMaterial({ color: 0xE5C158, roughness: 0.35, metalness: 0.5 });
-        const rimMesh = new THREE.Mesh(rimGeo, rimMat);
-        rimMesh.position.z = params.baseThick;
-        rimMesh.castShadow = true;
-        group.add(rimMesh);
-
-        // Raised Text
-        const letterGeo = new THREE.ExtrudeGeometry(fontShapes, {
-            depth: params.letterThick,
-            bevelEnabled: true,
-            bevelThickness: 0.35,
-            bevelSize: 0.25,
-            bevelSegments: 2
-        });
-        const letterMesh = new THREE.Mesh(letterGeo, getTextMaterial());
-        const textCenterX = (bounds.minX + bounds.maxX) / 2;
-        const textCenterY = (bounds.minY + bounds.maxY) / 2;
-        letterMesh.position.set(-textCenterX, -textCenterY - 2, params.baseThick + 0.4);
-        letterMesh.castShadow = true;
-        group.add(letterMesh);
 
         return group;
     }
 
     // ============================================================
-    // 6. MODEL DISPATCHER & RENDER TRIGGER
+    // 7. MODEL DISPATCHER & RENDER TRIGGER
     // ============================================================
     function renderSolidModel() {
         if (spinner) spinner.style.display = 'flex';
 
-        // Read all current parameters
         const params = {
             text: inputName ? inputName.value.trim() : 'LEGO',
             textSize: elTextSizeNum ? parseFloat(elTextSizeNum.value) : 18,
-            baseThick: elBaseThickNum ? parseFloat(elBaseThickNum.value) : 1.5,
-            letterThick: inputThickness ? parseFloat(inputThickness.value) : 3.0,
+            baseThick: 3.2,
+            letterThick: 2.8,
             outlineSize: elOutlineNum ? parseFloat(elOutlineNum.value) : 4.5,
             holeSize: elHoleSizeNum ? parseFloat(elHoleSizeNum.value) : 5.0,
             holeX: elHoleXNum ? parseFloat(elHoleXNum.value) : 3.0,
@@ -667,10 +786,8 @@ document.addEventListener('DOMContentLoaded', () => {
             spaceWidth: elSpaceWidthNum ? parseFloat(elSpaceWidthNum.value) : 1.0
         };
 
-        // Remove previous model from scene
         if (currentModelGroup) {
             scene.remove(currentModelGroup);
-            // Dispose geometries and materials
             currentModelGroup.traverse(child => {
                 if (child.isMesh) {
                     if (child.geometry) child.geometry.dispose();
@@ -683,15 +800,10 @@ document.addEventListener('DOMContentLoaded', () => {
             currentModelGroup = null;
         }
 
-        // Build new Solid 3D CAD model
         if (currentTemplate === 'lego') {
             currentModelGroup = buildLegoKeychain(params);
-        } else if (currentTemplate === 'nametag') {
+        } else {
             currentModelGroup = buildNameTag(params);
-        } else if (currentTemplate === 'deskstand') {
-            currentModelGroup = buildDeskStand(params);
-        } else if (currentTemplate === 'badge') {
-            currentModelGroup = buildBadgeShield(params);
         }
 
         if (currentModelGroup) {
@@ -701,11 +813,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePricing(params);
 
         if (spinner) {
-            setTimeout(() => { spinner.style.display = 'none'; }, 80);
+            setTimeout(() => { spinner.style.display = 'none'; }, 60);
         }
     }
 
-    // Animation Loop
     function animate() {
         requestAnimationFrame(animate);
         controls.update();
@@ -714,20 +825,18 @@ document.addEventListener('DOMContentLoaded', () => {
     animate();
 
     // ============================================================
-    // 7. PRICING & WEIGHT CALCULATION
+    // 8. PRICING & WEIGHT CALCULATION
     // ============================================================
     function updatePricing(params) {
         const textLen = (params.text || 'LEGO').length;
-        const totalThick = params.baseThick + params.letterThick;
-        const volEst = Math.round(textLen * 1.8 * totalThick * (params.outlineSize * 0.4 + 1));
-        const estGrams = Math.max(12, Math.round(volEst * 0.28));
+        const estGrams = Math.max(14, Math.round(textLen * 3.8 + 6));
 
         let finishMul = 1.0;
         if (currentFinish === 'silk') finishMul = 1.25;
         if (currentFinish === 'satin') finishMul = 1.20;
         if (currentFinish === 'neon') finishMul = 1.30;
 
-        const baseFee = currentTemplate === 'deskstand' ? 450 : 250;
+        const baseFee = 280;
         const calculatedPrice = Math.round((baseFee + (estGrams * currentRate)) * finishMul);
 
         if (displayPrice) {
@@ -735,17 +844,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         if (displaySpecs) {
             const modelNames = {
-                lego: 'LEGO Keychain.scad',
-                nametag: 'Customizable Name Tag.scad',
-                deskstand: 'Desk Stand Trophy.scad',
-                badge: 'Badge Plaque Shield.scad'
+                lego: 'LEGO Keychain.scad (6.0mm 4-Layer)',
+                nametag: 'Customizable Name Tag.scad'
             };
-            displaySpecs.textContent = `${modelNames[currentTemplate]} • ${currentColorName} • ~${estGrams}g PLA • ${params.baseThick}mm Base`;
+            displaySpecs.textContent = `${modelNames[currentTemplate]} • ${currentColorName} • ~${estGrams}g PLA • 6.0mm Solid Height`;
         }
     }
 
     // ============================================================
-    // 8. STL EXPORT (Direct 3D Print File Download)
+    // 9. STL EXPORT (Direct 3D Print File Download)
     // ============================================================
     function downloadSTL() {
         if (!currentModelGroup || typeof THREE.STLExporter === 'undefined') {
@@ -759,7 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
         const textClean = (inputName ? inputName.value : 'model').trim().replace(/[^a-zA-Z0-9_-]/g, '_');
-        link.download = `${textClean}_${currentTemplate}_print_ready.stl`;
+        link.download = `${textClean}_${currentTemplate}_6mm_print_ready.stl`;
         link.click();
         URL.revokeObjectURL(link.href);
     }
@@ -769,13 +876,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // 9. OPENSCAD CODE GENERATOR & MODAL
+    // 10. OPENSCAD CODE GENERATOR & MODAL
     // ============================================================
     function generateOpenSCADCode() {
         const text = inputName ? inputName.value.trim() : 'LEGO';
-        const textSize = elTextSizeNum ? elTextSizeNum.value : '18';
-        const baseThick = elBaseThickNum ? elBaseThickNum.value : '1.5';
-        const letterThick = inputThickness ? inputThickness.value : '3.0';
         const outlineSize = elOutlineNum ? elOutlineNum.value : '4.5';
         const holeSize = elHoleSizeNum ? elHoleSizeNum.value : '5.0';
         const holeX = elHoleXNum ? elHoleXNum.value : '3.0';
@@ -784,113 +888,76 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentTemplate === 'lego') {
             return `// ============================================================
 // Parametric LEGO Keychain — Generated by Kira's Creation Studio
-// Compatible with OpenSCAD, MakerWorld & Bambu Studio
+// Total Height: 6.0 mm (4 Color Layers)
+// 0.0mm -> 3.2mm: Red Base
+// 3.2mm -> 4.2mm: Yellow Accent
+// 4.2mm -> 5.2mm: Black Outline
+// 5.2mm -> 6.0mm: White Raised Text
 // ============================================================
 
+$fn = 60;
 nome = "${text}";
-texto_tamanho = ${textSize};
-base_espessura = ${baseThick};
-letra_espessura = ${letterThick};
-borda_tamanho = ${outlineSize};
-buraco_diametro = ${holeSize};
-buraco_x = ${holeX};
-buraco_y = ${holeY};
-fonte = "Fredoka:style=Bold";
+tamanho = 20;
+fonte = "Liberation Sans:style=Bold Italic";
 
-module base_plate() {
+module text_2d() {
+    text(nome, size = tamanho, font = fonte, halign = "center", valign = "center");
+}
+
+eyelet_x = -len(nome) * tamanho * 0.38 - 8 - ${holeX};
+eyelet_y = ${holeY};
+eyelet_r_outer = 7.0;
+eyelet_r_inner = ${holeSize} / 2;
+
+// 1. Red Base (0.0mm -> 3.2mm, Height = 3.2mm)
+color("${currentColor}") linear_extrude(height = 3.2) {
     difference() {
         union() {
-            // Pill contour around text
-            offset(r = borda_tamanho) {
-                text(nome, size = texto_tamanho, font = fonte, halign = "center", valign = "center");
-            }
-            // Ring eyelet for keychain
-            translate([-len(nome) * texto_tamanho * 0.38 - buraco_x, buraco_y])
-                circle(d = buraco_diametro + borda_tamanho * 2);
+            offset(r = ${outlineSize}) text_2d();
+            translate([eyelet_x, eyelet_y]) circle(r = eyelet_r_outer);
         }
-        // Hollow through-hole
-        translate([-len(nome) * texto_tamanho * 0.38 - buraco_x, buraco_y])
-            circle(d = buraco_diametro);
+        translate([eyelet_x, eyelet_y]) circle(r = eyelet_r_inner);
     }
 }
 
-// 3D Rendering (Dual Extrusion Ready)
-color("${currentColor}") linear_extrude(height = base_espessura) base_plate();
+// 2. Yellow Accent (3.2mm -> 4.2mm, Height = 1.0mm)
+color("#FFD700") translate([0, 0, 3.2]) linear_extrude(height = 1.0) {
+    offset(r = max(1.5, ${outlineSize} - 1.5)) text_2d();
+}
 
-color("#E5C158") translate([0, 0, base_espessura]) linear_extrude(height = 0.6)
-    offset(r = max(1, borda_tamanho - 1.5))
-        text(nome, size = texto_tamanho, font = fonte, halign = "center", valign = "center");
+// 3. Black Outline (4.2mm -> 5.2mm, Height = 1.0mm)
+color("#111111") translate([0, 0, 4.2]) linear_extrude(height = 1.0) {
+    offset(r = 1.6) text_2d();
+}
 
-color("#FFFFFF") translate([0, 0, base_espessura + 0.6]) linear_extrude(height = letra_espessura)
-    text(nome, size = texto_tamanho, font = fonte, halign = "center", valign = "center");
+// 4. White Raised Text (5.2mm -> 6.0mm, Height = 0.8mm)
+color("#FFFFFF") translate([0, 0, 5.2]) linear_extrude(height = 0.8) {
+    text_2d();
+}
 `;
-        } else if (currentTemplate === 'nametag') {
+        } else {
             return `// ============================================================
 // Customizable Name Tag.scad
 // ============================================================
 
 nome = "${text}";
-tamanho = ${textSize};
-espessura = ${baseThick};
-relevo = ${letterThick};
-borda = ${outlineSize};
+tamanho = 20;
+fonte = "Liberation Sans:style=Bold";
 
 module tag_plate() {
     difference() {
         minkowski() {
-            square([len(nome)*tamanho*0.7 + borda*2, tamanho*1.8 + borda*2], center=true);
+            square([len(nome)*tamanho*0.7 + 16, tamanho*1.8 + 12], center=true);
             circle(r=5);
         }
-        // Lanyard Slot
-        translate([0, (tamanho*1.8 + borda*2)/2 - 3])
+        translate([0, (tamanho*1.8 + 12)/2 - 3])
             minkowski() { square([10, 2], center=true); circle(r=1.5); }
     }
 }
 
-color("${currentColor}") linear_extrude(height = espessura) tag_plate();
-color("#FFFFFF") translate([0, -2, espessura]) linear_extrude(height = relevo)
-    text(nome, size = tamanho, halign = "center", valign = "center");
-`;
-        } else if (currentTemplate === 'deskstand') {
-            return `// ============================================================
-// Desk Stand Trophy.scad
-// ============================================================
-
-title = "${text}";
-size = ${textSize};
-base_h = ${baseThick};
-
-// Pedestal
-color("${currentColor}") translate([0, 0, 4]) cube([len(title)*size*0.8 + 30, 32, 8], center=true);
-
-// Plaque
-translate([0, -2, 8]) rotate([-10, 0, 0]) {
-    color("${currentColor}") linear_extrude(height = base_h + 1.5)
-        square([len(title)*size*0.7 + 20, size*2 + 15], center=true);
-    color("#FFD700") translate([0, 0, base_h + 1.5]) linear_extrude(height = ${letterThick})
-        text(title, size = size, halign = "center", valign = "center");
-}
-`;
-        } else {
-            return `// ============================================================
-// Badge Plaque Shield.scad
-// ============================================================
-
-title = "${text}";
-size = ${textSize};
-base_h = ${baseThick};
-
-module shield() {
-    difference() {
-        polygon(points=[[-35, 40], [0, 45], [35, 40], [0, -45]]);
-        translate([0, 36]) circle(r=2.5);
-    }
-}
-
-color("${currentColor}") linear_extrude(height = base_h) shield();
-color("#FFD700") translate([0, 0, base_h]) linear_extrude(height = 0.6) offset(r=-4) shield();
-color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${letterThick})
-    text(title, size = size, halign = "center", valign = "center");
+color("${currentColor}") linear_extrude(height = 3.2) tag_plate();
+color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
+    text(nome, size = tamanho, font = fonte, halign = "center", valign = "center");
 `;
         }
     }
@@ -926,7 +993,7 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
     }
 
     // ============================================================
-    // 10. CONTROLS SYNCHRONIZATION & EVENT LISTENERS
+    // 11. CONTROLS SYNCHRONIZATION & EVENT LISTENERS
     // ============================================================
     function syncControl(numEl, sliderEl, callback) {
         if (!numEl || !sliderEl) return;
@@ -971,7 +1038,6 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
         }
     }
 
-    // Text Input
     if (inputName) {
         inputName.addEventListener('input', () => {
             renderSolidModel();
@@ -981,7 +1047,6 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
         });
     }
 
-    // Steppers & Sliders Sync
     syncControl(elOutlineNum, elOutlineSlider, renderSolidModel);
     setupStepper('btn-minus-outline', 'btn-plus-outline', elOutlineNum, elOutlineSlider, 0.5, renderSolidModel);
 
@@ -1041,8 +1106,7 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
             if (!pill) return;
             fontOptions.querySelectorAll('.font-pill').forEach(p => p.classList.remove('active'));
             pill.classList.add('active');
-            // Toggle between helvetiker and optimer font
-            currentFontKey = currentFontKey === 'helvetiker' ? 'optimer' : 'helvetiker';
+            currentFont = pill.dataset.font || "'Fredoka', sans-serif";
             saveHistoryState();
             renderSolidModel();
         });
@@ -1054,9 +1118,7 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
             currentTemplate = scadSelect.value;
             const badgeTexts = {
                 lego: '🔑 KEYRING',
-                nametag: '🏷️ NAME TAG',
-                deskstand: '🏆 TROPHY',
-                badge: '🛡️ SHIELD'
+                nametag: '🏷️ NAME TAG'
             };
             if (templateBadge) templateBadge.textContent = badgeTexts[currentTemplate] || '🧊 3D MODEL';
             camera.position.copy(defaultCamPos);
@@ -1080,7 +1142,7 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
     if (btnUndoScad) {
         btnUndoScad.addEventListener('click', () => {
             if (stateHistory.length > 1) {
-                stateHistory.pop(); // current
+                stateHistory.pop();
                 const prev = stateHistory[stateHistory.length - 1];
                 if (prev) {
                     currentTemplate = prev.template;
@@ -1124,12 +1186,9 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
         });
     }
 
-    // ============================================================
-    // 11. CART & ORDER INTEGRATION
-    // ============================================================
+    // Cart Integration
     if (btnAddToCart) {
         btnAddToCart.addEventListener('click', () => {
-            // Render one clean frame to snapshot
             renderer.render(scene, camera);
             const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
 
@@ -1137,10 +1196,8 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
             const price = parseInt(priceText, 10) || 350;
 
             const modelTitles = {
-                lego: 'LEGO Keychain.scad',
-                nametag: 'Customizable Name Tag.scad',
-                deskstand: 'Desk Stand Trophy.scad',
-                badge: 'Badge Plaque Shield.scad'
+                lego: 'LEGO Keychain.scad (4-Layer 6.0mm)',
+                nametag: 'Customizable Name Tag.scad'
             };
 
             const item = {
@@ -1154,7 +1211,7 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
                     text: inputName ? inputName.value : '',
                     color: currentColorName,
                     finish: currentFinish,
-                    thickness: `${elBaseThickNum ? elBaseThickNum.value : 1.5}mm base + ${inputThickness ? inputThickness.value : 3.0}mm text`
+                    height: '6.0mm Multi-Color (3.2mm Red Base + 1.0mm Yellow + 1.0mm Black + 0.8mm White)'
                 }
             };
 
@@ -1173,7 +1230,14 @@ color("#FFFFFF") translate([0, 0, base_h + 0.6]) linear_extrude(height = ${lette
         });
     }
 
-    // Save Initial State & Initial Render
-    saveHistoryState();
-    renderSolidModel();
+    // Wait for Google Fonts to be ready, then render
+    if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(() => {
+            saveHistoryState();
+            renderSolidModel();
+        });
+    } else {
+        saveHistoryState();
+        renderSolidModel();
+    }
 });
