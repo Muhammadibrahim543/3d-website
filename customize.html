@@ -157,10 +157,29 @@
                                 </select>
                             </div>
                         </div>
+
+                        <!-- Studio Category Tabs (Segmented Control) -->
+                        <div class="studio-tab-strip" id="studio-tab-strip" role="tablist">
+                            <button type="button" class="studio-tab-btn active" data-target="acc-text" role="tab" aria-selected="true">
+                                <span class="tab-emoji">📝</span> <span class="tab-txt">Text &amp; Font</span>
+                            </button>
+                            <button type="button" class="studio-tab-btn" data-target="acc-brim" role="tab" aria-selected="false">
+                                <span class="tab-emoji">🛡️</span> <span class="tab-txt">Brim &amp; Colors</span>
+                            </button>
+                            <button type="button" class="studio-tab-btn" data-target="acc-letters" role="tab" aria-selected="false">
+                                <span class="tab-emoji">🔤</span> <span class="tab-txt">Geometry</span>
+                            </button>
+                            <button type="button" class="studio-tab-btn" data-target="acc-hole" role="tab" aria-selected="false">
+                                <span class="tab-emoji">🔑</span> <span class="tab-txt">Hole</span>
+                            </button>
+                            <button type="button" class="studio-tab-btn" data-target="all" role="tab" aria-selected="false" title="Show all settings together">
+                                <span class="tab-emoji">📑</span> <span class="tab-txt">All</span>
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Parametric Accordion Sections -->
-                    <div class="scad-accordion-container">
+                    <!-- Parametric Accordion Sections (Scrollable Inspector Surface) -->
+                    <div class="scad-accordion-container" id="scad-accordion-container">
                         
                         <!-- Accordion 1: Text -->
                         <div class="scad-accordion-item open" id="acc-text">
@@ -374,29 +393,46 @@
 
                     </div>
 
-                    <!-- Pricing & Specs Output -->
-                    <div class="pricing-panel">
-                        <div style="font-size:0.85rem; color:var(--c-text-muted); margin-bottom:0.3rem;">Estimated Price</div>
-                        <div id="cust-price" style="font-size:2.4rem; font-weight:800; color:var(--c-accent); font-family:var(--f-head);">৳80</div>
-                        <div id="cust-specs" style="font-size:0.78rem; color:var(--c-text-muted); margin-top:0.4rem;">LEGO 4-Color Keychain • 6.0mm Elevation • Metal Keyring Included</div>
-                    </div>
+                    <!-- Dedicated Sticky Studio Action & Pricing Footer -->
+                    <div class="studio-action-footer">
+                        <!-- Pricing & Specs Output -->
+                        <div class="pricing-panel">
+                            <div style="font-size:0.8rem; color:var(--c-text-muted); margin-bottom:0.2rem;">Estimated Price</div>
+                            <div id="cust-price" style="font-size:2.2rem; font-weight:800; color:var(--c-accent); font-family:var(--f-head); line-height:1.1;">৳80</div>
+                            <div id="cust-specs" style="font-size:0.75rem; color:var(--c-text-muted); margin-top:0.3rem;">LEGO 4-Color Keychain • 6.0mm Elevation • Metal Keyring Included</div>
+                        </div>
 
-                    <!-- MakerWorld Style Action Bar -->
-                    <div class="scad-action-bar">
-                        <button type="button" id="btn-scad-reset" class="scad-icon-btn" title="Reset to Model Defaults">🔄</button>
-                        <button type="button" id="btn-scad-undo" class="scad-icon-btn" title="Undo Last Change">↩️</button>
-                        <button type="button" id="btn-download-3mf-panel" class="clay-btn btn-coral btn-sm" style="flex:1.2; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px; background:linear-gradient(135deg,#e11d48,#f59e0b); color:#fff; box-shadow:0 4px 14px rgba(225,29,72,0.35);" title="Download Multi-Color 3MF File for Bambu Studio / OrcaSlicer">🌈 Download 3MF (Color)</button>
-                        <button type="button" id="btn-download-stl-panel" class="clay-btn btn-cream btn-sm" style="flex:0.8; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px;" title="Download Print-Ready 3D STL file directly from browser">⬇️ STL</button>
-                    </div>
+                        <!-- MakerWorld Style Action Bar -->
+                        <div class="scad-action-bar">
+                            <button type="button" id="btn-scad-reset" class="scad-icon-btn" title="Reset to Model Defaults">🔄</button>
+                            <button type="button" id="btn-scad-undo" class="scad-icon-btn" title="Undo Last Change">↩️</button>
+                            <button type="button" id="btn-download-3mf-panel" class="clay-btn btn-coral btn-sm" style="flex:1.2; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px; background:linear-gradient(135deg,#e11d48,#f59e0b); color:#fff; box-shadow:0 4px 14px rgba(225,29,72,0.35);" title="Download Multi-Color 3MF File for Anycubic Slicer / OrcaSlicer / Bambu Studio">🌈 Download 3MF (Color)</button>
+                            <button type="button" id="btn-download-stl-panel" class="clay-btn btn-cream btn-sm" style="flex:0.8; font-weight:700; display:flex; align-items:center; justify-content:center; gap:0.4rem; border-radius:12px;" title="Download Print-Ready 3D STL file directly from browser">⬇️ STL</button>
+                        </div>
 
-                    <div style="display:flex; flex-direction:column; gap:0.8rem; margin-top:1.2rem;">
-                        <button id="btn-add-cart-custom" class="clay-btn btn-lg btn-coral btn-block" style="font-size:1.05rem;" data-i18n="cart_add">🛒 Add to Cart</button>
-                        <div style="display:flex; gap:0.8rem;">
-                            <button id="btn-save-preset-custom" class="clay-btn btn-cream btn-sm" style="flex:1;" data-i18n="preset_save">⭐ Save Preset</button>
-                            <button id="btn-order-custom" class="clay-btn btn-cream btn-sm" style="flex:1;">⚡ Instant Order</button>
+                        <div style="display:flex; flex-direction:column; gap:0.6rem; margin-top:0.8rem;">
+                            <button id="btn-add-cart-custom" class="clay-btn btn-lg btn-coral btn-block" style="font-size:1.02rem;" data-i18n="cart_add">🛒 Add to Cart</button>
+                            <div style="display:flex; gap:0.6rem;">
+                                <button id="btn-save-preset-custom" class="clay-btn btn-cream btn-sm" style="flex:1;" data-i18n="preset_save">⭐ Save Preset</button>
+                                <button id="btn-order-custom" class="clay-btn btn-cream btn-sm" style="flex:1;">⚡ Instant Order</button>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Mobile Persistent Floating Action Bar -->
+            <div class="mobile-sticky-action-bar" id="mobile-sticky-action-bar">
+                <div class="msab-price-col">
+                    <span class="msab-label">Price</span>
+                    <span class="msab-price" id="mobile-cust-price">৳80</span>
+                </div>
+                <button type="button" class="clay-btn btn-coral msab-cart-btn" id="btn-mobile-add-cart">
+                    🛒 Add to Cart
+                </button>
+                <button type="button" class="clay-btn btn-cream msab-quick-order" id="btn-mobile-quick-order" title="Instant Order">
+                    ⚡ Order
+                </button>
             </div>
         </main>
 
@@ -434,7 +470,7 @@
                 <button type="button" class="scad-modal-close" id="btn-close-scad-modal">×</button>
             </div>
             <div class="scad-modal-body">
-                <p style="font-size:0.85rem; color:var(--c-text-muted); margin-bottom:0.6rem;">This standard OpenSCAD code matches your live parameters exactly. Copy or download to use in Bambu Studio / OpenSCAD desktop.</p>
+                <p style="font-size:0.85rem; color:var(--c-text-muted); margin-bottom:0.6rem;">This standard OpenSCAD code matches your live parameters exactly. Copy or download to use in Anycubic Slicer / OrcaSlicer / OpenSCAD desktop.</p>
                 <textarea id="scad-code-area" readonly spellcheck="false"></textarea>
             </div>
             <div class="scad-modal-footer">

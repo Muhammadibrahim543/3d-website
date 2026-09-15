@@ -16,13 +16,37 @@
 .customizer-grid {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+    align-items: start;
 }
-@media(min-width: 900px) {
+@media(min-width: 992px) {
     .customizer-grid {
-        grid-template-columns: 1.3fr 1fr;
+        grid-template-columns: 1.35fr 1fr;
+        gap: 1.5rem;
         align-items: start;
+    }
+
+    /* Sticky 3D Viewport on Desktop: Locks in view so user never loses sight of the 3D model */
+    .customizer-stage-card {
+        position: sticky;
+        top: 85px;
+        height: calc(100vh - 105px);
+        min-height: 520px;
+        max-height: 840px;
+    }
+
+    /* Sticky Dedicated Settings Surface on Desktop: Independent scrollable inspector */
+    .customizer-controls {
+        position: sticky;
+        top: 85px;
+        height: calc(100vh - 105px);
+        min-height: 520px;
+        max-height: 840px;
+        display: flex;
+        flex-direction: column;
+        padding: 0 !important;
+        overflow: hidden;
     }
 }
 
@@ -618,13 +642,106 @@
     cursor: pointer;
 }
 
-/* Accordion Container */
+/* Studio Tab Strip (Segmented Category Navigation) */
+.studio-tab-strip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 0.9rem;
+    padding: 4px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+}
+.studio-tab-strip::-webkit-scrollbar {
+    display: none;
+}
+.studio-tab-btn {
+    flex: 1 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px 12px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    color: var(--c-text-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+}
+.studio-tab-btn:hover {
+    color: var(--c-text);
+    background: rgba(255, 255, 255, 0.06);
+}
+.studio-tab-btn.active {
+    background: linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(245, 158, 11, 0.25));
+    border-color: rgba(245, 158, 11, 0.6);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(225, 29, 72, 0.25);
+}
+.studio-tab-btn .tab-emoji {
+    font-size: 0.88rem;
+}
+
+/* Accordion Container - Scrollable Inspector Surface */
 .scad-accordion-container {
     display: flex;
     flex-direction: column;
     gap: 0.8rem;
-    margin-bottom: 1.2rem;
+    margin-bottom: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 1rem 1.25rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) rgba(0, 0, 0, 0.2);
 }
+.scad-accordion-container::-webkit-scrollbar {
+    width: 6px;
+}
+.scad-accordion-container::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+.scad-accordion-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+.scad-accordion-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+/* Tab Filtering: When a tab is selected, show only that category */
+.scad-accordion-container[data-active-tab="acc-text"] .scad-accordion-item:not(#acc-text),
+.scad-accordion-container[data-active-tab="acc-brim"] .scad-accordion-item:not(#acc-brim),
+.scad-accordion-container[data-active-tab="acc-letters"] .scad-accordion-item:not(#acc-letters),
+.scad-accordion-container[data-active-tab="acc-hole"] .scad-accordion-item:not(#acc-hole) {
+    display: none !important;
+}
+
+/* In single tab mode, make the active accordion item open cleanly without redundant accordion header */
+.scad-accordion-container:not([data-active-tab="all"]) .scad-accordion-item {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+.scad-accordion-container:not([data-active-tab="all"]) .scad-accordion-header {
+    display: none;
+}
+.scad-accordion-container:not([data-active-tab="all"]) .scad-accordion-body {
+    display: flex !important;
+    padding: 0.2rem 0;
+    border-top: none;
+}
+
 .scad-accordion-item {
     background: var(--c-bg-page);
     border: 1px solid rgba(255, 255, 255, 0.08);
@@ -1039,35 +1156,113 @@
         padding: 4px 8px;
         border-radius: 8px;
     }
-    .stage-hint {
-        bottom: 8px;
-        font-size: 0.64rem;
-        padding: 3px 10px;
-        max-width: 94%;
-        border-radius: 12px;
-        pointer-events: none;
-    }
+/* Studio Action Footer - Fixed at bottom of inspector column on desktop */
+.studio-action-footer {
+    flex-shrink: 0;
+    padding: 1rem 1.25rem 1.1rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(18, 16, 26, 0.96);
+    backdrop-filter: blur(16px);
+    border-radius: 0 0 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    z-index: 10;
+}
+.studio-action-footer .pricing-panel {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 0.75rem 1rem;
+    margin-top: 0;
+    margin-bottom: 0.3rem;
 }
 
-@media (max-width: 480px) {
+/* Mobile Persistent Floating Action Bar */
+.mobile-sticky-action-bar {
+    display: none;
+}
+
+@media (max-width: 991px) {
     .customizer-stage-card {
-        min-height: 310px;
-        height: 330px;
+        position: sticky !important;
+        top: 65px !important;
+        height: 38vh !important;
+        min-height: 250px !important;
+        max-height: 340px !important;
+        z-index: 85;
+        border-radius: 16px;
+        margin-bottom: 1rem;
+        box-shadow: 0 12px 36px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
     }
-    .template-options {
-        grid-template-columns: repeat(2, 1fr);
+    
+    .clay-card.customizer-controls {
+        position: relative;
+        top: 0;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
+        padding-bottom: 90px !important; /* clearance for mobile sticky bar */
     }
-    .stage-toggle-btn {
-        padding: 5px 8px;
-        font-size: 0.68rem;
+
+    .studio-action-footer {
+        border-radius: 16px;
+        margin-top: 1rem;
     }
-    .stage-dimensions-badge {
-        font-size: 0.62rem;
-        padding: 3px 6px;
+
+    .mobile-sticky-action-bar {
+        display: flex;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        z-index: 999;
+        background: rgba(18, 16, 26, 0.94);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+        padding: 10px 16px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
     }
-    .stage-template-badge {
-        font-size: 0.62rem;
-        padding: 3px 6px;
+    .msab-price-col {
+        display: flex;
+        flex-direction: column;
+        line-height: 1.1;
+    }
+    .msab-label {
+        font-size: 0.7rem;
+        color: var(--c-text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .msab-price {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: var(--c-accent);
+        font-family: var(--f-head);
+    }
+    .msab-cart-btn {
+        flex: 1;
+        padding: 10px 16px;
+        font-size: 0.92rem;
+        font-weight: 700;
+        border-radius: 12px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+    .msab-quick-order {
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        font-weight: 700;
+        border-radius: 12px;
+        white-space: nowrap;
     }
 }
 

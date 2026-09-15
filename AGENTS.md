@@ -76,32 +76,28 @@
 ## 4. Current State Audit (Where the Project Paused)
 
 ### ✅ Completed & Fully Functional Features:
-1. **LEGO Keychain 4-Layer 6.0mm Elevation Architecture (`LEGO Keychain.scad`):**
-   - **Layer 1 (Red Base Plate):** $Z = 0.0 \to 3.2\text{ mm}$ (3.2mm thick).
-   - **Layer 2 (Yellow Accent Brim):** $Z = 3.2 \to 4.2\text{ mm}$ (1.0mm thick).
-   - **Layer 3 (Black Border Outline):** $Z = 4.2 \to 5.2\text{ mm}$ (1.0mm thick).
-   - **Layer 4 (White Raised Letters):** $Z = 5.2 \to 6.0\text{ mm}$ (0.8mm thick).
-   - Integrated left circular eyelet with through-hole.
-   - Exact 12° italic slant applied exclusively to the LEGO model.
+## 4. Key Architectural Achievements
 
-2. **Customizable Name Tag Engine (`Customizable Name Tag.scad`):**
-   - **Organic Base Contour:** Powered by `ClipperLib` polygon offsetting (`jtRound`), organically wrapping around letters without disjoint islands or square boxes.
-   - **3 Outline Styles:** 🫧 `Bubble Contour`, 💊 `Capsule Badge`, 📐 `Modern Chamfer`.
-   - **Zero Font Mismatch:** Asynchronous font loader (`document.fonts.load`) respecting true Google Font weights (`Montserrat`, `Nunito`, `Orbitron`, `Fredoka`, `Baloo 2`, `Lilita One`, `Chewy`, `Lobster`, `Pacifico`, `Righteous`, `Bubblegum Sans`).
-   - **Upright Typography:** 12° slant removed for Name Tag (letters extrude straight and true).
+1. **True 3D Solid Extrusion (Zero 2.5D Illusion):**
+   - LEGO Keychain: Real 3D stepped topology ($0 \to 3.2\text{ mm}$ base, $3.2 \to 4.2\text{ mm}$ yellow offset, $4.2 \to 5.2\text{ mm}$ black outline, $5.2 \to 6.0\text{ mm}$ white text).
+   - Name Tag: Parametric ClipperLib polygon offset outline with 3 switchable contour styles: Bubble Contour, Capsule Badge, and Modern Chamfer.
+   - Hardware target: **Anycubic Kobra X (ACE Gen 2)** with direct 4-toolpath toolhead, dual-PTC heating, and 60% lower purge waste than Bowden AMS boxes.
+
+2. **Parametric Precision & Geometry:**
+   - **Zero Font Mismatch:** Asynchronous font loader (`document.fonts.load`) respecting true Google Font weights.
+   - **Upright Typography:** Letters extrude straight and true without artificial slants.
    - **Two-Tone Color Swatches:** Primary Base Color + Secondary Raised Letter Color.
    - **Hole Placement Control:** Left Eyelet, Right Eyelet, or None (Desk Display Tag).
 
 3. **Export & Fabrication Parity:**
-   - **Bambu Studio Multi-Color 3MF:** Generates watertight closed manifold triangle meshes partitioned by extruder ID for seamless AMS multi-color printing.
+   - **Anycubic / OrcaSlicer Multi-Color 3MF:** Generates watertight closed manifold triangle meshes partitioned by extruder ID for seamless 4-color printing.
    - **Binary STL Export:** Single-solid watertight mesh for standard single-color slicing.
    - **Parametric OpenSCAD Code Modal:** Generates clean, copyable OpenSCAD code matching active 3D parameters.
 
-4. **UI Bloat Cleanup:**
-   - The heavy 2D Visual Layout Studio modal window and element additives (hearts, stars, flowers, paws) were **completely removed** as requested by the user to eliminate memory lag and browser stutter.
-
-5. **Universal Navigation Consistency:**
-   - All 10 HTML pages now have uniform navigation bars with `Customize` link in both desktop and mobile menus.
+4. **UI Bloat Cleanup & Sticky Studio Layout:**
+   - On desktop, the 3D Stage Card is pinned (`position: sticky`), while inspector settings are organized with segmented category tabs (`Text & Font`, `Brim & Colors`, `Geometry`, `Hole`, `All`).
+   - Sticky bottom action footer ensures price and "Add to Cart" are always accessible without scrolling.
+   - On mobile, 3D viewport is sticky at top (~38vh), tabs scroll horizontally, and a persistent floating action bar stays at the bottom.
 
 ---
 
@@ -113,19 +109,19 @@
 
 > [!IMPORTANT]
 > **2. Preserve LEGO 4-Layer Mathematical Heights:**
-> Never collapse the 4-layer stepped hierarchy ($0 \to 3.2 \to 4.2 \to 5.2 \to 6.0\text{ mm}$). This exact elevation is critical for Bambu Lab AMS filament swap layers.
+> Never collapse the 4-layer stepped hierarchy ($0 \to 3.2 \to 4.2 \to 5.2 \to 6.0\text{ mm}$). This exact elevation is calibrated for Anycubic Kobra X direct 4-toolpath layer heights.
 
 > [!IMPORTANT]
 > **3. Maintain Font Weight Matching (`getFontWeight`):**
 > When adding new fonts, register their exact weight in `getFontWeight(fontStr)` in `js/customize.js` to prevent browser fallback to system serif/sans-serif.
 
-> [!TIP]
-> **4. Git & Commit Best Practices:**
-> Always verify with `git status` and test locally before pushing to `origin/main`. Keep commit messages descriptive (e.g. `feat: ...`, `fix: ...`).
+> [!CAUTION]
+> **4. Hardware Identity - Anycubic Kobra X (ACE Gen 2):**
+> The maker uses the **Anycubic Kobra X (ACE Gen 2)** 3D printer featuring 4 distinct direct toolpaths in a single toolhead. Do **NOT** refer to Bambu AMS.
 
 > [!CAUTION]
 > **5. STRICT PRIVACY CONSTRAINT - Internal Economics:**
-> Raw economics (Bambu Lab PLA+ = ৳2,000/kg $\to$ ৳2.00/g, Machine runtime = ৳70.00/hr) are exclusively backend calculation constants. **NEVER** expose raw cost breakdown, hourly rates, or profit formulas on customer-facing badges or cards. Customers only see final transparent prices (e.g. ৳80, ৳450) and craftsmanship value (e.g. "Bambu AMS Multi-Color", "Metal Keyring Included").
+> Raw economics (High-Speed PLA+ = ৳2,000/kg $\to$ ৳2.00/g, Machine runtime = ৳70.00/hr) are exclusively backend calculation constants. **NEVER** expose raw cost breakdown, hourly rates, or profit formulas on customer-facing badges or cards. Customers only see final transparent prices (e.g. ৳80, ৳450) and craftsmanship value (e.g. "Anycubic 4-Color Direct", "Metal Keyring Included").
 
 > [!IMPORTANT]
 > **6. Keychain Pricing Guardrails:**
@@ -141,4 +137,4 @@
 2. **Preset Sharing via URL Hash:**
    - Compress customizer parameters into a base64 or URL query string for 1-click sharing of customized tags.
 3. **Automated Cloud Slicing Integration:**
-   - Optional webhook to PrusaSlicer/Bambu CLI for automated print time and filament weight estimation.
+   - Optional webhook to Anycubic / OrcaSlicer CLI for automated print time and filament weight estimation.

@@ -2020,6 +2020,65 @@ color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(
         });
     }
 
+    // Studio Category Tab Strip Handling
+    const tabButtons = document.querySelectorAll('.studio-tab-btn');
+    const accordionContainer = document.getElementById('scad-accordion-container');
+    if (tabButtons.length > 0 && accordionContainer) {
+        tabButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = btn.dataset.target;
+                tabButtons.forEach(b => {
+                    b.classList.remove('active');
+                    b.setAttribute('aria-selected', 'false');
+                });
+                btn.classList.add('active');
+                btn.setAttribute('aria-selected', 'true');
+                accordionContainer.dataset.activeTab = target;
+
+                // If 'all' is chosen, open all items so user sees everything
+                if (target === 'all') {
+                    document.querySelectorAll('.scad-accordion-item').forEach(item => item.classList.add('open'));
+                } else {
+                    const activeItem = document.getElementById(target);
+                    if (activeItem) activeItem.classList.add('open');
+                }
+            });
+        });
+        // Default initial tab
+        accordionContainer.dataset.activeTab = 'acc-text';
+    }
+
+    // Mobile Persistent Bar & Price Sync
+    const mobilePrice = document.getElementById('mobile-cust-price');
+    const btnMobileAddCart = document.getElementById('btn-mobile-add-cart');
+    const btnMobileQuickOrder = document.getElementById('btn-mobile-quick-order');
+
+    function syncMobilePrice() {
+        if (mobilePrice && displayPrice) {
+            mobilePrice.textContent = displayPrice.textContent;
+        }
+    }
+    if (displayPrice && mobilePrice) {
+        const priceObserver = new MutationObserver(syncMobilePrice);
+        priceObserver.observe(displayPrice, { childList: true, characterData: true, subtree: true });
+        syncMobilePrice();
+    }
+
+    if (btnMobileAddCart && btnAddToCart) {
+        btnMobileAddCart.addEventListener('click', () => btnAddToCart.click());
+    }
+    if (btnMobileQuickOrder && btnOrder) {
+        btnMobileQuickOrder.addEventListener('click', () => btnOrder.click());
+    }
+
+    // Automatic ResizeObserver on stage card for flawless responsive 3D viewport
+    if (stageCard && typeof ResizeObserver !== 'undefined') {
+        const stageResizeObserver = new ResizeObserver(() => {
+            onWindowResize();
+        });
+        stageResizeObserver.observe(stageCard);
+    }
+
     // Initialize template-specific fields
     updateTemplateVisibility();
 

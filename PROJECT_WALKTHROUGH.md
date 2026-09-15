@@ -128,20 +128,21 @@ To prevent non-manifold edges, self-intersecting facets, and slicer warnings, `d
 3. Coincident vertices share single index pointers, creating a $100\%$ watertight manifold topological boundary representation.
 4. Degenerate triangular faces (area $= 0$) are rejected.
 
-### C. Milestone 8: Production-Grade Pricing Overhaul & Solo Maker Elevation
+### C. Milestone 8: Production-Grade Pricing Overhaul & Hardware Alignment
 1. **Dynamic Keychain Pricing (৳80–৳100 Range):**
    - Single 4-color LEGO keychain for 5–7 letters defaults strictly to **৳80**.
    - Longer names scale gently (+৳5 per letter beyond 7 characters). Name Tag model scales between ৳60–৳70.
    - Purged legacy arbitrary pricing (৳400–৳500).
 2. **Strict Privacy Architecture for Internal Economics:**
-   - Raw economics engine: Bambu Lab PLA+ = ৳2,000/kg (৳2.00/g); Machine runtime = ৳70.00/hr.
-   - Internal cost formulas and profit margins are encapsulated strictly within JavaScript logic; user-facing cards display **only** the final customer price and value specifications (no internal cost equations exposed).
+   - Raw economics engine: High-Speed PLA+ = ৳2,000/kg (৳2.00/g); Machine runtime = ৳70.00/hr.
+   - Internal cost formulas and profit margins are encapsulated strictly within JavaScript logic; user-facing cards display **only** the final customer price and value specifications.
 3. **Contact Page Stale State Fix:**
    - Stale test orders ("IBRAHIM / Chewy / ৳343") no longer hijack `contact.html`.
    - Customizer preview requires explicit query parameters `?from=customizer&type=custom_order`, with clear "✕ Cancel" and "✏️ Edit" buttons.
-4. **Solo Maker Authenticity & Material Realism:**
-   - `about.html`: Transformed from a duplicated 3-member team into an authentic solo maker profile for Md. Ibrahim (Founder, Solo Maker & 3D Print Engineer).
-   - `services.html` & `materials.html`: Replaced industrial SLS Nylon sintering, ABS, and Carbon Fiber with authentic Bambu Lab AMS Multi-Color 3D printing and Silk Glossy PLA.
+4. **Solo Maker Authenticity & Hardware Realism:**
+   - Hardware: **Anycubic Kobra X (ACE Gen 2)** with a single advanced toolhead housing 4 distinct direct toolpaths, active dual-PTC heating, and ~60% lower purge waste.
+   - `about.html`: Transformed into an authentic solo maker profile for Md. Ibrahim (Founder, Solo Maker & 3D Print Engineer).
+   - `services.html` & `materials.html`: Replaced Bambu AMS with Anycubic Kobra X (ACE Gen 2) 4-toolpath direct technology.
 5. **Bilingual Parity:**
    - `js/translations.js` updated across all 10 pages for English and Bangla.
 
@@ -153,11 +154,11 @@ To prevent non-manifold edges, self-intersecting facets, and slicer warnings, `d
 | :--- | :--- | :--- |
 | **`customize.html` (LEGO Model)** | 🟢 100% Complete | 4-layer 6.0mm elevation renders, ৳80 base price, export verified. |
 | **`customize.html` (Name Tag Model)** | 🟢 100% Complete | 3 outline styles, 2-tone swatches, hole positions verified. |
-| **Bambu Studio 3MF Export** | 🟢 100% Complete | Generates AMS multi-extruder package with color metadata. |
+| **Anycubic / OrcaSlicer 3MF Export** | 🟢 100% Complete | Generates 4-extruder package with color metadata. |
 | **Binary STL Export** | 🟢 100% Complete | Single manifold binary mesh for universal slicers. |
 | **OpenSCAD Code Generation** | 🟢 100% Complete | Generates parametric `.scad` script with sanitized English variables. |
 | **Dynamic Pricing Engine** | 🟢 100% Complete | ৳80 (5–7 chars) + ৳5/char scaling, internal ৳2/g + ৳70/hr engine. |
-| **Solo Maker Profile & Materials** | 🟢 100% Complete | Md. Ibrahim solo profile, Bambu AMS multi-color, Silk PLA. |
+| **Solo Maker Profile & Anycubic Tech** | 🟢 100% Complete | Md. Ibrahim solo profile, Anycubic Kobra X 4-color direct toolpath. |
 | **Site Navigation & UI** | 🟢 100% Complete | All 10 HTML pages synchronized. |
 | **Admin Operations Portal** | 🟢 100% Complete | PIN `1234`, order queue, product management. |
 | **Git Repository** | 🟢 Up-to-Date | Ready for staging and commit. |

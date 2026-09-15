@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function calculate() {
         const mat = calcMaterial.value;
-        const weight = parseInt(calcWeight.value, 10) || 20;
+        const weight = parseInt(calcWeight.value, 10) || 10;
         const infill = parseInt(calcInfill.value, 10) || 20;
         const qty = parseInt(calcQty.value, 10) || 1;
         const res = calcResolution ? parseFloat(calcResolution.value) : 1.0;
@@ -52,20 +52,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Internal calculation logic
         const unitMatRate = filamentRates[mat] || 2.00;
-        const infillFactor = 1 + ((infill - 20) / 100) * 0.25;
+        const infillFactor = 1 + ((infill - 20) / 100) * 0.35;
         const effectiveWeight = weight * infillFactor;
         const materialCost = effectiveWeight * unitMatRate;
 
-        // Print hours estimation on modern high-speed Bambu Lab printer (approx 35-40g/hr at speed for simple models)
-        const printHours = Math.max(0.3, (effectiveWeight / 32.0) * res * complexity);
+        // Print speed model based on complexity (g/hr):
+        // Basic: ~20g/hr | Functional: ~15g/hr | Complex Art/Miniature: ~11g/hr
+        const speedGramsPerHour = Math.max(8.0, 20.0 / complexity);
+        const printHours = Math.max(0.22, (effectiveWeight / speedGramsPerHour) * res);
         const machineCost = printHours * MACHINE_HOURLY_RATE;
 
-        // Unit Price calculation (studio margin + minimal handling included)
-        let unitPrice = Math.max(80, Math.round((materialCost + machineCost) * 1.18 + 10));
+        // Base operational cost: material + machine time + preparation/handling fee
+        const baseCost = materialCost + machineCost + 20.0;
 
-        // For small keychains under 20g with basic complexity: lock to ৳80
-        if (weight <= 20 && complexity <= 1.0 && mat === 'PLA') {
-            unitPrice = 80;
+        // Tiered commercial margin: scales from 1.35x (small keychains) to 1.55x (heavy/complex prints with higher failure risk)
+        const marginMultiplier = effectiveWeight > 60 ? 1.55 : (effectiveWeight > 20 ? 1.45 : 1.35);
+        let unitPrice = Math.max(50, Math.round(baseCost * marginMultiplier));
+
+        // Ensure 10g standard keychain stays at standard ৳80-85 baseline
+        if (weight <= 10 && complexity <= 1.0 && mat === 'PLA' && infill <= 20) {
+            unitPrice = Math.min(unitPrice, 85);
         }
 
         let discountRate = 1.0;
