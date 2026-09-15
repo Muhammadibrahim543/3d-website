@@ -200,21 +200,30 @@
                                 <span class="acc-chevron">▾</span>
                             </button>
                             <div class="scad-accordion-body">
-                                <div class="scad-param-field">
-                                    <div class="param-label-row">
-                                        <label for="scad-outline-size">Outline Size</label>
-                                        <div class="stepper-input-group">
-                                            <button type="button" class="stepper-btn" id="btn-minus-outline">-</button>
-                                            <input type="number" id="scad-outline-size" value="4.5" step="0.5" min="0" max="10">
-                                            <button type="button" class="stepper-btn" id="btn-plus-outline">+</button>
-                                        </div>
+                                <div class="scad-param-field" id="field-outline-style">
+                                    <label>Outline Style (আউটলাইন ডিজাইন)</label>
+                                    <div class="finish-options" id="outline-style-options">
+                                        <button type="button" class="finish-option active" data-style="bubble">🫧 Bubble Contour</button>
+                                        <button type="button" class="finish-option" data-style="capsule">💊 Capsule Badge</button>
+                                        <button type="button" class="finish-option" data-style="chamfer">📐 Modern Chamfer</button>
                                     </div>
-                                    <input type="range" id="scad-outline-slider" class="scad-slider" min="0" max="10" step="0.5" value="4.5">
                                 </div>
 
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="scad-base-thick">Base Thickness (mm)</label>
+                                        <label for="scad-outline-size">Outline Size (বিস্তার mm)</label>
+                                        <div class="stepper-input-group">
+                                            <button type="button" class="stepper-btn" id="btn-minus-outline">-</button>
+                                            <input type="number" id="scad-outline-size" value="4.5" step="0.5" min="0.8" max="10.0">
+                                            <button type="button" class="stepper-btn" id="btn-plus-outline">+</button>
+                                        </div>
+                                    </div>
+                                    <input type="range" id="scad-outline-slider" class="scad-slider" min="0.8" max="10.0" step="0.5" value="4.5">
+                                </div>
+
+                                <div class="scad-param-field">
+                                    <div class="param-label-row">
+                                        <label for="scad-base-thick">Base Thickness (বেজ উচ্চতা mm)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-basethick">-</button>
                                             <input type="number" id="scad-base-thick" value="3.2" step="0.2" min="1.0" max="8.0">
@@ -225,24 +234,39 @@
                                 </div>
 
                                 <div class="scad-param-field">
-                                    <label>Base Color</label>
+                                    <label>Base Color (বেজের রঙ)</label>
                                     <div class="color-swatches" id="color-swatches">
-                                        <button class="color-swatch active" data-color="#D01012" data-name="LEGO Red" data-rate="7.0" style="background:#D01012;" title="LEGO Red"></button>
-                                        <button class="color-swatch" data-color="#E5C158" data-name="LEGO Yellow" data-rate="6.0" style="background:#E5C158;" title="LEGO Yellow"></button>
-                                        <button class="color-swatch" data-color="#2979FF" data-name="Ocean Blue" data-rate="5.0" style="background:#2979FF;" title="Ocean Blue"></button>
-                                        <button class="color-swatch" data-color="#222222" data-name="Carbon Black" data-rate="5.0" style="background:#222222;" title="Carbon Black"></button>
-                                        <button class="color-swatch" data-color="#388E3C" data-name="Green" data-rate="5.0" style="background:#388E3C;" title="Forest Green"></button>
-                                        <button class="color-swatch" data-color="#FF6F00" data-name="Orange" data-rate="5.5" style="background:#FF6F00;" title="Sunset Orange"></button>
+                                        <button type="button" class="color-swatch active" data-color="#D01012" data-name="LEGO Red" data-rate="7.0" style="background:#D01012;" title="LEGO Red"></button>
+                                        <button type="button" class="color-swatch" data-color="#E5C158" data-name="LEGO Yellow" data-rate="6.0" style="background:#E5C158;" title="LEGO Yellow"></button>
+                                        <button type="button" class="color-swatch" data-color="#2979FF" data-name="Ocean Blue" data-rate="5.0" style="background:#2979FF;" title="Ocean Blue"></button>
+                                        <button type="button" class="color-swatch" data-color="#222222" data-name="Carbon Black" data-rate="5.0" style="background:#222222;" title="Carbon Black"></button>
+                                        <button type="button" class="color-swatch" data-color="#388E3C" data-name="Green" data-rate="5.0" style="background:#388E3C;" title="Forest Green"></button>
+                                        <button type="button" class="color-swatch" data-color="#FF6F00" data-name="Orange" data-rate="5.5" style="background:#FF6F00;" title="Sunset Orange"></button>
+                                        <button type="button" class="color-swatch" data-color="#FFFFFF" data-name="Pure White" data-rate="5.0" style="background:#FFFFFF; border:1px solid #CCC;" title="Pure White"></button>
+                                        <button type="button" class="color-swatch" data-color="#9C27B0" data-name="Purple Velvet" data-rate="6.0" style="background:#9C27B0;" title="Purple Velvet"></button>
+                                    </div>
+                                </div>
+
+                                <div class="scad-param-field" id="field-letter-color">
+                                    <label>Letter Color (অক্ষরের রঙ)</label>
+                                    <div class="color-swatches" id="letter-color-swatches">
+                                        <button type="button" class="color-swatch active" data-color="#FFFFFF" data-name="Pure White" style="background:#FFFFFF; border:1px solid #CCC;" title="Pure White"></button>
+                                        <button type="button" class="color-swatch" data-color="#111111" data-name="Carbon Black" style="background:#111111;" title="Carbon Black"></button>
+                                        <button type="button" class="color-swatch" data-color="#FFD700" data-name="Warm Gold" style="background:#FFD700;" title="Warm Gold"></button>
+                                        <button type="button" class="color-swatch" data-color="#D01012" data-name="LEGO Red" style="background:#D01012;" title="LEGO Red"></button>
+                                        <button type="button" class="color-swatch" data-color="#2979FF" data-name="Ocean Blue" style="background:#2979FF;" title="Ocean Blue"></button>
+                                        <button type="button" class="color-swatch" data-color="#00E676" data-name="Neon Green" style="background:#00E676;" title="Neon Green"></button>
+                                        <button type="button" class="color-swatch" data-color="#FF4081" data-name="Rose Pink" style="background:#FF4081;" title="Rose Pink"></button>
                                     </div>
                                 </div>
 
                                 <div class="scad-param-field">
                                     <label>Surface Finish</label>
                                     <div class="finish-options" id="finish-options">
-                                        <button class="finish-option active" data-finish="standard">Matte PLA</button>
-                                        <button class="finish-option" data-finish="silk">Silk Metallic</button>
-                                        <button class="finish-option" data-finish="satin">Glossy Satin</button>
-                                        <button class="finish-option" data-finish="neon">Neon Glow</button>
+                                        <button type="button" class="finish-option active" data-finish="standard">Matte PLA</button>
+                                        <button type="button" class="finish-option" data-finish="silk">Silk Metallic</button>
+                                        <button type="button" class="finish-option" data-finish="satin">Glossy Satin</button>
+                                        <button type="button" class="finish-option" data-finish="neon">Neon Glow</button>
                                     </div>
                                 </div>
                             </div>
@@ -257,31 +281,31 @@
                             <div class="scad-accordion-body">
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="scad-text-size">Text Size</label>
+                                        <label for="scad-text-size">Text Size (ফন্ট সাইজ mm)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-textsize">-</button>
-                                            <input type="number" id="scad-text-size" value="18" step="1" min="10" max="30">
+                                            <input type="number" id="scad-text-size" value="18" step="1" min="10" max="32">
                                             <button type="button" class="stepper-btn" id="btn-plus-textsize">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-text-size-slider" class="scad-slider" min="10" max="30" step="1" value="18">
+                                    <input type="range" id="scad-text-size-slider" class="scad-slider" min="10" max="32" step="1" value="18">
                                 </div>
 
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="scad-space-width">Space Width / Letter Spacing</label>
+                                        <label for="scad-space-width">Letter Spacing (অক্ষরের দূরত্ব)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-space">-</button>
-                                            <input type="number" id="scad-space-width" value="1.0" step="0.5" min="0" max="6">
+                                            <input type="number" id="scad-space-width" value="1.0" step="0.2" min="0" max="4.0">
                                             <button type="button" class="stepper-btn" id="btn-plus-space">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-space-width-slider" class="scad-slider" min="0" max="6" step="0.5" value="1.0">
+                                    <input type="range" id="scad-space-width-slider" class="scad-slider" min="0" max="4.0" step="0.2" value="1.0">
                                 </div>
 
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="cust-thickness">Letter Thickness (mm)</label>
+                                        <label for="cust-thickness">Letter Relief (অক্ষরের উচ্চতা mm)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-thick">-</button>
                                             <input type="number" id="cust-thickness" value="0.8" step="0.2" min="0.4" max="4.0">
@@ -301,40 +325,49 @@
                                 <span class="acc-chevron">▾</span>
                             </button>
                             <div class="scad-accordion-body">
+                                <div class="scad-param-field" id="field-hole-placement">
+                                    <label>Hole Placement (রিং পজিশন)</label>
+                                    <div class="finish-options" id="hole-placement-options">
+                                        <button type="button" class="finish-option active" data-pos="left">◀ Left Eyelet</button>
+                                        <button type="button" class="finish-option" data-pos="right">Right Eyelet ▶</button>
+                                        <button type="button" class="finish-option" data-pos="none">🚫 None (Desk Tag)</button>
+                                    </div>
+                                </div>
+
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="scad-hole-size">Keychain Hole Size Input <span class="param-sublabel">Keychain hole diameter</span></label>
+                                        <label for="scad-hole-size">Hole Diameter (ছিদ্র ব্যাস mm)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-holesize">-</button>
-                                            <input type="number" id="scad-hole-size" value="5.0" step="0.5" min="2" max="12">
+                                            <input type="number" id="scad-hole-size" value="5.0" step="0.5" min="2" max="10">
                                             <button type="button" class="stepper-btn" id="btn-plus-holesize">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-hole-size-slider" class="scad-slider" min="2" max="12" step="0.5" value="5.0">
+                                    <input type="range" id="scad-hole-size-slider" class="scad-slider" min="2" max="10" step="0.5" value="5.0">
                                 </div>
 
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="scad-hole-x">Hole Horizontal Adjustment <span class="param-sublabel">X Movement</span></label>
+                                        <label for="scad-hole-x">Hole X Offset (অনুভূমিক শিফট)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-holex">-</button>
-                                            <input type="number" id="scad-hole-x" value="3.0" step="0.5" min="-20" max="20">
+                                            <input type="number" id="scad-hole-x" value="0.0" step="0.5" min="-15" max="15">
                                             <button type="button" class="stepper-btn" id="btn-plus-holex">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-hole-x-slider" class="scad-slider" min="-20" max="20" step="0.5" value="3.0">
+                                    <input type="range" id="scad-hole-x-slider" class="scad-slider" min="-15" max="15" step="0.5" value="0.0">
                                 </div>
 
                                 <div class="scad-param-field">
                                     <div class="param-label-row">
-                                        <label for="scad-hole-y">Hole Vertical Adjustment <span class="param-sublabel">Y Movement</span></label>
+                                        <label for="scad-hole-y">Hole Y Offset (উল্লম্ব শিফট)</label>
                                         <div class="stepper-input-group">
                                             <button type="button" class="stepper-btn" id="btn-minus-holey">-</button>
-                                            <input type="number" id="scad-hole-y" value="0.0" step="0.5" min="-20" max="20">
+                                            <input type="number" id="scad-hole-y" value="0.0" step="0.5" min="-15" max="15">
                                             <button type="button" class="stepper-btn" id="btn-plus-holey">+</button>
                                         </div>
                                     </div>
-                                    <input type="range" id="scad-hole-y-slider" class="scad-slider" min="-20" max="20" step="0.5" value="0.0">
+                                    <input type="range" id="scad-hole-y-slider" class="scad-slider" min="-15" max="15" step="0.5" value="0.0">
                                 </div>
                             </div>
                         </div>
@@ -425,6 +458,6 @@
     <script src="js/fonts/optimer_bold.js"></script>
     <!-- ClipperLib Geometric Polygon Engine for exact Minkowski offset & CSG boolean unions -->
     <script src="js/clipper.js"></script>
-    <script src="js/customize.js?v=16"></script>
+    <script src="js/customize.js?v=20260915_v3"></script>
 </body>
 </html>

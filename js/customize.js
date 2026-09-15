@@ -18,6 +18,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const fontOptions = document.getElementById('font-options');
     const colorSwatches = document.getElementById('color-swatches');
     const finishOptions = document.getElementById('finish-options');
+    const outlineStyleOptions = document.getElementById('outline-style-options');
+    const letterColorSwatches = document.getElementById('letter-color-swatches');
+    const holePlacementOptions = document.getElementById('hole-placement-options');
+    const fieldOutlineStyle = document.getElementById('field-outline-style');
+    const fieldLetterColor = document.getElementById('field-letter-color');
+    const fieldHolePlacement = document.getElementById('field-hole-placement');
 
     // Steppers & Sliders
     const elOutlineNum = document.getElementById('scad-outline-size');
@@ -81,6 +87,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFont = "'Nunito', sans-serif";
     let currentColor = '#D01012';
     let currentColorName = 'LEGO Red';
+    let currentLetterColor = '#FFFFFF';
+    let currentLetterColorName = 'Pure White';
+    let currentOutlineStyle = 'bubble'; // 'bubble', 'capsule', 'chamfer'
+    let currentHolePlacement = 'left'; // 'left', 'right', 'none'
     let currentRate = 7.0;
     let currentFinish = 'standard';
 
@@ -94,6 +104,10 @@ document.addEventListener('DOMContentLoaded', () => {
             font: currentFont,
             color: currentColor,
             colorName: currentColorName,
+            letterColor: currentLetterColor,
+            letterColorName: currentLetterColorName,
+            outlineStyle: currentOutlineStyle,
+            holePlacement: currentHolePlacement,
             finish: currentFinish,
             outline: elOutlineNum ? elOutlineNum.value : '4.5',
             baseThick: elBaseThickNum ? elBaseThickNum.value : '3.2',
@@ -101,7 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             spaceWidth: elSpaceWidthNum ? elSpaceWidthNum.value : '1.0',
             letterThick: inputThickness ? inputThickness.value : '0.8',
             holeSize: elHoleSizeNum ? elHoleSizeNum.value : '5.0',
-            holeX: elHoleXNum ? elHoleXNum.value : '3.0',
+            holeX: elHoleXNum ? elHoleXNum.value : '0.0',
             holeY: elHoleYNum ? elHoleYNum.value : '0.0'
         });
         if (stateHistory.length > 25) stateHistory.shift();
@@ -408,10 +422,31 @@ document.addEventListener('DOMContentLoaded', () => {
         return polygons;
     }
 
+    function getFontWeight(fontStr) {
+        if (!fontStr) return '900';
+        const lower = fontStr.toLowerCase();
+        if (lower.includes('lilita') || lower.includes('chewy') || lower.includes('lobster') ||
+            lower.includes('pacifico') || lower.includes('righteous') || lower.includes('bubblegum')) {
+            return '400';
+        }
+        if (lower.includes('fredoka') || lower.includes('anek') || lower.includes('hind')) {
+            return '700';
+        }
+        if (lower.includes('baloo')) {
+            return '800';
+        }
+        return '900';
+    }
+
     // High-Resolution Multi-Contour & Hole Extractor with Dynamic Letter Spacing & Sizing
-    async function extractTextContours(text, fontStr, spaceWidth = 1.0, textSize = 18) {
+    async function extractTextContours(text, fontStr, spaceWidth = 1.0, textSize = 18, isLego = false) {
         // Wait for fonts to load so canvas renders correctly
         await document.fonts.ready;
+
+        const weight = getFontWeight(fontStr);
+        try {
+            await document.fonts.load(`${weight} 120px ${fontStr}`);
+        } catch (e) {}
 
         const W = 3600;
         const H = 900;
@@ -424,7 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.fillStyle = '#000000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const weight = (fontStr && fontStr.includes('Baloo')) ? '800' : '900';
         ctx.font = `${weight} 120px ${fontStr || "'Nunito', sans-serif"}`;
 
         // Dynamic letter spacing (1.0 = standard; 0 -> tighter; >1 -> wider)
@@ -433,17 +467,17 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.letterSpacing = `${Math.round(extraSpacePx)}px`;
         }
 
-        // LEGO-style italic tilt: ~12° right-leaning shear
-        // Top of letters lean right, bottom stays — matches LEGO logo aesthetic
-        const skewAngle = 12 * Math.PI / 180; // 12 degrees
-        const skew = Math.tan(skewAngle);
-        ctx.transform(1, 0, -skew, 1, (H / 2) * skew, 0);
+        // LEGO-style italic tilt: ~12° right-leaning shear (ONLY for LEGO Keychain)
+        if (isLego) {
+            const skewAngle = 12 * Math.PI / 180; // 12 degrees
+            const skew = Math.tan(skewAngle);
+            ctx.transform(1, 0, -skew, 1, (H / 2) * skew, 0);
+        }
 
-        // Cute, softly rounded pill edges matching MakerLab reference:
-        // A subtle 6px round stroke rounds all stroke caps and corner fillets
+        // Smooth pill edges: subtle 4px stroke rounds off raster aliasing
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = 6;
+        ctx.lineWidth = isLego ? 6 : 4;
         ctx.strokeStyle = '#000000';
         ctx.strokeText(text, W / 2, H / 2);
         ctx.fillText(text, W / 2, H / 2);
@@ -626,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const fontStr = currentFont || "'Nunito', sans-serif";
-        const { paths: textPaths, outerPaths, exPolys } = await extractTextContours(text, fontStr, params.spaceWidth, params.textSize);
+        const { paths: textPaths, outerPaths, exPolys } = await extractTextContours(text, fontStr, params.spaceWidth, params.textSize, true);
 
         if (!textPaths || textPaths.length === 0) {
             return group;
@@ -834,114 +868,215 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // 6. CUSTOMIZABLE NAME TAG GENERATOR
+    // 6. CUSTOMIZABLE NAME TAG GENERATOR (Organic Contoured Base & Raised Letters)
     // ============================================================
-    function buildNameTag(params) {
+    async function buildNameTag(params) {
         const group = new THREE.Group();
         const text = (params.text || 'NAME').trim() || 'NAME';
 
-        const fontStyle = `bold 64px ${currentFont}, 'Montserrat', sans-serif`;
-        const tempCvs = document.createElement('canvas');
-        const tempCtx = tempCvs.getContext('2d');
-        tempCtx.font = fontStyle;
-        const metrics = tempCtx.measureText(text);
-        const textWidth = Math.max(70, metrics.width);
-
-        const padX = 20 + params.outlineSize * 2.5;
-        const padY = 12 + params.outlineSize * 2;
-        const scale = 0.28;
-
-        const width = (textWidth + padX * 2) * scale;
-        const height = (70 + padY * 2) * scale;
-        const cornerR = 5;
-
-        const w2 = width / 2;
-        const h2 = height / 2;
-
-        // Beveled Rounded Rectangle
-        const shape = new THREE.Shape();
-        shape.moveTo(-w2 + cornerR, -h2);
-        shape.lineTo(w2 - cornerR, -h2);
-        shape.absarc(w2 - cornerR, -h2 + cornerR, cornerR, -Math.PI / 2, 0, false);
-        shape.lineTo(w2, h2 - cornerR);
-        shape.absarc(w2 - cornerR, h2 - cornerR, cornerR, 0, Math.PI / 2, false);
-        shape.lineTo(-w2 + cornerR, h2);
-        shape.absarc(-w2 + cornerR, h2 - cornerR, cornerR, Math.PI / 2, Math.PI, false);
-        shape.lineTo(-w2, -h2 + cornerR);
-        shape.absarc(-w2 + cornerR, -h2 + cornerR, cornerR, Math.PI, -Math.PI / 2, false);
-
-        // Lanyard Slot
-        const slotW = 12;
-        const slotH = 3.5;
-        const slotY = h2 - 5.5;
-        const slotR = slotH / 2;
-        const slotPath = new THREE.Path();
-        slotPath.moveTo(-slotW / 2 + slotR, slotY - slotR);
-        slotPath.lineTo(slotW / 2 - slotR, slotY - slotR);
-        slotPath.absarc(slotW / 2 - slotR, slotY, slotR, -Math.PI / 2, Math.PI / 2, false);
-        slotPath.lineTo(-slotW / 2 + slotR, slotY + slotR);
-        slotPath.absarc(-slotW / 2 + slotR, slotY, slotR, Math.PI / 2, -Math.PI / 2, false);
-        shape.holes.push(slotPath);
-
-        const baseGeo = new THREE.ExtrudeGeometry(shape, {
-            depth: 3.2,
-            bevelEnabled: true,
-            bevelThickness: 0.35,
-            bevelSize: 0.35,
-            bevelSegments: 3
-        });
-        const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
-        baseMesh.name = "1_Base_Plate";
-        baseMesh.userData = {
-            colorHex: currentColor || '#D01012',
-            colorIdx: 0,
-            layerName: 'Base Plate',
-            extruder: 1
-        };
-        baseMesh.position.z = 0;
-        baseMesh.castShadow = true;
-        baseMesh.receiveShadow = true;
-        group.add(baseMesh);
-
-        // Trace Letters
-        const fontStr = `${currentFont}, 'Montserrat', sans-serif`;
-        const { paths: textPaths } = extractTextContours(text, fontStr);
-
-        if (textPaths && textPaths.length > 0) {
-            const textClipper = new ClipperLib.Clipper();
-            textClipper.AddPaths(textPaths, ClipperLib.PolyType.ptSubject, true);
-            const textPolyTree = new ClipperLib.PolyTree();
-            textClipper.Execute(ClipperLib.ClipType.ctUnion, textPolyTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
-            const letterExPolygons = ClipperLib.JS.PolyTreeToExPolygons(textPolyTree);
-            const letterShapes = exPolygonsToThreeShapes(letterExPolygons, 0.001);
-
-            if (letterShapes.length > 0) {
-                const letterGeo = new THREE.ExtrudeGeometry(letterShapes, {
-                    depth: 2.8,
-                    bevelEnabled: true,
-                    bevelThickness: 0.20,
-                    bevelSize: 0.20,
-                    bevelSegments: 2
-                });
-                const letterMat = new THREE.MeshStandardMaterial({
-                    color: 0xFFFFFF,
-                    roughness: 0.35,
-                    metalness: 0.05
-                });
-                const letterMesh = new THREE.Mesh(letterGeo, letterMat);
-                letterMesh.name = "2_White_Letters";
-                letterMesh.userData = {
-                    colorHex: '#FFFFFF',
-                    colorIdx: 1,
-                    layerName: 'White Letters',
-                    extruder: 2
-                };
-                letterMesh.position.z = 3.2; // Placed on top of 3.2mm base
-                letterMesh.castShadow = true;
-                group.add(letterMesh);
-            }
+        if (typeof ClipperLib === 'undefined') {
+            console.error('ClipperLib not loaded');
+            return group;
         }
 
+        const fontStr = currentFont || "'Montserrat', sans-serif";
+        const { paths: textPaths, outerPaths, exPolys } = await extractTextContours(text, fontStr, params.spaceWidth, params.textSize, false);
+
+        if (!textPaths || textPaths.length === 0 || !exPolys || exPolys.length === 0) {
+            return group;
+        }
+
+        const CLIPPER_SCALE = 1000;
+        const invScale = 1 / CLIPPER_SCALE;
+        const arcTol = 0.1 * CLIPPER_SCALE;
+
+        // Single source of truth for letters
+        const letterBase = exPolys
+            .filter(e => e && e.outer && e.outer.length >= 3)
+            .map(e => e.outer);
+
+        if (letterBase.length === 0) return group;
+
+        // Bounding box of letterBase
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        letterBase.forEach(path => path.forEach(pt => {
+            if (pt.X < minX) minX = pt.X;
+            if (pt.X > maxX) maxX = pt.X;
+            if (pt.Y < minY) minY = pt.Y;
+            if (pt.Y > maxY) maxY = pt.Y;
+        }));
+
+        const brimMm = Math.max(0.8, params.outlineSize || 4.5);
+        const baseThickness = Math.max(1.0, params.baseThick || 3.2);
+        const letterThickness = Math.max(0.4, params.letterThick || 0.8);
+        const outlineStyle = params.outlineStyle || currentOutlineStyle || 'bubble';
+
+        let baseExps = [];
+
+        if (outlineStyle === 'capsule') {
+            // Pill / Stadium Badge around text
+            const padX = brimMm * CLIPPER_SCALE;
+            const padY = brimMm * CLIPPER_SCALE;
+            const bLeft = minX - padX;
+            const bRight = maxX + padX;
+            const bTop = maxY + padY;
+            const bBottom = minY - padY;
+            const bH = bTop - bBottom;
+            const rad = Math.min(bH / 2, 24 * CLIPPER_SCALE);
+
+            const pillPts = [];
+            const steps = 16;
+            for (let i = 0; i <= steps; i++) {
+                const a = 0 + (i / steps) * (Math.PI / 2);
+                pillPts.push({
+                    X: Math.round(bRight - rad + Math.cos(a) * rad),
+                    Y: Math.round(bTop - rad + Math.sin(a) * rad)
+                });
+            }
+            for (let i = 0; i <= steps; i++) {
+                const a = (Math.PI / 2) + (i / steps) * (Math.PI / 2);
+                pillPts.push({
+                    X: Math.round(bLeft + rad + Math.cos(a) * rad),
+                    Y: Math.round(bTop - rad + Math.sin(a) * rad)
+                });
+            }
+            for (let i = 0; i <= steps; i++) {
+                const a = Math.PI + (i / steps) * (Math.PI / 2);
+                pillPts.push({
+                    X: Math.round(bLeft + rad + Math.cos(a) * rad),
+                    Y: Math.round(bBottom + rad + Math.sin(a) * rad)
+                });
+            }
+            for (let i = 0; i <= steps; i++) {
+                const a = (Math.PI * 1.5) + (i / steps) * (Math.PI / 2);
+                pillPts.push({
+                    X: Math.round(bRight - rad + Math.cos(a) * rad),
+                    Y: Math.round(bBottom + rad + Math.sin(a) * rad)
+                });
+            }
+            baseExps = [{ outer: pillPts, holes: [] }];
+        } else if (outlineStyle === 'chamfer') {
+            // Modern Chamfer / Mitered Outline
+            const co = new ClipperLib.ClipperOffset(1.5, arcTol);
+            co.AddPaths(letterBase, ClipperLib.JoinType.jtMiter, ClipperLib.EndType.etClosedPolygon);
+            const bTree = new ClipperLib.PolyTree();
+            co.Execute(bTree, brimMm * CLIPPER_SCALE);
+            baseExps = ClipperLib.JS.PolyTreeToExPolygons(bTree);
+        } else {
+            // Organic Bubble Contour (jtRound)
+            const co = new ClipperLib.ClipperOffset(2.0, arcTol);
+            co.AddPaths(letterBase, ClipperLib.JoinType.jtRound, ClipperLib.EndType.etClosedPolygon);
+            const bTree = new ClipperLib.PolyTree();
+            co.Execute(bTree, brimMm * CLIPPER_SCALE);
+            baseExps = ClipperLib.JS.PolyTreeToExPolygons(bTree);
+        }
+
+        const baseOffsetPaths = baseExps.map(e => e.outer).filter(p => p && p.length >= 3);
+        if (baseOffsetPaths.length === 0) return group;
+
+        let baseMinX = Infinity, baseMaxX = -Infinity, baseMinY = Infinity, baseMaxY = -Infinity;
+        baseOffsetPaths.forEach(path => path.forEach(pt => {
+            if (pt.X < baseMinX) baseMinX = pt.X;
+            if (pt.X > baseMaxX) baseMaxX = pt.X;
+            if (pt.Y < baseMinY) baseMinY = pt.Y;
+            if (pt.Y > baseMaxY) baseMaxY = pt.Y;
+        }));
+
+        const centerY = (baseMinY + baseMaxY) / 2;
+        const holePlacement = params.holePlacement || currentHolePlacement || 'left';
+        const holeDiameterMm = (holePlacement === 'none') ? 0 : Math.max(0, params.holeSize || 5.0);
+
+        let baseShapes = [];
+
+        if (holeDiameterMm >= 2.0) {
+            const eyeletOuterR = ((holeDiameterMm / 2) + 2.8) * CLIPPER_SCALE;
+            const eyeletInnerR = (holeDiameterMm / 2) * CLIPPER_SCALE;
+            const eyeletX = (holePlacement === 'left')
+                ? (baseMinX - eyeletOuterR * 0.45 + (params.holeX || 0) * CLIPPER_SCALE)
+                : (baseMaxX + eyeletOuterR * 0.45 + (params.holeX || 0) * CLIPPER_SCALE);
+            const eyeletY = centerY + (params.holeY || 0) * CLIPPER_SCALE;
+
+            const eyeletCircle = [];
+            const circleSteps = 48;
+            for (let i = 0; i < circleSteps; i++) {
+                const a = (i / circleSteps) * Math.PI * 2;
+                eyeletCircle.push({
+                    X: Math.round(eyeletX + Math.cos(a) * eyeletOuterR),
+                    Y: Math.round(eyeletY + Math.sin(a) * eyeletOuterR)
+                });
+            }
+
+            const eyeletUnion = new ClipperLib.Clipper();
+            eyeletUnion.AddPaths(baseOffsetPaths, ClipperLib.PolyType.ptSubject, true);
+            eyeletUnion.AddPath(eyeletCircle, ClipperLib.PolyType.ptClip, true);
+            const eTree = new ClipperLib.PolyTree();
+            eyeletUnion.Execute(ClipperLib.ClipType.ctUnion, eTree, ClipperLib.PolyFillType.pftNonZero, ClipperLib.PolyFillType.pftNonZero);
+            const eExps = ClipperLib.JS.PolyTreeToExPolygons(eTree);
+            const eSolid = eExps.map(e => ({ outer: e.outer, holes: [] }));
+            baseShapes = exPolygonsToThreeShapes(eSolid, invScale);
+
+            // Punch the keychain hole
+            const holePath = new THREE.Path();
+            holePath.absarc(eyeletX * invScale, eyeletY * invScale, eyeletInnerR * invScale, 0, Math.PI * 2, true);
+            if (baseShapes.length > 0) {
+                baseShapes[0].holes.push(holePath);
+            }
+        } else {
+            baseShapes = exPolygonsToThreeShapes(baseExps, invScale);
+        }
+
+        // 1. Extrude Base Plate (Extruder 1)
+        if (baseShapes.length > 0) {
+            const baseGeo = new THREE.ExtrudeGeometry(baseShapes, {
+                depth: baseThickness,
+                bevelEnabled: true,
+                bevelThickness: 0.35,
+                bevelSize: 0.35,
+                bevelSegments: 3
+            });
+            const baseMesh = new THREE.Mesh(baseGeo, getBaseMaterial());
+            baseMesh.name = "1_Base_Plate";
+            baseMesh.userData = {
+                colorHex: currentColor || '#D01012',
+                colorIdx: 0,
+                layerName: 'Base Plate',
+                extruder: 1
+            };
+            baseMesh.position.z = 0;
+            baseMesh.castShadow = true;
+            baseMesh.receiveShadow = true;
+            group.add(baseMesh);
+        }
+
+        // 2. Extrude Raised Letters (Extruder 2)
+        const letterShapes = exPolygonsToThreeShapes(exPolys, invScale);
+        if (letterShapes.length > 0) {
+            const letterGeo = new THREE.ExtrudeGeometry(letterShapes, {
+                depth: letterThickness,
+                bevelEnabled: true,
+                bevelThickness: 0.20,
+                bevelSize: 0.20,
+                bevelSegments: 2
+            });
+            const letterMat = new THREE.MeshStandardMaterial({
+                color: new THREE.Color(currentLetterColor || '#FFFFFF'),
+                roughness: 0.35,
+                metalness: 0.05
+            });
+            const letterMesh = new THREE.Mesh(letterGeo, letterMat);
+            letterMesh.name = "2_Raised_Letters";
+            letterMesh.userData = {
+                colorHex: currentLetterColor || '#FFFFFF',
+                colorIdx: 1,
+                layerName: 'Raised Letters',
+                extruder: 2
+            };
+            letterMesh.position.z = baseThickness;
+            letterMesh.castShadow = true;
+            group.add(letterMesh);
+        }
+
+        // Center entire model at (0, 0)
         const bbox = new THREE.Box3().setFromObject(group);
         const center = new THREE.Vector3();
         bbox.getCenter(center);
@@ -966,9 +1101,12 @@ document.addEventListener('DOMContentLoaded', () => {
             letterThick: inputThickness ? parseFloat(inputThickness.value) : 0.8,
             outlineSize: elOutlineNum ? parseFloat(elOutlineNum.value) : 4.5,
             holeSize: elHoleSizeNum ? parseFloat(elHoleSizeNum.value) : 5.0,
-            holeX: elHoleXNum ? parseFloat(elHoleXNum.value) : 3.0,
+            holeX: elHoleXNum ? parseFloat(elHoleXNum.value) : 0.0,
             holeY: elHoleYNum ? parseFloat(elHoleYNum.value) : 0.0,
-            spaceWidth: elSpaceWidthNum ? parseFloat(elSpaceWidthNum.value) : 1.0
+            spaceWidth: elSpaceWidthNum ? parseFloat(elSpaceWidthNum.value) : 1.0,
+            outlineStyle: currentOutlineStyle,
+            letterColor: currentLetterColor,
+            holePlacement: currentHolePlacement
         };
 
         if (currentModelGroup) {
@@ -988,7 +1126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (currentTemplate === 'lego') {
             currentModelGroup = await buildLegoKeychain(params);
         } else {
-            currentModelGroup = buildNameTag(params);
+            currentModelGroup = await buildNameTag(params);
         }
 
         if (currentModelGroup) {
@@ -1375,28 +1513,58 @@ color("#FFFFFF") translate([0, 0, ${whiteZ}]) linear_extrude(height = ${letterTh
 }
 `;
         } else {
+            const fontClean = currentFont.replace(/['",]/g, '').trim();
+            const holePlacement = currentHolePlacement || 'left';
+            const holeDia = (holePlacement === 'none') ? 0 : parseFloat(holeSize);
+            const outline = parseFloat(outlineSize) || 4.5;
+            const textSize = elTextSizeNum ? elTextSizeNum.value : '18';
+
             return `// ============================================================
-// Customizable Name Tag.scad
+// Customizable Name Tag.scad - Kira's Creation
+// Parametric Contoured Base Plate with Raised 3D Letters
 // ============================================================
 
-nome = "${text}";
-tamanho = 20;
-fonte = "Liberation Sans:style=Bold";
+$fn = 60;
+text_string = "${text}";
+text_size = ${textSize};
+font_name = "${fontClean}:style=Bold";
+outline_size = ${outline};
+base_thickness = ${baseThick};
+raised_thickness = ${letterThick};
+hole_placement = "${holePlacement}"; // "left", "right", "none"
+hole_diameter = ${holeDia};
 
-module tag_plate() {
+module name_text_2d() {
+    text(text_string, size = text_size, font = font_name, halign = "center", valign = "center");
+}
+
+// 1. Organic Contoured Base Plate (Extruder 1)
+color("${currentColor}") linear_extrude(height = base_thickness) {
     difference() {
-        minkowski() {
-            square([len(nome)*tamanho*0.7 + 16, tamanho*1.8 + 12], center=true);
-            circle(r=5);
+        union() {
+            offset(r = outline_size) name_text_2d();
+            if (hole_placement == "left") {
+                translate([-len(text_string) * text_size * 0.36 - 6 - ${holeX}, ${holeY}])
+                    circle(d = hole_diameter + 5.6);
+            } else if (hole_placement == "right") {
+                translate([len(text_string) * text_size * 0.36 + 6 + ${holeX}, ${holeY}])
+                    circle(d = hole_diameter + 5.6);
+            }
         }
-        translate([0, (tamanho*1.8 + 12)/2 - 3])
-            minkowski() { square([10, 2], center=true); circle(r=1.5); }
+        if (hole_placement == "left") {
+            translate([-len(text_string) * text_size * 0.36 - 6 - ${holeX}, ${holeY}])
+                circle(d = hole_diameter);
+        } else if (hole_placement == "right") {
+            translate([len(text_string) * text_size * 0.36 + 6 + ${holeX}, ${holeY}])
+                circle(d = hole_diameter);
+        }
     }
 }
 
-color("${currentColor}") linear_extrude(height = 3.2) tag_plate();
-color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
-    text(nome, size = tamanho, font = fonte, halign = "center", valign = "center");
+// 2. Raised 3D Letters (Extruder 2)
+color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(height = raised_thickness) {
+    name_text_2d();
+}
 `;
         }
     }
@@ -1510,7 +1678,7 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
     syncControl(elHoleYNum, elHoleYSlider, renderSolidModel);
     setupStepper('btn-minus-holey', 'btn-plus-holey', elHoleYNum, elHoleYSlider, 0.5, renderSolidModel);
 
-    // Color Swatches
+    // Color Swatches (Base Color)
     if (colorSwatches) {
         colorSwatches.addEventListener('click', (e) => {
             const btn = e.target.closest('.color-swatch');
@@ -1520,6 +1688,46 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
             currentColor = btn.dataset.color || '#D32F2F';
             currentColorName = btn.dataset.name || 'Ruby Red';
             currentRate = parseFloat(btn.dataset.rate) || 7.0;
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
+    // Letter Color Swatches (Raised Text Color)
+    if (letterColorSwatches) {
+        letterColorSwatches.addEventListener('click', (e) => {
+            const btn = e.target.closest('.color-swatch');
+            if (!btn) return;
+            letterColorSwatches.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+            btn.classList.add('active');
+            currentLetterColor = btn.dataset.color || '#FFFFFF';
+            currentLetterColorName = btn.dataset.name || 'Pure White';
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
+    // Outline Style Options (Bubble, Capsule, Chamfer)
+    if (outlineStyleOptions) {
+        outlineStyleOptions.addEventListener('click', (e) => {
+            const btn = e.target.closest('.finish-option');
+            if (!btn) return;
+            outlineStyleOptions.querySelectorAll('.finish-option').forEach(f => f.classList.remove('active'));
+            btn.classList.add('active');
+            currentOutlineStyle = btn.dataset.style || 'bubble';
+            saveHistoryState();
+            renderSolidModel();
+        });
+    }
+
+    // Hole Placement Options (Left, Right, None)
+    if (holePlacementOptions) {
+        holePlacementOptions.addEventListener('click', (e) => {
+            const btn = e.target.closest('.finish-option');
+            if (!btn) return;
+            holePlacementOptions.querySelectorAll('.finish-option').forEach(f => f.classList.remove('active'));
+            btn.classList.add('active');
+            currentHolePlacement = btn.dataset.pos || 'left';
             saveHistoryState();
             renderSolidModel();
         });
@@ -1551,6 +1759,14 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
         });
     }
 
+    // Template Mode Visibility Toggle
+    function updateTemplateVisibility() {
+        const isNameTag = (currentTemplate === 'nametag');
+        if (fieldOutlineStyle) fieldOutlineStyle.style.display = isNameTag ? 'block' : 'none';
+        if (fieldLetterColor) fieldLetterColor.style.display = isNameTag ? 'block' : 'none';
+        if (fieldHolePlacement) fieldHolePlacement.style.display = isNameTag ? 'block' : 'none';
+    }
+
     // SCAD Model Selector
     if (scadSelect) {
         scadSelect.addEventListener('change', () => {
@@ -1560,6 +1776,12 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
                 nametag: '🏷️ NAME TAG'
             };
             if (templateBadge) templateBadge.textContent = badgeTexts[currentTemplate] || '🧊 3D MODEL';
+            if (currentTemplate === 'nametag' && inputName && inputName.value === 'LEGO') {
+                inputName.value = 'KIRA';
+            } else if (currentTemplate === 'lego' && inputName && inputName.value === 'KIRA') {
+                inputName.value = 'LEGO';
+            }
+            updateTemplateVisibility();
             camera.up.set(0, 0, 1);
             camera.position.copy(defaultCamPos);
             controls.target.set(0, 0, 3);
@@ -1586,16 +1808,61 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
                 stateHistory.pop();
                 const prev = stateHistory[stateHistory.length - 1];
                 if (prev) {
-                    currentTemplate = prev.template;
-                    if (scadSelect) scadSelect.value = prev.template;
-                    if (inputName) inputName.value = prev.text;
-                    currentColor = prev.color;
-                    currentColorName = prev.colorName;
-                    currentFinish = prev.finish;
-                    if (elOutlineNum) { elOutlineNum.value = prev.outline; if (elOutlineSlider) elOutlineSlider.value = prev.outline; }
-                    if (elBaseThickNum) { elBaseThickNum.value = prev.baseThick; if (elBaseThickSlider) elBaseThickSlider.value = prev.baseThick; }
-                    if (elTextSizeNum) { elTextSizeNum.value = prev.textSize; if (elTextSizeSlider) elTextSizeSlider.value = prev.textSize; }
-                    if (inputThickness) { inputThickness.value = prev.letterThick; if (elLetterThickSlider) elLetterThickSlider.value = prev.letterThick; }
+                    currentTemplate = prev.template || 'lego';
+                    if (scadSelect) scadSelect.value = currentTemplate;
+                    if (inputName) inputName.value = prev.text || 'LEGO';
+                    currentColor = prev.color || '#D01012';
+                    currentColorName = prev.colorName || 'LEGO Red';
+                    if (colorSwatches) {
+                        colorSwatches.querySelectorAll('.color-swatch').forEach(b => {
+                            b.classList.toggle('active', b.dataset.color === currentColor);
+                        });
+                    }
+
+                    if (prev.letterColor) {
+                        currentLetterColor = prev.letterColor;
+                        currentLetterColorName = prev.letterColorName || 'Pure White';
+                        if (letterColorSwatches) {
+                            letterColorSwatches.querySelectorAll('.color-swatch').forEach(b => {
+                                b.classList.toggle('active', b.dataset.color === currentLetterColor);
+                            });
+                        }
+                    }
+
+                    if (prev.outlineStyle) {
+                        currentOutlineStyle = prev.outlineStyle;
+                        if (outlineStyleOptions) {
+                            outlineStyleOptions.querySelectorAll('.finish-option').forEach(b => {
+                                b.classList.toggle('active', b.dataset.style === currentOutlineStyle);
+                            });
+                        }
+                    }
+
+                    if (prev.holePlacement) {
+                        currentHolePlacement = prev.holePlacement;
+                        if (holePlacementOptions) {
+                            holePlacementOptions.querySelectorAll('.finish-option').forEach(b => {
+                                b.classList.toggle('active', b.dataset.pos === currentHolePlacement);
+                            });
+                        }
+                    }
+
+                    currentFinish = prev.finish || 'standard';
+                    if (finishOptions) {
+                        finishOptions.querySelectorAll('.finish-option').forEach(b => {
+                            b.classList.toggle('active', b.dataset.finish === currentFinish);
+                        });
+                    }
+
+                    if (elOutlineNum) { elOutlineNum.value = prev.outline || '4.5'; if (elOutlineSlider) elOutlineSlider.value = prev.outline || '4.5'; }
+                    if (elBaseThickNum) { elBaseThickNum.value = prev.baseThick || '3.2'; if (elBaseThickSlider) elBaseThickSlider.value = prev.baseThick || '3.2'; }
+                    if (elTextSizeNum) { elTextSizeNum.value = prev.textSize || '18'; if (elTextSizeSlider) elTextSizeSlider.value = prev.textSize || '18'; }
+                    if (inputThickness) { inputThickness.value = prev.letterThick || '0.8'; if (elLetterThickSlider) elLetterThickSlider.value = prev.letterThick || '0.8'; }
+                    if (elHoleSizeNum) { elHoleSizeNum.value = prev.holeSize || '5.0'; if (elHoleSizeSlider) elHoleSizeSlider.value = prev.holeSize || '5.0'; }
+                    if (elHoleXNum) { elHoleXNum.value = prev.holeX || '0.0'; if (elHoleXSlider) elHoleXSlider.value = prev.holeX || '0.0'; }
+                    if (elHoleYNum) { elHoleYNum.value = prev.holeY || '0.0'; if (elHoleYSlider) elHoleYSlider.value = prev.holeY || '0.0'; }
+                    if (elSpaceWidthNum) { elSpaceWidthNum.value = prev.spaceWidth || '1.0'; if (elSpaceWidthSlider) elSpaceWidthSlider.value = prev.spaceWidth || '1.0'; }
+                    updateTemplateVisibility();
                     renderSolidModel();
                 }
             }
@@ -1605,15 +1872,36 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
     // Reset to Defaults
     if (btnResetScad) {
         btnResetScad.addEventListener('click', () => {
-            if (inputName) inputName.value = 'LEGO';
+            if (inputName) inputName.value = (currentTemplate === 'nametag') ? 'KIRA' : 'LEGO';
             if (elOutlineNum) { elOutlineNum.value = '4.5'; if (elOutlineSlider) elOutlineSlider.value = '4.5'; }
             if (elBaseThickNum) { elBaseThickNum.value = '3.2'; if (elBaseThickSlider) elBaseThickSlider.value = '3.2'; }
             if (elTextSizeNum) { elTextSizeNum.value = '18'; if (elTextSizeSlider) elTextSizeSlider.value = '18'; }
             if (inputThickness) { inputThickness.value = '0.8'; if (elLetterThickSlider) elLetterThickSlider.value = '0.8'; }
             if (elHoleSizeNum) { elHoleSizeNum.value = '5.0'; if (elHoleSizeSlider) elHoleSizeSlider.value = '5.0'; }
-            if (elHoleXNum) { elHoleXNum.value = '3.0'; if (elHoleXSlider) elHoleXSlider.value = '3.0'; }
+            if (elHoleXNum) { elHoleXNum.value = '0.0'; if (elHoleXSlider) elHoleXSlider.value = '0.0'; }
             if (elHoleYNum) { elHoleYNum.value = '0.0'; if (elHoleYSlider) elHoleYSlider.value = '0.0'; }
             if (elSpaceWidthNum) { elSpaceWidthNum.value = '1.0'; if (elSpaceWidthSlider) elSpaceWidthSlider.value = '1.0'; }
+
+            currentOutlineStyle = 'bubble';
+            if (outlineStyleOptions) {
+                outlineStyleOptions.querySelectorAll('.finish-option').forEach(b => {
+                    b.classList.toggle('active', b.dataset.style === 'bubble');
+                });
+            }
+            currentLetterColor = '#FFFFFF';
+            currentLetterColorName = 'Pure White';
+            if (letterColorSwatches) {
+                letterColorSwatches.querySelectorAll('.color-swatch').forEach(b => {
+                    b.classList.toggle('active', b.dataset.color === '#FFFFFF');
+                });
+            }
+            currentHolePlacement = 'left';
+            if (holePlacementOptions) {
+                holePlacementOptions.querySelectorAll('.finish-option').forEach(b => {
+                    b.classList.toggle('active', b.dataset.pos === 'left');
+                });
+            }
+            updateTemplateVisibility();
             camera.up.set(0, 0, 1);
             camera.position.copy(defaultCamPos);
             controls.target.set(0, 0, 3);
@@ -1674,6 +1962,9 @@ color("#FFFFFF") translate([0, -2, 3.2]) linear_extrude(height = 2.8)
             window.location.href = 'contact.html?type=custom_order';
         });
     }
+
+    // Initialize template-specific fields
+    updateTemplateVisibility();
 
     // Wait for Google Fonts to be ready, then render
     if (document.fonts && document.fonts.ready) {
