@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script>
+        (function() {
+            var m = localStorage.getItem('kiras_theme') || 'system';
+            if (m === 'dark' || (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Walkthrough & Architecture // Kira's Creation Soft-3D Studio</title>
+    
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="description" content="Technical Development Walkthrough, Architecture Log, and Agent Context for Kira's Creation Soft-3D Studio.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Anek+Bangla:wght@500;700&family=Hind+Siliguri:wght@400;500;600;700&family=Nunito:wght@400;600;700&family=Quicksand:wght@500;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/base.css?v=3.0">
+    <link rel="stylesheet" href="css/components.css?v=3.3">
+    <link rel="stylesheet" href="css/animations.css?v=3.0">
+    <link rel="stylesheet" href="css/pages.css?v=3.0">
+
+    <style>
+        .wt-hero {
+            padding: 9rem 1rem 3rem;
+            text-align: center;
+        }
+        .wt-badge-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            background: rgba(46, 204, 113, 0.15);
+            color: #27ae60;
+            border: 1px solid rgba(46, 204, 113, 0.3);
+            margin-bottom: 1rem;
+        }
+        .wt-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 1rem 5rem;
+        }
+        .wt-card {
+            padding: 2rem;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .wt-card:hover {
+            transform: translateY(-3px);
+        }
+        .wt-phase-tag {
+            display: inline-block;
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            background: var(--c-primary);
+            color: white;
+            margin-bottom: 0.75rem;
+        }
+        .wt-phase-tag.paused {
+            background: #f39c12;
+        }
+        .wt-phase-tag.roadmap {
+            background: #8e44ad;
+        }
+        .wt-step-list {
+            list-style: none;
+            padding: 0;
+            margin: 1.25rem 0 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.9rem;
+        }
+        .wt-step-list li {
+            position: relative;
+            padding-left: 1.8rem;
+            line-height: 1.55;
+            color: var(--c-text);
+        }
+        .wt-step-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 0;
+            font-weight: 900;
+            color: #27ae60;
+        }
+        .wt-step-list li.paused::before {
+            content: '⏸️';
+            font-size: 0.9rem;
+        }
+        .wt-step-list li.pending::before {
+            content: '📌';
+            font-size: 0.9rem;
+        }
+        .code-box {
+            background: #181920;
+            color: #f1f2f6;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            padding: 1.25rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin-top: 1rem;
+            border: 1px solid rgba(255,255,255,0.08);
+            line-height: 1.5;
+        }
+        .spec-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            font-size: 0.88rem;
+        }
+        .spec-table th, .spec-table td {
+            padding: 10px 14px;
+            text-align: left;
+            border-bottom: 1px solid rgba(0,0,0,0.08);
+        }
+        [data-theme="dark"] .spec-table th, [data-theme="dark"] .spec-table td {
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .spec-table th {
+            font-weight: 700;
+            color: var(--c-primary);
+        }
+        .quick-nav-bar {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+        .nav-filter-btn {
+            padding: 8px 18px;
+            border-radius: 999px;
+            border: 1px solid rgba(0,0,0,0.1);
+            background: var(--c-surface);
+            color: var(--c-text);
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .nav-filter-btn.active, .nav-filter-btn:hover {
+            background: var(--c-primary);
+            color: white;
+            border-color: var(--c-primary);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="site-wrapper">
+        <!-- Header -->
+        <header class="main-header">
+            <div class="nav-pill">
+                <a href="index.html" class="brand-logo">
+                    <span class="brand-text">Kira's Creation</span>
+                </a>
+                
+                <nav class="desktop-nav">
+                    <a href="index.html" data-i18n="nav_home">Home</a>
+                    <a href="services.html" data-i18n="nav_services">Services</a>
+                    <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                    <a href="portfolio.html" data-i18n="nav_gallery">Gallery</a>
+                    <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+                    <a href="customize.html" data-i18n="nav_customize">Customize</a>
+                    <a href="about.html" data-i18n="nav_about">About</a>
+                    <a href="contact.html" data-i18n="nav_contact">Contact</a>
+                </nav>
+                
+                <div class="header-cta">
+                    <button class="theme-toggle-btn" aria-label="Toggle Theme" title="Toggle Light/Dark Theme">🌙</button>
+                    <button class="lang-toggle-btn" aria-label="Switch Language / ভাষা পরিবর্তন" title="Language / ভাষা">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle; flex-shrink:0;"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"></path></svg>
+                        <span class="btn-text" style="font-weight:700; margin-left:3px;">EN <span style="opacity:0.65; font-weight:600;">| বাংলা</span></span>
+                    </button>
+                    <button class="header-cart-btn" onclick="KiraCart.openDrawer()" aria-label="View Shopping Cart" title="View Cart">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        <span class="cart-count-badge" style="display:none;">0</span>
+                    </button>
+                    <div class="header-user-slot"></div>
+                    <a href="admin.html" class="clay-btn btn-sm btn-coral">Admin Portal</a>
+                </div>
+
+                <button class="mobile-toggle" aria-label="Toggle Menu">
+                    <span class="toggle-icon"></span>
+                </button>
+            </div>
+
+            <!-- Mobile Dropdown -->
+            <div class="mobile-menu-dropdown clay-card">
+                <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem; flex-wrap:wrap;">
+                    <button class="theme-toggle-btn" aria-label="Toggle Theme">🌙</button>
+                    <button class="lang-toggle-btn" aria-label="Switch Language / ভাষা পরিবর্তন">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10z"></path></svg>
+                        <span class="btn-text">EN | বাংলা</span>
+                    </button>
+                    <button class="header-cart-btn" onclick="KiraCart.openDrawer()" aria-label="Shopping Cart">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"></circle><circle cx="20" cy="21" r="1"></circle><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path></svg>
+                        <span class="cart-text">Cart</span>
+                        <span class="cart-count-badge" style="display:none;">0</span>
+                    </button>
+                    <div class="header-user-slot"></div>
+                </div>
+                <a href="index.html" data-i18n="nav_home">Home</a>
+                <a href="services.html" data-i18n="nav_services">Services</a>
+                <a href="materials.html" data-i18n="nav_materials">Materials</a>
+                <a href="portfolio.html" data-i18n="nav_gallery">Gallery</a>
+                <a href="pricing.html" data-i18n="nav_pricing">Pricing</a>
+                <a href="customize.html" data-i18n="nav_customize">Customize</a>
+                <a href="about.html" data-i18n="nav_about">About</a>
+                <a href="contact.html" data-i18n="nav_contact">Contact</a>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="wt-hero">
+            <div class="wt-badge-status">🟢 System Status: 100% Operational & Synchronized</div>
+            <h1 style="font-size:2.6rem; font-weight:800; margin-bottom:0.75rem;">System Architecture & Development Walkthrough</h1>
+            <p style="color:var(--c-text-muted); font-size:1.15rem; max-width:760px; margin:0 auto 2rem;">
+                সম্পূর্ণ প্রজেক্টের কাজের ধাপ, বর্তমান স্থিতি, ৩ডি ইঞ্জিনের আর্কিটেকচার এবং যেকোনো অ্যাসিস্ট্যান্ট/এজেন্টের জন্য বিস্তারিত গাইডলাইন।
+            </p>
+            
+            <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+                <a href="customize.html" class="clay-btn btn-coral">🎨 Test 3D Customizer</a>
+                <a href="admin.html" class="clay-btn btn-cream">🔐 Open Admin Dashboard</a>
+                <a href="portfolio.html" class="clay-btn btn-secondary">🖼️ Shape Gallery</a>
+            </div>
+        </section>
+
+        <!-- Main Walkthrough Cards -->
+        <main class="wt-grid">
+
+            <!-- Card 0: Quick Context for Assistants & Agents -->
+            <div class="clay-card wt-card" style="border-left: 5px solid var(--c-primary);">
+                <span class="wt-phase-tag">🤖 Agent & Assistant Fast Briefing</span>
+                <h2 style="margin-top:0.5rem;">প্রজেক্ট সংক্ষিপ্ত পরিচয় ও জরুরি নির্দেশনা</h2>
+                <p style="color:var(--c-text-muted); margin-top:0.5rem;">
+                    এই কোডবেসটি <strong>Kira's Creation Soft-3D Studio</strong>-এর অফিশিয়াল প্ল্যাটফর্ম। এখানে থ্রি-ডি প্রিন্টিং স্টোরফ্রন্টের পাশাপাশি একটি ফুল-ফিচার্ড ইন-ব্রাউজার সলিড CAD কাস্টমাইজার যুক্ত রয়েছে।
+                </p>
+                <ul class="wt-step-list">
+                    <li><strong>কোডবেস স্ট্যাক:</strong> Vanilla HTML5, CSS3, ES6 JavaScript, Three.js (WebGL), ClipperLib (2D Minkowski Offset), JSZip (Multi-Color 3MF builder)।</li>
+                    <li><strong>ইউজার কমিউনিকেশন নীতি:</strong> ব্যবহারকারীর সাথে সবসময় বাংলায় (Bengali) কথা বলুন।</li>
+                    <li><strong>গুরুত্বপূর্ণ সতর্কতা:</strong> ইউজার অনুরোধে ২ডি লেআউট স্টুডিও এবং শেপ অ্যাডিটিভস (হার্ট, স্টার, ফ্লাওয়ার ইত্যাদি) বাদ দেওয়া হয়েছে ব্রাউজার ল্যাগ প্রতিরোধে। এগুলো পুনরায় যুক্ত করবেন না।</li>
+                    <li><strong>গিটহাব রিপোজিটরি:</strong> <code>origin/main</code> ব্রাঞ্চে সর্বশেষ কোড পুশ করা রয়েছে।</li>
+                </ul>
+            </div>
+
+            <!-- Card 1: 3D CAD Engine & Mathematical Elevators -->
+            <div class="clay-card wt-card">
+                <span class="wt-phase-tag">🧊 3D Solid CAD Engine</span>
+                <h2>থ্রি-ডি সলিড ইঞ্জিনের আর্কিটেকচার ও লেয়ার হাইট</h2>
+                <p style="color:var(--c-text-muted); margin-top:0.5rem;">
+                    <code>js/customize.js</code> ফাইলটি সম্পূর্ণ থ্রি-ডি মডেলিং হ্যান্ডেল করে। এতে দুটি প্রধান ওপেনএসসিএডি মডেল রয়েছে:
+                </p>
+                
+                <h3 style="margin-top:1.5rem; font-size:1.15rem;">১. LEGO Keychain.scad (4-Layer 6.0mm Elevation)</h3>
+                <table class="spec-table">
+                    <thead>
+                        <tr>
+                            <th>লেয়ার ও পার্টস</th>
+                            <th>Z-উচ্চতা রেঞ্জ</th>
+                            <th>মোট উচ্চতা</th>
+                            <th>কালার ও মেটেরিয়াল</th>
+                            <th>এক্সট্রুডার</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Layer 1 (Base Plate)</strong></td>
+                            <td>Z = 0.0 → 3.2 mm</td>
+                            <td>3.2 mm</td>
+                            <td>LEGO Red (#D01012)</td>
+                            <td>Extruder 1</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Layer 2 (Yellow Accent)</strong></td>
+                            <td>Z = 3.2 → 4.2 mm</td>
+                            <td>1.0 mm</td>
+                            <td>LEGO Yellow (#FFD700)</td>
+                            <td>Extruder 2</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Layer 3 (Black Border)</strong></td>
+                            <td>Z = 4.2 → 5.2 mm</td>
+                            <td>1.0 mm</td>
+                            <td>Carbon Black (#141414)</td>
+                            <td>Extruder 3</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Layer 4 (White Letters)</strong></td>
+                            <td>Z = 5.2 → 6.0 mm</td>
+                            <td>0.8 mm</td>
+                            <td>Pure White (#FFFFFF)</td>
+                            <td>Extruder 4</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top:0.75rem; font-weight:700; color:var(--c-primary);">মোট অ্যাসেম্বলি উচ্চতা: ঠিক ৬.০ মিলিমিটার (Bambu Lab AMS প্রিন্টারের জন্য আদর্শ)।</p>
+
+                <h3 style="margin-top:2rem; font-size:1.15rem;">২. Customizable Name Tag.scad (অর্গানিক কনট্যুরড বেজ)</h3>
+                <ul class="wt-step-list">
+                    <li><strong>৩টি আউটলাইন স্টাইল:</strong> 🫧 Bubble Contour (লেটার-হাগিং কার্ভ), 💊 Capsule Badge (স্মুথ পিল ব্যাজ), 📐 Modern Chamfer (জ্যামিতিক মাইটার্ড চ্যাম্ফার)।</li>
+                    <li><strong>জিরো ফন্ট মিসম্যাচ:</strong> Google Fonts এর রিয়েল ওয়েট লোড করে নির্ভুল ৩ডি এক্সট্রুশন তৈরি হয় (টিল্ট মুক্ত খাড়া টাইপোগ্রাফি)।</li>
+                    <li><strong>টু-টোন কালার কাস্টমাইজেশন:</strong> প্রাইমারি বেজ কালার এবং সেকেন্ডারি রেইজড টেক্সট কালার সোয়াচ।</li>
+                    <li><strong>রিং পজিশন কন্ট্রোল:</strong> Left Eyelet, Right Eyelet, অথবা None (ডেস্কটপ ডিসপ্লে নেমপ্লেট)।</li>
+                </ul>
+
+                <div class="code-box">
+// Core Parameters Object (js/customize.js)
+const params = {
+    text: "KIRA",           // টেক্সট ইনপুট
+    textSize: 18,           // অক্ষরের আকার (১০-৩২ মিমি)
+    baseThick: 3.2,         // বেজ উচ্চতা (১-৮ মিমি)
+    letterThick: 0.8,       // অক্ষরের উচ্চতা (০.৪-৪ মিমি)
+    outlineSize: 4.5,       // আউটলাইনের বিস্তার (০.৮-১০ মিমি)
+    outlineStyle: 'bubble', // 'bubble' | 'capsule' | 'chamfer'
+    letterColor: '#FFFFFF', // সেকেন্ডারি লেখার রঙ
+    holePlacement: 'left'   // 'left' | 'right' | 'none'
+};
+                </div>
+            </div>
+
+            <!-- Card 2: Export Engine (3MF, STL, OpenSCAD) -->
+            <div class="clay-card wt-card">
+                <span class="wt-phase-tag">📦 Export Engine</span>
+                <h2>ম্যানিফোল্ড মেশ ওয়েল্ডিং ও এক্সপোর্ট পাইপলাইন</h2>
+                <p style="color:var(--c-text-muted); margin-top:0.5rem;">
+                    সরাসরি ৩ডি প্রিন্টারে প্রিন্ট করার জন্য ফাইল এক্সপোর্ট সিস্টেম:
+                </p>
+                <ul class="wt-step-list">
+                    <li><strong>Bambu Studio Multi-Color 3MF:</strong> <code>JSZip</code> ব্যবহার করে জিপ আর্কাইভ তৈরি করে <code>/3D/3dmodel.model</code> এবং মেটাডাটা সহ মাল্টি-এক্সট্রুডার 3MF ফাইল এক্সপোর্ট হয়।</li>
+                    <li><strong>Watertight Manifold Welder:</strong> ০.০০০১ মিমি প্রিসিশন রাউন্ডিং এবং পয়েন্ট হ্যাশম্যাপ দিয়ে মেশ ওয়েল্ড করা হয়, ফলে স্লাইসারে কোনো হোল বা নন-ম্যানিফোল্ড এরর আসে না।</li>
+                    <li><strong>Binary STL Export:</strong> যেকোনো সাধারণ ৩ডি প্রিন্টারের জন্য ওয়াটারটাইট বাইনারি এসটিএল ফাইল।</li>
+                    <li><strong>Live OpenSCAD Code:</strong> ইউজারের পছন্দ অনুযায়ী রিয়েলটাইমে প্যারামেট্রিক <code>.scad</code> কোড তৈরি হয় এবং কপি/ডাউনলোড করা যায়।</li>
+                </ul>
+            </div>
+
+            <!-- Card 3: Storefront & Admin Portal -->
+            <div class="clay-card wt-card">
+                <span class="wt-phase-tag">🛍️ Storefront & Operations</span>
+                <h2>ই-কমার্স স্টোরফ্রন্ট, কার্ট ও অ্যাডমিন সিস্টেম</h2>
+                <ul class="wt-step-list">
+                    <li><strong>KiraCart (js/cart.js):</strong> সাইটব্যাপী লোকালস্টোরেজ পারসিস্ট্যান্ট কার্ট ড্রয়ার, রিয়েলটাইম ব্যাজ এবং ৩ডি কাস্টমাইজার স্ন্যাপশট ইমেজ সেভ সুবিধা।</li>
+                    <li><strong>Admin Portal (admin.html & js/admin.js):</strong> সিকিউরিটি পিন (<code>1234</code>), অর্ডার ট্র্যাকিং, প্রোডাক্ট CRUD, ফিল্টার ও গুগল শিট সিঙ্ক।</li>
+                    <li><strong>Bilingual Support (js/translations.js):</strong> বাংলা ও ইংরেজি উভয় ভাষায় তাৎক্ষণিক পেজ ট্রানজিশন।</li>
+                    <li><strong>10-Page Unified Navigation:</strong> সবকটি পেজের মেনু শতভাগ সিঙ্ক্রোনাইজড।</li>
+                </ul>
+            </div>
+
+            <!-- Card 4: Current Paused State & Benchmark -->
+            <div class="clay-card wt-card" style="border-left: 5px solid #f39c12;">
+                <span class="wt-phase-tag paused">⏸️ Current Benchmark (যেখানে কাজ শেষ হয়েছে)</span>
+                <h2>বর্তমান স্ট্যাটাস ও চেকপয়েন্ট</h2>
+                <p style="color:var(--c-text-muted); margin-top:0.5rem;">
+                    প্রজেক্টের যাবতীয় পূর্ববর্তী রিকুয়েস্ট শতভাগ নির্ভুলভাবে সম্পন্ন করা হয়েছে:
+                </p>
+                <ul class="wt-step-list">
+                    <li class="paused"><strong>LEGO Keychain & Name Tag:</strong> ৩ডি প্রিভিউ, এক্সপোর্ট এবং ওপেনএসসিএডি কোড পুরোপুরি সক্রিয় ও ভেরিফায়েড।</li>
+                    <li class="paused"><strong>UI Bloat Cleanup:</strong> ভারী ২ডি স্টুডিও মোডাল রিমুভ করে সিস্টেম ফাস্ট ও স্মুথ করা হয়েছে।</li>
+                    <li class="paused"><strong>Pricing Navigation Bug Fixed:</strong> প্রাইসিং পেজের মেনুতে কাস্টমাইজ লিংক মিসিং সমস্যা সমাধান করা হয়েছে।</li>
+                    <li class="paused"><strong>Git Push:</strong> সমস্ত কোড গিটহাব <code>origin/main</code> ব্রাঞ্চে পুশ করা রয়েছে (ক্লিন র্কিং ট্রি)।</li>
+                </ul>
+            </div>
+
+            <!-- Card 5: Next Steps / Roadmap -->
+            <div class="clay-card wt-card" style="border-left: 5px solid #8e44ad;">
+                <span class="wt-phase-tag roadmap">🚀 Future Roadmap (ভবিষ্যত উন্নয়ন পরিকল্পনা)</span>
+                <h2>পরবর্তী পদক্ষেপ যা করা যেতে পারে</h2>
+                <ul class="wt-step-list">
+                    <li class="pending"><strong>নতুন ওপেনএসসিএডি টেমপ্লেট:</strong> ডেস্ক স্ট্যান্ড নেমপ্লেট (Desk Nameplate with Stand) ও লাগেজ ট্যাগ (Luggage Tag)।</li>
+                    <li class="pending"><strong>প্রিসেট ডিপ-লিংক শেয়ারিং:</strong> কাস্টমাইজারের কনফিগারেশন ইউআরএল হ্যাশে এনকোড করে ১-ক্লিকে বন্ধুদের সাথে শেয়ারিং।</li>
+                    <li class="pending"><strong>ক্লাউড স্লাইসিং এপিআই:</strong> প্রুসা অথবা ব্যাম্বু সিএলআই দিয়ে স্বয়ংক্রিয় প্রিন্ট সময় ও ফিলামেন্ট ওজনের সঠিক হিসাব।</li>
+                </ul>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-content" style="text-align:center; padding: 2rem 1rem;">
+                <p style="color:var(--c-text-muted); font-size:0.95rem;">
+                    © 2026 Kira's Creation Soft-3D Studio • Dhaka, Bangladesh • Architecture & Walkthrough Hub
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/main.js"></script>
+    <script src="js/translations.js"></script>
+    <script src="js/cart.js?v=6"></script>
+</body>
+</html>

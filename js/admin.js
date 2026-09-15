@@ -409,17 +409,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabOrders = document.getElementById('tab-orders');
     const tabProducts = document.getElementById('tab-products');
     const tabUsers = document.getElementById('tab-users');
+    const tabWalkthrough = document.getElementById('tab-walkthrough');
     const viewOrders = document.getElementById('view-orders');
     const viewProducts = document.getElementById('view-products');
     const viewUsers = document.getElementById('view-users');
+    const viewWalkthrough = document.getElementById('view-walkthrough');
 
     function resetTabs() {
         if(tabOrders) { tabOrders.style.background = 'transparent'; tabOrders.style.color = 'var(--c-text)'; }
         if(tabProducts) { tabProducts.style.background = 'transparent'; tabProducts.style.color = 'var(--c-text)'; }
         if(tabUsers) { tabUsers.style.background = 'transparent'; tabUsers.style.color = 'var(--c-text)'; }
+        if(tabWalkthrough) { tabWalkthrough.style.background = 'transparent'; tabWalkthrough.style.color = 'var(--c-text)'; }
         if(viewOrders) viewOrders.style.display = 'none';
         if(viewProducts) viewProducts.style.display = 'none';
         if(viewUsers) viewUsers.style.display = 'none';
+        if(viewWalkthrough) viewWalkthrough.style.display = 'none';
     }
 
     if (tabOrders) {
@@ -448,6 +452,15 @@ document.addEventListener('DOMContentLoaded', () => {
             tabUsers.style.color = 'white';
             viewUsers.style.display = 'block';
             loadUsers();
+        });
+    }
+
+    if (tabWalkthrough) {
+        tabWalkthrough.addEventListener('click', () => {
+            resetTabs();
+            tabWalkthrough.style.background = 'var(--c-primary)';
+            tabWalkthrough.style.color = 'white';
+            viewWalkthrough.style.display = 'block';
         });
     }
 

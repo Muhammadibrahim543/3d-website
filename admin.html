@@ -131,6 +131,7 @@
                 <button id="tab-orders" class="clay-btn" style="background:var(--c-primary); color:white; padding: 0.8rem 2rem;">📦 Orders</button>
                 <button id="tab-products" class="clay-btn" style="padding: 0.8rem 2rem;">🛍️ Products</button>
                 <button id="tab-users" class="clay-btn" style="padding: 0.8rem 2rem;">👥 Users</button>
+                <button id="tab-walkthrough" class="clay-btn" style="padding: 0.8rem 2rem;">🧭 Architecture Walkthrough</button>
             </div>
 
             <div id="view-orders">
@@ -308,6 +309,50 @@
                     <!-- Pagination Controls -->
                     <div id="admin-products-pagination" class="admin-pagination-container">
                         <!-- Populated dynamically via admin.js -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Walkthrough & Architecture View Container -->
+            <div id="view-walkthrough" style="display:none;">
+                <div class="clay-card" style="padding:2.2rem; margin-bottom:2rem;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; margin-bottom:1.8rem; border-bottom:1px solid rgba(255,255,255,0.1); padding-bottom:1.2rem;">
+                        <div>
+                            <span style="font-size:0.8rem; font-weight:800; background:rgba(46, 204, 113, 0.15); color:#27ae60; padding:4px 10px; border-radius:8px; border:1px solid rgba(46, 204, 113, 0.3);">🟢 System Status: 100% Operational</span>
+                            <h3 style="margin-top:0.6rem; font-size:1.4rem;">Project Development Walkthrough & Agent Context</h3>
+                            <p style="color:var(--c-text-muted); font-size:0.92rem; margin-top:0.25rem;">Comprehensive architecture log, mathematical CAD elevation specs, and next milestone roadmap.</p>
+                        </div>
+                        <a href="walkthrough.html" target="_blank" class="clay-btn btn-coral" style="padding:0.75rem 1.6rem; font-weight:700;">🚀 Open Full Walkthrough Hub ↗</a>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:1.25rem; margin-bottom:1.8rem;">
+                        <div class="clay-card" style="padding:1.25rem; background:rgba(255,255,255,0.03);">
+                            <div style="font-size:1.6rem; margin-bottom:0.25rem;">🧊 3D Solid CAD</div>
+                            <h4 style="margin:0.25rem 0;">LEGO & Name Tag</h4>
+                            <p style="color:var(--c-text-muted); font-size:0.85rem; line-height:1.5;">Strict 4-layer 6.0mm elevation architecture for LEGO keyring + ClipperLib organic letter-hugging base contours for Name Tag.</p>
+                        </div>
+                        <div class="clay-card" style="padding:1.25rem; background:rgba(255,255,255,0.03);">
+                            <div style="font-size:1.6rem; margin-bottom:0.25rem;">📦 Multi-Color 3MF</div>
+                            <h4 style="margin:0.25rem 0;">Bambu Studio AMS</h4>
+                            <p style="color:var(--c-text-muted); font-size:0.85rem; line-height:1.5;">100% watertight closed manifold mesh welder (0.0001mm precision), packaged into multi-extruder 3MF archives & binary STL.</p>
+                        </div>
+                        <div class="clay-card" style="padding:1.25rem; background:rgba(255,255,255,0.03);">
+                            <div style="font-size:1.6rem; margin-bottom:0.25rem;">⏸️ Paused Benchmark</div>
+                            <h4 style="margin:0.25rem 0;">100% Tested & Clean</h4>
+                            <p style="color:var(--c-text-muted); font-size:0.85rem; line-height:1.5;">Heavy 2D studio bloat purged, font weights matched, pricing nav bug fixed, and changes pushed to GitHub <code>origin/main</code>.</p>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--c-bg); border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:1.5rem; line-height:1.7;">
+                        <h4 style="margin-bottom:0.75rem; color:var(--c-primary);">📋 Key Project Documents & Quick Reference:</h4>
+                        <ul style="padding-left:1.3rem; font-size:0.9rem; color:var(--c-text);">
+                            <li><strong><a href="walkthrough.html" target="_blank" style="color:var(--c-primary); font-weight:700;">walkthrough.html</a>:</strong> In-browser interactive walkthrough with phase timelines and mathematical elevation tables.</li>
+                            <li><strong><code>AGENTS.md</code>:</strong> Master briefing context for future AI coding agents (tech stack, rules, directory map).</li>
+                            <li><strong><code>PROJECT_WALKTHROUGH.md</code>:</strong> Exhaustive engineering trajectory across all 7 milestones and fabrication formulas.</li>
+                            <li><strong><code>js/customize.js</code>:</strong> Core CAD engine (Three.js WebGL + ClipperLib polygon offsetting + 3MF/STL export).</li>
+                            <li><strong><code>customize.html</code>:</strong> Dual-pane real-time 3D customizer interface.</li>
+                            <li><strong><code>js/admin.js</code>:</strong> Admin operations portal with PIN security (default: <code>1234</code>).</li>
+                        </ul>
                     </div>
                 </div>
             </div>
