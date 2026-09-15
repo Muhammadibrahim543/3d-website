@@ -99,30 +99,29 @@
                     <form id="shapey-contact-form">
                         <div class="form-group">
                             <label for="contact-name" data-i18n="label_name">Your Name</label>
-                            <input type="text" id="contact-name" class="clay-input" data-i18n-placeholder="ph_name" placeholder="e.g. Ibrahim" required>
+                            <input type="text" id="contact-name" class="clay-input" data-i18n-placeholder="ph_name" placeholder="e.g. Tanvir Ahmed" required>
                         </div>
                         <div class="form-group">
                             <label for="contact-email" data-i18n="label_email">Email Address</label>
-                            <input type="email" id="contact-email" class="clay-input" data-i18n-placeholder="ph_email" placeholder="e.g. sidratuluae@gmail.com" required>
+                            <input type="email" id="contact-email" class="clay-input" data-i18n-placeholder="ph_email" placeholder="e.g. yourname@example.com" required>
                         </div>
                         <div class="form-group">
                             <label for="material-choice" data-i18n="label_material">Preferred Material</label>
                             <select id="material-choice" class="clay-select">
-                                <option>Friendly PLA (Bio-Starch)</option>
-                                <option>Tough ABS (Impact-Resistant)</option>
-                                <option>Flex Resin (Smooth Rubber Touch)</option>
-                                <option>Carbon Fiber (Ultra Stiff)</option>
+                                <option value="Bambu Lab PLA+">Bambu Lab PLA+ (Friendly Bio-Starch - ৳২/g)</option>
+                                <option value="Silk Glossy PLA">Silk Glossy PLA (Metallic Luster - ৳২.৫০/g)</option>
+                                <option value="Tough PETG">Tough PETG (Impact & Heat Resistant - ৳২.৫০/g)</option>
                             </select>
                         </div>
                         <div class="form-group" id="file-upload-group">
-                            <label data-i18n="label_file">Upload Optional Photo / Reference File</label>
-                            <input type="file" class="clay-input" accept="image/*,.stl,.step,.stp">
+                            <label data-i18n="label_file">Upload Optional 3D Model / Reference Photo (.stl, .obj, .step, images)</label>
+                            <input type="file" class="clay-input" accept="image/*,.stl,.obj,.step,.stp,.3mf">
                         </div>
                         <div class="form-group">
-                            <label for="project-details" data-i18n="label_details">Project Details & Size</label>
-                            <textarea id="project-details" class="clay-textarea" rows="4" data-i18n-placeholder="ph_details" placeholder="Describe what you want to shape..."></textarea>
+                            <label for="project-details" data-i18n="label_details">Project Details & Requirements</label>
+                            <textarea id="project-details" class="clay-textarea" rows="4" data-i18n-placeholder="ph_details" placeholder="Describe what you want to 3D print (dimensions, quantity, color preferences)..."></textarea>
                         </div>
-                        <button type="submit" class="clay-btn btn-lg btn-coral btn-block" data-i18n="btn_submit">Submit Idea Payload</button>
+                        <button type="submit" class="clay-btn btn-lg btn-coral btn-block" data-i18n="btn_submit">Send Print Quote Request</button>
                     </form>
                 </div>
 

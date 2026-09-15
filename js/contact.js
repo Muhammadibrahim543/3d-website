@@ -11,45 +11,52 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('project-details').value = urlParams.get('details');
     }
 
-    // Check for live customizer snapshot payload
+    // Check for live customizer snapshot payload ONLY if navigated with customizer query parameter
     let pendingCustomOrder = null;
-    try {
-        const storedPending = localStorage.getItem('kiras_pending_custom_order');
-        if (storedPending) {
-            pendingCustomOrder = JSON.parse(storedPending);
-        }
-    } catch(e) {}
+    const isFromCustomizer = (urlParams.get('from') === 'customizer' || urlParams.get('type') === 'custom_order');
+    if (isFromCustomizer) {
+        try {
+            const storedPending = localStorage.getItem('kiras_pending_custom_order');
+            if (storedPending) {
+                pendingCustomOrder = JSON.parse(storedPending);
+            }
+        } catch(e) {}
+    }
 
-    const isFromCustomizer = urlParams.get('from') === 'customizer' || pendingCustomOrder !== null;
     const fileUploadGroup = document.getElementById('file-upload-group');
     const previewContainer = document.getElementById('customizer-preview-container');
 
-    if (isFromCustomizer && fileUploadGroup) {
-        // HIDE STL file requirement completely when ordering a customizer design!
-        fileUploadGroup.style.display = 'none';
-    }
+    if (isFromCustomizer && pendingCustomOrder && previewContainer) {
+        // Hide standard file requirement when ordering an active customizer design
+        if (fileUploadGroup) fileUploadGroup.style.display = 'none';
 
-    if (isFromCustomizer && previewContainer && pendingCustomOrder) {
+        const rawPrice = pendingCustomOrder.price || '৳80';
+        const formattedPrice = rawPrice.toString().startsWith('৳') ? rawPrice : `৳${rawPrice}`;
+
         previewContainer.innerHTML = `
             <div class="customizer-order-preview-card" style="background:#181621; color:#FFFFFF; padding:1.4rem; border-radius:24px; margin-bottom:1.8rem; text-align:center; border:2px solid var(--c-primary); box-shadow: 0 12px 32px rgba(0,0,0,0.3);">
-                <div style="font-size:0.9rem; text-transform:uppercase; letter-spacing:1.5px; color:var(--c-primary); font-weight:700; margin-bottom:0.6rem;">🎨 Your Custom 3D Nameplate Preview</div>
-                
-                <div style="background:#121019; padding:1rem; border-radius:18px; display:inline-block; max-width:100%; margin:0.5rem 0;">
-                    <img src="${pendingCustomOrder.snapshot}" alt="3D Custom Nameplate Preview" style="max-width:100%; height:auto; border-radius:12px; display:block; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
+                    <div style="font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:var(--c-primary); font-weight:700;">🎨 Your 3D Customizer Design</div>
+                    <button type="button" id="btn-cancel-custom-order" class="clay-btn btn-sm" style="background:rgba(255,255,255,0.1); color:#FF8A75; border-radius:10px; font-size:0.75rem; padding:0.3rem 0.7rem;" title="Clear design and open standard contact form">✕ Cancel / Standard Inquiry</button>
                 </div>
                 
-                <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:0.8rem; margin-top:1rem; font-size:0.95rem; font-family:var(--f-head); background:rgba(255,255,255,0.05); padding:0.8rem 1rem; border-radius:16px;">
-                    <span><strong>Text:</strong> <span style="color:var(--c-accent);">${pendingCustomOrder.text}</span></span>
-                    <span><strong>Font:</strong> ${pendingCustomOrder.font}</span>
-                    <span><strong>Color:</strong> ${pendingCustomOrder.color}</span>
-                    <span><strong>Thickness:</strong> ${pendingCustomOrder.thickness}mm</span>
-                    <span><strong>Quote:</strong> <strong style="color:var(--c-primary); font-size:1.1rem;">${pendingCustomOrder.price}</strong></span>
+                <div style="background:#121019; padding:0.8rem; border-radius:18px; display:inline-block; max-width:100%; margin:0.3rem 0;">
+                    <img src="${pendingCustomOrder.snapshot}" alt="3D Custom Model Preview" style="max-width:100%; max-height:220px; height:auto; border-radius:12px; display:block; margin:0 auto; object-fit:contain;">
+                </div>
+                
+                <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:0.6rem; margin-top:0.8rem; font-size:0.9rem; font-family:var(--f-head); background:rgba(255,255,255,0.05); padding:0.7rem 1rem; border-radius:16px;">
+                    <span><strong>Text:</strong> <span style="color:var(--c-accent);">${pendingCustomOrder.text || 'Custom'}</span></span>
+                    <span><strong>Model:</strong> ${pendingCustomOrder.model || 'LEGO Keychain'}</span>
+                    <span><strong>Color:</strong> ${pendingCustomOrder.color || 'Multi-Color'}</span>
+                    <span><strong>Total:</strong> <strong style="color:var(--c-primary); font-size:1.15rem;">${formattedPrice}</strong></span>
                 </div>
 
-                <!-- Direct WhatsApp Order Button -->
-                <div style="margin-top:1.2rem;">
-                    <a id="btn-whatsapp-direct" href="#" target="_blank" rel="noopener noreferrer" class="clay-btn btn-coral" style="background:#25D366; color:#FFF; width:100%; font-size:1.05rem; gap:0.5rem; justify-content:center;">
-                        💬 Order Directly via WhatsApp (+880 1793-500131)
+                <div style="display:flex; gap:0.8rem; margin-top:1.2rem; flex-wrap:wrap;">
+                    <a id="btn-whatsapp-direct" href="#" target="_blank" rel="noopener noreferrer" class="clay-btn btn-coral" style="background:#25D366; color:#FFF; flex:1; min-width:200px; font-size:0.95rem; gap:0.5rem; justify-content:center;">
+                        💬 Order via WhatsApp
+                    </a>
+                    <a href="customize.html" class="clay-btn btn-cream" style="flex:0.8; font-size:0.95rem; justify-content:center;">
+                        ✏️ Edit in 3D
                     </a>
                 </div>
             </div>
@@ -58,9 +65,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Configure WhatsApp direct message link
         const btnWa = document.getElementById('btn-whatsapp-direct');
         if (btnWa) {
-            const waMsg = `Hi Studio Kira's Creation! I want to order my customized 3D Nameplate:\n\n• Text/Name: ${pendingCustomOrder.text}\n• Font Style: ${pendingCustomOrder.font}\n• Base Color: ${pendingCustomOrder.color}\n• Thickness: ${pendingCustomOrder.thickness}mm\n• Quoted Price: ${pendingCustomOrder.price}\n\nPlease confirm my order!`;
+            const waMsg = `Hi Studio Kira's Creation! I want to order my customized 3D design:\n\n• Text: ${pendingCustomOrder.text || 'Custom'}\n• Model: ${pendingCustomOrder.model || 'LEGO Keychain'}\n• Color: ${pendingCustomOrder.color || 'Multi-Color'}\n• Quoted Price: ${formattedPrice}\n\nPlease confirm my order!`;
             btnWa.href = `https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}`;
         }
+
+        // Cancel / Clear custom order handler
+        const btnCancel = document.getElementById('btn-cancel-custom-order');
+        if (btnCancel) {
+            btnCancel.addEventListener('click', () => {
+                localStorage.removeItem('kiras_pending_custom_order');
+                window.location.href = 'contact.html';
+            });
+        }
+    } else if (fileUploadGroup) {
+        fileUploadGroup.style.display = 'block';
     }
 
     if (contactForm) {
@@ -79,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // Parse price from details if calculated, otherwise mark as Quote Requested
-            let estPrice = '৳1,200 (Quote Required)';
+            // Parse price from details if calculated, otherwise mark as Quote Required
+            let estPrice = (currentLang === 'bn' ? 'কোটেশন প্রয়োজন' : 'Quote Required');
             const priceMatch = details.match(/৳[0-9,]+/);
             if (priceMatch) {
                 estPrice = priceMatch[0];

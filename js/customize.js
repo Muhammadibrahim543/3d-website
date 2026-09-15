@@ -1159,18 +1159,51 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. PRICING & WEIGHT CALCULATION WITH LIVE DIMENSIONS
     // ============================================================
     let lastDimensions = { width: '0.0', height: '0.0', depth: '6.0' };
+    let currentCalculatedPrice = 80;
 
     function updatePricing(params) {
-        const textLen = (params.text || 'LEGO').length;
-        const estGrams = Math.max(14, Math.round(textLen * 3.8 + 6));
+        const textStr = (params.text || (currentTemplate === 'lego' ? 'LEGO' : 'KIRA')).trim();
+        const textLen = Math.max(1, textStr.length);
 
-        let finishMul = 1.0;
-        if (currentFinish === 'silk') finishMul = 1.25;
-        if (currentFinish === 'satin') finishMul = 1.20;
-        if (currentFinish === 'neon') finishMul = 1.30;
+        let calculatedPrice = 80;
 
-        const baseFee = 280;
-        const calculatedPrice = Math.round((baseFee + (estGrams * currentRate)) * finishMul);
+        if (currentTemplate === 'lego') {
+            // Authentic 4-Layer Bambu AMS LEGO Keychain
+            // Standard 5 to 7 letters: ৳80 sweet spot as instructed by owner
+            if (textLen <= 7) {
+                calculatedPrice = 80;
+            } else {
+                // Beyond 7 letters: +৳5 per extra letter (e.g. 8 chars = ৳85, 10 chars = ৳95)
+                calculatedPrice = 80 + (textLen - 7) * 5;
+            }
+
+            // Small proportional adjustment for oversized scale or heavy base
+            if (params.textSize > 24) calculatedPrice += 5;
+            if (params.baseThick > 4.5) calculatedPrice += 5;
+
+            // Minor finish adjustment (silk/neon) without inflating
+            if (currentFinish === 'silk' || currentFinish === 'neon') {
+                calculatedPrice += 5;
+            }
+        } else {
+            // Customizable Name Tag (2-tone dual color)
+            // With keyring hole: ৳70 base for up to 7 chars
+            // Without hole (desk display tag): ৳60 base
+            const baseTagPrice = (currentHolePlacement === 'none') ? 60 : 70;
+            if (textLen <= 7) {
+                calculatedPrice = baseTagPrice;
+            } else {
+                calculatedPrice = baseTagPrice + (textLen - 7) * 5;
+            }
+
+            if (params.textSize > 24) calculatedPrice += 5;
+            if (params.baseThick > 4.5) calculatedPrice += 5;
+            if (currentFinish === 'silk' || currentFinish === 'neon') {
+                calculatedPrice += 5;
+            }
+        }
+
+        currentCalculatedPrice = calculatedPrice;
 
         const totalW = params.actualWidth ? params.actualWidth.toFixed(1) : '0.0';
         const totalH = params.actualHeight ? params.actualHeight.toFixed(1) : '0.0';
@@ -1186,11 +1219,12 @@ document.addEventListener('DOMContentLoaded', () => {
             displayPrice.textContent = `৳${calculatedPrice}`;
         }
         if (displaySpecs) {
-            const modelNames = {
-                lego: 'LEGO Keychain.scad',
-                nametag: 'Customizable Name Tag.scad'
-            };
-            displaySpecs.textContent = `${modelNames[currentTemplate]} • ${currentColorName} • ~${estGrams}g PLA • 📐 ${totalW} × ${totalH} × ${totalD} mm`;
+            if (currentTemplate === 'lego') {
+                displaySpecs.textContent = `LEGO 4-Color Keychain • 6.0mm Elevation • ${currentColorName} • Metal Keyring Included`;
+            } else {
+                const holeLabel = currentHolePlacement === 'none' ? 'Desk Display Tag' : 'Keyring Hole Included';
+                displaySpecs.textContent = `Custom Name Tag • 2-Tone PLA+ • ${holeLabel} • 📐 ${totalW} × ${totalH} × ${totalD} mm`;
+            }
         }
     }
 
@@ -1473,15 +1507,15 @@ ${configObjects.join('\n')}
 // ============================================================
 
 $fn = 60;
-nome = "${text}";
-tamanho = 20;
-fonte = "Liberation Sans:style=Bold Italic";
+custom_text = "${text}";
+text_size = 20;
+font_name = "Liberation Sans:style=Bold Italic";
 
 module text_2d() {
-    text(nome, size = tamanho, font = fonte, halign = "center", valign = "center");
+    text(custom_text, size = text_size, font = font_name, halign = "center", valign = "center");
 }
 
-eyelet_x = -len(nome) * tamanho * 0.38 - 8 - ${holeX};
+eyelet_x = -len(custom_text) * text_size * 0.38 - 8 - ${holeX};
 eyelet_y = ${holeY};
 eyelet_r_outer = 7.0;
 eyelet_r_inner = ${holeSize} / 2;
@@ -1925,26 +1959,28 @@ color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(
             renderer.render(scene, camera);
             const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
 
-            const priceText = displayPrice ? displayPrice.textContent.replace('৳', '') : '350';
-            const price = parseInt(priceText, 10) || 350;
+            const priceText = displayPrice ? displayPrice.textContent.replace('৳', '').trim() : `${currentCalculatedPrice}`;
+            const price = parseInt(priceText, 10) || currentCalculatedPrice || 80;
 
             const modelTitles = {
-                lego: 'LEGO Keychain.scad (4-Layer 6.0mm)',
-                nametag: 'Customizable Name Tag.scad'
+                lego: 'LEGO Keychain (4-Color 6.0mm)',
+                nametag: 'Customizable Name Tag'
             };
+
+            const rawText = inputName ? inputName.value.trim() : (currentTemplate === 'lego' ? 'LEGO' : 'KIRA');
 
             const item = {
                 id: 'custom-' + Date.now(),
-                title: `${modelTitles[currentTemplate]} ("${inputName ? inputName.value : 'Custom'}")`,
+                title: `${modelTitles[currentTemplate]} ("${rawText}")`,
                 price: price,
                 quantity: 1,
                 image: snapshot,
                 specs: {
                     model: modelTitles[currentTemplate],
-                    text: inputName ? inputName.value : '',
+                    text: rawText,
                     color: currentColorName,
                     finish: currentFinish,
-                    height: '6.0mm Multi-Color (3.2mm Red Base + 1.0mm Yellow + 1.0mm Black + 0.8mm White)'
+                    height: (currentTemplate === 'lego' ? '6.0mm Multi-Color (3.2mm Red Base + 1.0mm Yellow + 1.0mm Black + 0.8mm White)' : `${lastDimensions.depth}mm 2-Tone`)
                 }
             };
 
@@ -1958,8 +1994,29 @@ color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(
 
     if (btnOrder) {
         btnOrder.addEventListener('click', () => {
-            if (btnAddToCart) btnAddToCart.click();
-            window.location.href = 'contact.html?type=custom_order';
+            renderer.render(scene, camera);
+            const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
+            const priceText = displayPrice ? displayPrice.textContent.trim() : `৳${currentCalculatedPrice}`;
+            const rawText = inputName ? inputName.value.trim() : (currentTemplate === 'lego' ? 'LEGO' : 'KIRA');
+            const modelTitles = {
+                lego: 'LEGO Keychain (4-Color 6.0mm)',
+                nametag: 'Customizable Name Tag'
+            };
+
+            const pendingOrder = {
+                snapshot: snapshot,
+                text: rawText,
+                model: modelTitles[currentTemplate],
+                font: currentFont.replace(/['",]/g, ''),
+                color: currentColorName,
+                letterColor: currentLetterColorName,
+                thickness: (currentTemplate === 'lego' ? '6.0' : lastDimensions.depth),
+                price: priceText
+            };
+            try {
+                localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingOrder));
+            } catch(e) {}
+            window.location.href = 'contact.html?from=customizer&type=custom_order';
         });
     }
 

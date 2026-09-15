@@ -123,6 +123,14 @@
 > **4. Git & Commit Best Practices:**
 > Always verify with `git status` and test locally before pushing to `origin/main`. Keep commit messages descriptive (e.g. `feat: ...`, `fix: ...`).
 
+> [!CAUTION]
+> **5. STRICT PRIVACY CONSTRAINT - Internal Economics:**
+> Raw economics (Bambu Lab PLA+ = ৳2,000/kg $\to$ ৳2.00/g, Machine runtime = ৳70.00/hr) are exclusively backend calculation constants. **NEVER** expose raw cost breakdown, hourly rates, or profit formulas on customer-facing badges or cards. Customers only see final transparent prices (e.g. ৳80, ৳450) and craftsmanship value (e.g. "Bambu AMS Multi-Color", "Metal Keyring Included").
+
+> [!IMPORTANT]
+> **6. Keychain Pricing Guardrails:**
+> Single 4-color LEGO keychain must default strictly to **৳80 for 5–7 letters** (+৳5/letter beyond 7 letters). Do NOT revert to arbitrary ৳400–৳500 fees.
+
 ---
 
 ## 6. Next Planned Milestones (Ready for Continuation)

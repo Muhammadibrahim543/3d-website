@@ -6,76 +6,87 @@ document.addEventListener('DOMContentLoaded', () => {
     const infillVal = document.getElementById('calc-infill-val');
     const calcQty = document.getElementById('calc-qty');
     const calcResolution = document.getElementById('calc-resolution');
-    const calcRush = document.getElementById('calc-rush');
+    const calcComplexity = document.getElementById('calc-complexity');
 
     const displayPrice = document.getElementById('calc-total-price');
-    const displayTime = document.getElementById('calc-print-time');
     const displayDiscount = document.getElementById('calc-discount-badge');
     const btnSendQuote = document.getElementById('btn-send-quote');
+    const btnAddCartEstimate = document.getElementById('btn-add-cart-estimate');
 
     if (!calcMaterial || !displayPrice) return;
 
-    // Rates in BDT (৳ per gram) - PLA+ set to ৳5/gram as requested
-    const rates = {
-        'PLA': 5.00,
-        'ABS': 7.00,
-        'Resin': 12.00,
-        'CarbonFiber': 16.00
+    // Internal studio rates:
+    // Bambu Lab PLA+ ৳2000/kg = ৳2.00/g
+    // Machine running cost = ৳70.00/hour
+    const filamentRates = {
+        'PLA': 2.00,
+        'SilkPLA': 2.50,
+        'PETG': 2.50
     };
+    const MACHINE_HOURLY_RATE = 70.0;
 
     function calculate() {
         const mat = calcMaterial.value;
-        const weight = parseInt(calcWeight.value, 10);
-        const infill = parseInt(calcInfill.value, 10);
+        const weight = parseInt(calcWeight.value, 10) || 20;
+        const infill = parseInt(calcInfill.value, 10) || 20;
         const qty = parseInt(calcQty.value, 10) || 1;
         const res = calcResolution ? parseFloat(calcResolution.value) : 1.0;
-        const isRush = calcRush ? calcRush.checked : false;
+        const complexity = calcComplexity ? parseFloat(calcComplexity.value) : 1.0;
 
         if (weightVal) weightVal.textContent = weight + 'g';
         if (infillVal) infillVal.textContent = infill + '%';
 
         // Update slider track fill
         if (calcWeight) {
-            const wPct = ((weight - 10) / (1000 - 10)) * 100;
+            const minW = parseInt(calcWeight.min, 10) || 5;
+            const maxW = parseInt(calcWeight.max, 10) || 500;
+            const wPct = Math.max(0, Math.min(100, ((weight - minW) / (maxW - minW)) * 100));
             calcWeight.style.background = `linear-gradient(to right, #FF8A75 0%, #FF5E5E ${wPct}%, rgba(142, 132, 120, 0.2) ${wPct}%, rgba(142, 132, 120, 0.2) 100%)`;
         }
         if (calcInfill) {
-            const iPct = ((infill - 10) / (100 - 10)) * 100;
+            const minI = parseInt(calcInfill.min, 10) || 10;
+            const maxI = parseInt(calcInfill.max, 10) || 100;
+            const iPct = Math.max(0, Math.min(100, ((infill - minI) / (maxI - minI)) * 100));
             calcInfill.style.background = `linear-gradient(to right, #9B99E2 0%, #7B78D8 ${iPct}%, rgba(142, 132, 120, 0.2) ${iPct}%, rgba(142, 132, 120, 0.2) 100%)`;
         }
 
-        // Material cost = Weight * Rate
-        const baseMatCost = weight * (rates[mat] || 5.00);
-        
-        // Infill density factor: 100% infill adds up to 30% material density multiplier
-        const infillMultiplier = 1 + ((infill - 20) / 100) * 0.35;
-        
-        // Base machine operation & slice fee: ৳150 per unit
-        const baseCostPerUnit = (baseMatCost * infillMultiplier * res) + 150;
+        // Internal calculation logic
+        const unitMatRate = filamentRates[mat] || 2.00;
+        const infillFactor = 1 + ((infill - 20) / 100) * 0.25;
+        const effectiveWeight = weight * infillFactor;
+        const materialCost = effectiveWeight * unitMatRate;
+
+        // Print hours estimation on modern high-speed Bambu Lab printer (approx 35-40g/hr at speed for simple models)
+        const printHours = Math.max(0.3, (effectiveWeight / 32.0) * res * complexity);
+        const machineCost = printHours * MACHINE_HOURLY_RATE;
+
+        // Unit Price calculation (studio margin + minimal handling included)
+        let unitPrice = Math.max(80, Math.round((materialCost + machineCost) * 1.18 + 10));
+
+        // For small keychains under 20g with basic complexity: lock to ৳80
+        if (weight <= 20 && complexity <= 1.0 && mat === 'PLA') {
+            unitPrice = 80;
+        }
 
         let discountRate = 1.0;
         if (qty >= 25) {
             discountRate = 0.75;
-            if (displayDiscount) displayDiscount.textContent = '২৫% ব্যাচ প্রোডাকশন ডিসকাউন্ট প্রযোজ্য!';
+            if (displayDiscount) displayDiscount.textContent = '🎉 ২৫% ব্যাচ প্রোডাকশন ডিসকাউন্ট প্রযোজ্য!';
         } else if (qty >= 10) {
             discountRate = 0.85;
-            if (displayDiscount) displayDiscount.textContent = '১৫% বাল্ক ডিসকাউন্ট প্রযোজ্য!';
+            if (displayDiscount) displayDiscount.textContent = '🎉 ১৫% বাল্ক ডিসকাউন্ট প্রযোজ্য!';
         } else {
             if (displayDiscount) displayDiscount.textContent = 'স্ট্যান্ডার্ড রেট (বিকাশ / নগদ পেমেন্ট গ্রহণযোগ্য)';
         }
 
-        let total = Math.round(baseCostPerUnit * qty * discountRate);
-        if (isRush) total += 350;
+        const total = Math.round(unitPrice * qty * discountRate);
 
-        // Estimated Print Hours
-        const totalHours = Math.max(1, Math.round(((weight * (infill / 40) * res * qty) / 30)));
-
+        // Display ONLY final price to customer
         displayPrice.textContent = '৳' + total.toLocaleString('en-US');
-        if (displayTime) displayTime.textContent = totalHours + ' ঘণ্টা (' + Math.ceil(totalHours / 24) + ' দিনের মধ্যে ডেলিভারি)';
     }
 
     // Attach Event Listeners
-    [calcMaterial, calcWeight, calcInfill, calcQty, calcResolution, calcRush].forEach(input => {
+    [calcMaterial, calcWeight, calcInfill, calcQty, calcResolution, calcComplexity].forEach(input => {
         if (input) {
             input.addEventListener('input', calculate);
             input.addEventListener('change', calculate);
@@ -91,12 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const qty = calcQty.value;
             const price = displayPrice.textContent;
 
-            const details = `কোটেশন হিসাব: ${price} (পরিমাণ: ${qty} টি, ওজন: ${weight}g, ইনফিল: ${infill}%, ফিলামেন্ট: ${matName})`;
+            const details = `কোটেশন হিসাব: ${price} (পরিমাণ: ${qty} টি, ওজন: ${weight}g, ইনফিল: ${infill}%, ম্যাটেরিয়াল: ${matName})`;
             window.location.href = `contact.html?material=${encodeURIComponent(matName)}&details=${encodeURIComponent(details)}`;
         });
     }
 
-    const btnAddCartEstimate = document.getElementById('btn-add-cart-estimate');
     if (btnAddCartEstimate) {
         btnAddCartEstimate.addEventListener('click', (e) => {
             e.preventDefault();
@@ -104,11 +114,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const weight = calcWeight.value;
             const infill = calcInfill.value;
             const qty = parseInt(calcQty.value, 10) || 1;
-            const price = displayPrice.textContent;
+            const priceText = displayPrice.textContent.replace('৳', '').replace(/,/g, '').trim();
+            const price = parseInt(priceText, 10) || 80;
 
             if (window.KiraCart) {
                 KiraCart.addItem({
-                    title: `Calculated 3D Print (${matName})`,
+                    title: `Custom 3D Print (${matName})`,
                     specs: `${weight}g • ${infill}% Infill • ${qty} Unit(s)`,
                     price: price,
                     quantity: qty,
