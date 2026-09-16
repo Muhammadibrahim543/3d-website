@@ -111,6 +111,40 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = '<td colspan="7" style="text-align:center; padding: 1rem; color:var(--c-primary); font-weight:600;">⏳ Loading latest orders from cloud...</td>';
             tbody.insertBefore(tr, tbody.firstChild);
         }
+        if (window.KiraDB && window.KiraDB.isCloudEnabled()) {
+            try {
+                const cloudOrders = await window.KiraDB.orders.getAll();
+                if (Array.isArray(cloudOrders) && cloudOrders.length > 0) {
+                    const localOrders = getOrders();
+                    const map = new Map();
+                    localOrders.forEach(o => map.set(o.id, o));
+                    cloudOrders.forEach(o => {
+                        const normalized = {
+                            id: o.id,
+                            date: o.created_at ? new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : o.date || '',
+                            time: o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : o.time || '',
+                            name: o.customer_name || o.name,
+                            email: o.customer_email || o.email,
+                            material: o.custom_3d_specs ? `${o.custom_3d_specs.model || 'Custom'} (${o.custom_3d_specs.color || 'PLA'})` : '3D Print Order',
+                            details: o.notes || (o.items ? o.items.map(i => `${i.quantity}x ${i.title}`).join(', ') : 'Order'),
+                            status: o.status || 'Pending',
+                            estimatedPrice: o.total_amount ? `৳${o.total_amount}` : (o.estimatedPrice || '৳0'),
+                            modelFileUrl: o.model_file_url || null
+                        };
+                        map.set(o.id, normalized);
+                    });
+                    const merged = Array.from(map.values());
+                    localStorage.setItem('kiras_orders', JSON.stringify(merged));
+                    localStorage.setItem('kiras_last_sync_orders', new Date().toLocaleString('en-US'));
+                    updateLastSyncUI();
+                    renderOrders();
+                    return;
+                }
+            } catch (err) {
+                console.warn("[Admin] Cloud DB orders fetch error:", err);
+            }
+        }
+
         try {
             const res = await fetch(GOOGLE_SHEET_URL + '?action=getOrders');
             const text = await res.text();
@@ -221,6 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <span style="font-weight:600;">${escapeHtml(order.material)}</span><br>
                     <small style="color:var(--c-text-muted);">${escapeHtml((order.details || '').substring(0, 35))}${(order.details || '').length > 35 ? '...' : ''}</small>
                     ${hasSnapshot ? `<br><button class="clay-btn btn-sm btn-view-design" data-id="${escapeHtml(order.id)}" style="margin-top:0.4rem; padding:0.25rem 0.6rem; font-size:0.75rem; background:var(--c-primary); color:#FFF;">🎨 View Custom Design</button>` : ''}
+                    ${order.modelFileUrl ? `<br><a href="${order.modelFileUrl}" target="_blank" class="clay-btn btn-sm" style="margin-top:0.4rem; padding:0.25rem 0.6rem; font-size:0.75rem; background:#10B981; color:#FFF; display:inline-block; text-decoration:none;">⬇️ Download 3D Print File</a>` : ''}
                 </td>
                 <td><strong>${escapeHtml(order.estimatedPrice || '৳0')}</strong></td>
                 <td>
@@ -290,6 +325,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetOrder.status = newStatus;
                     saveOrders(allOrders);
                     showToast(`Order ${id} status updated to ${newStatus}`);
+
+                    if (window.KiraDB && window.KiraDB.isCloudEnabled()) {
+                        window.KiraDB.orders.updateStatus(id, newStatus.toLowerCase()).catch(err => console.warn(err));
+                    }
                     
                     // Sync this specific update to Google Sheets
                     const params = new URLSearchParams({

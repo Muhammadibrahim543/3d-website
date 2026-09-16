@@ -203,13 +203,29 @@
                 snapshot: items[0] ? items[0].image : null
             };
 
-            // Save to kiras_orders in localStorage
-            let orders = [];
-            try {
-                orders = JSON.parse(localStorage.getItem('kiras_orders')) || [];
-            } catch(e) {}
-            orders.unshift(newOrder);
-            localStorage.setItem('kiras_orders', JSON.stringify(orders));
+            // Save via KiraDB (Supabase Cloud + LocalStorage Mirror)
+            if (window.KiraDB && window.KiraDB.orders) {
+                try {
+                    await window.KiraDB.orders.create({
+                        id: newOrder.id,
+                        name: newOrder.name,
+                        email: newOrder.email,
+                        items: items,
+                        totalAmount: totalPrice,
+                        notes: newOrder.details
+                    });
+                } catch(e) {
+                    console.warn("KiraDB order create error:", e);
+                }
+            } else {
+                // Save to kiras_orders in localStorage
+                let orders = [];
+                try {
+                    orders = JSON.parse(localStorage.getItem('kiras_orders')) || [];
+                } catch(e) {}
+                orders.unshift(newOrder);
+                localStorage.setItem('kiras_orders', JSON.stringify(orders));
+            }
 
             // Send to Google Sheets Cloud
             const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';

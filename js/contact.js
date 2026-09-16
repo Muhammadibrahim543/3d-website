@@ -118,9 +118,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 snapshot: pendingCustomOrder ? pendingCustomOrder.snapshot : null
             };
 
-            const existingOrders = JSON.parse(localStorage.getItem('kiras_orders') || '[]');
-            existingOrders.unshift(newOrder);
-            localStorage.setItem('kiras_orders', JSON.stringify(existingOrders));
+            if (window.KiraDB && window.KiraDB.orders) {
+                window.KiraDB.orders.create({
+                    id: newOrder.id,
+                    name: newOrder.name,
+                    email: newOrder.email,
+                    notes: newOrder.details,
+                    customSpecs: pendingCustomOrder,
+                    totalAmount: estPrice.replace(/[^0-9]/g, '') || 0
+                }).catch(err => console.warn("KiraDB contact order create error:", err));
+            } else {
+                const existingOrders = JSON.parse(localStorage.getItem('kiras_orders') || '[]');
+                existingOrders.unshift(newOrder);
+                localStorage.setItem('kiras_orders', JSON.stringify(existingOrders));
+            }
 
             const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
 

@@ -156,7 +156,16 @@
             this.updateUI();
         },
 
-        login: function(email, password) {
+        login: async function(email, password) {
+            if (window.KiraDB && window.KiraDB.isCloudEnabled()) {
+                try {
+                    const user = await window.KiraDB.auth.signIn(email, password);
+                    this.setCurrentUser(user);
+                    return { success: true, user: user };
+                } catch (err) {
+                    return { success: false, message: err.message || 'Invalid email or password.' };
+                }
+            }
             const users = JSON.parse(localStorage.getItem('kiras_users')) || [];
             const found = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase() && u.password === password);
             if (found) {
@@ -166,7 +175,19 @@
             return { success: false, message: 'Invalid email or password.' };
         },
 
-        register: function(name, email, password, phone, address) {
+        register: async function(name, email, password, phone, address) {
+            if (window.KiraDB && window.KiraDB.isCloudEnabled()) {
+                try {
+                    const user = await window.KiraDB.auth.signUp(email, password, name);
+                    if (phone || address) {
+                        await window.KiraDB.auth.updateProfile({ phone, address });
+                    }
+                    this.setCurrentUser(user);
+                    return { success: true, user: user };
+                } catch (err) {
+                    return { success: false, message: err.message || 'Could not create account.' };
+                }
+            }
             let users = JSON.parse(localStorage.getItem('kiras_users')) || [];
             const exists = users.some(u => u.email.toLowerCase() === email.trim().toLowerCase());
             if (exists) {
@@ -203,7 +224,10 @@
             return { success: true, user: newUser };
         },
 
-        logout: function() {
+        logout: async function() {
+            if (window.KiraDB) {
+                try { await window.KiraDB.auth.signOut(); } catch(e) {}
+            }
             this.setCurrentUser(null);
             showToast('Logged out successfully');
             if (window.location.pathname.includes('account.html')) {
@@ -541,37 +565,44 @@
             document.body.insertAdjacentHTML('beforeend', modalHTML);
         },
 
-        handleLoginSubmit: function(e) {
+        handleLoginSubmit: async function(e) {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
             const pass = document.getElementById('login-pass').value;
-            const res = this.login(email, pass);
+            const err = document.getElementById('login-error');
+            if (err) err.style.display = 'none';
+
+            const res = await this.login(email, pass);
             if (res.success) {
                 this.closeModal();
                 showToast(`Welcome back, ${res.user.name.split(' ')[0]}! 👋`);
             } else {
-                const err = document.getElementById('login-error');
-                err.textContent = res.message;
-                err.style.display = 'block';
+                if (err) {
+                    err.textContent = res.message;
+                    err.style.display = 'block';
+                }
             }
         },
 
-        handleSignupSubmit: function(e) {
+        handleSignupSubmit: async function(e) {
             e.preventDefault();
             const name = document.getElementById('signup-name').value;
             const email = document.getElementById('signup-email').value;
             const pass = document.getElementById('signup-pass').value;
             const phone = document.getElementById('signup-phone').value;
             const address = document.getElementById('signup-address').value;
+            const err = document.getElementById('signup-error');
+            if (err) err.style.display = 'none';
 
-            const res = this.register(name, email, pass, phone, address);
+            const res = await this.register(name, email, pass, phone, address);
             if (res.success) {
                 this.closeModal();
                 showToast(`Account created! Welcome, ${res.user.name.split(' ')[0]}!`);
             } else {
-                const err = document.getElementById('signup-error');
-                err.textContent = res.message;
-                err.style.display = 'block';
+                if (err) {
+                    err.textContent = res.message;
+                    err.style.display = 'block';
+                }
             }
         }
     };

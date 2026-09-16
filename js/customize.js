@@ -1993,7 +1993,7 @@ color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(
     }
 
     if (btnOrder) {
-        btnOrder.addEventListener('click', () => {
+        btnOrder.addEventListener('click', async () => {
             renderer.render(scene, camera);
             const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
             const priceText = displayPrice ? displayPrice.textContent.trim() : `৳${currentCalculatedPrice}`;
@@ -2013,6 +2013,22 @@ color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(
                 thickness: (currentTemplate === 'lego' ? '6.0' : lastDimensions.depth),
                 price: priceText
             };
+
+            // If Supabase Storage is active, export binary STL and upload
+            if (window.KiraDB && window.KiraDB.isCloudEnabled() && typeof THREE.STLExporter !== 'undefined') {
+                try {
+                    const exporter = new THREE.STLExporter();
+                    const stlBinary = exporter.parse(mainMeshGroup || scene, { binary: true });
+                    const blob = new Blob([stlBinary], { type: 'application/sla' });
+                    const uploadedUrl = await window.KiraDB.storage.uploadModel(blob, `${rawText.toLowerCase()}_model.stl`);
+                    if (uploadedUrl) {
+                        pendingOrder.modelFileUrl = uploadedUrl;
+                    }
+                } catch(err) {
+                    console.warn("3D model auto-upload notice:", err);
+                }
+            }
+
             try {
                 localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingOrder));
             } catch(e) {}
