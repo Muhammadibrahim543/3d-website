@@ -97,8 +97,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentModelGroup = null;
     let stateHistory = [];
 
-    function saveHistoryState() {
-        stateHistory.push({
+    function getDesignState() {
+        return {
             template: currentTemplate,
             text: inputName ? inputName.value : 'LEGO',
             font: currentFont,
@@ -117,7 +117,10 @@ document.addEventListener('DOMContentLoaded', () => {
             holeSize: elHoleSizeNum ? elHoleSizeNum.value : '5.0',
             holeX: elHoleXNum ? elHoleXNum.value : '0.0',
             holeY: elHoleYNum ? elHoleYNum.value : '0.0'
-        });
+        };
+    }
+    function saveHistoryState() {
+        stateHistory.push(getDesignState());
         if (stateHistory.length > 25) stateHistory.shift();
     }
 
@@ -1091,7 +1094,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 7. MODEL DISPATCHER & RENDER TRIGGER
     // ============================================================
+    let renderVersion = 0;
     async function renderSolidModel() {
+        const version = ++renderVersion;
         if (spinner) spinner.style.display = 'flex';
 
         const params = {
@@ -1123,11 +1128,12 @@ document.addEventListener('DOMContentLoaded', () => {
             currentModelGroup = null;
         }
 
-        if (currentTemplate === 'lego') {
-            currentModelGroup = await buildLegoKeychain(params);
-        } else {
-            currentModelGroup = await buildNameTag(params);
+        const built = currentTemplate === 'lego' ? await buildLegoKeychain(params) : await buildNameTag(params);
+        if (version !== renderVersion) {
+            built.traverse(child => { if (child.geometry) child.geometry.dispose(); if (child.material) child.material.dispose(); });
+            return;
         }
+        currentModelGroup = built;
 
         if (currentModelGroup) {
             scene.add(currentModelGroup);
@@ -1231,12 +1237,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // ============================================================
     // 9. 3MF & STL EXPORT (Direct 3D Print File Download)
     // ============================================================
-    async function download3MF() {
+    async function download3MF(options) {
         if (!currentModelGroup) {
+            if (options?.uploadOnly) throw new Error('3D model not ready / মডেল এখনও তৈরি হয়নি');
             alert('3D Mesh not ready yet.');
             return;
         }
         if (typeof JSZip === 'undefined') {
+            if (options?.uploadOnly) throw new Error('3MF export unavailable / 3MF তৈরি করা যাচ্ছে না');
             alert('JSZip library is still loading. Please try again in a moment.');
             return;
         }
@@ -1438,6 +1446,7 @@ ${configObjects.join('\n')}
                 compressionOptions: { level: 6 }
             });
 
+            if (options?.uploadOnly) return blob;
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             const textClean = rawName.replace(/[^a-zA-Z0-9_-]/g, '_') || 'keychain';
@@ -1445,6 +1454,7 @@ ${configObjects.join('\n')}
             link.click();
             URL.revokeObjectURL(link.href);
         } catch (err) {
+            if (options?.uploadOnly) throw err;
             console.error('Error generating 3MF:', err);
             alert('Failed to generate 3MF file: ' + err.message);
         } finally {
@@ -1953,88 +1963,50 @@ color("${currentLetterColor}") translate([0, 0, base_thickness]) linear_extrude(
         btnDownloadStlPanel.addEventListener('click', downloadSTL);
     }
 
-    // Cart Integration
-    if (btnAddToCart) {
-        btnAddToCart.addEventListener('click', () => {
-            renderer.render(scene, camera);
-            const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
-
-            const priceText = displayPrice ? displayPrice.textContent.replace('৳', '').trim() : `${currentCalculatedPrice}`;
-            const price = parseInt(priceText, 10) || currentCalculatedPrice || 80;
-
-            const modelTitles = {
-                lego: 'LEGO Keychain (4-Color 6.0mm)',
-                nametag: 'Customizable Name Tag'
-            };
-
-            const rawText = inputName ? inputName.value.trim() : (currentTemplate === 'lego' ? 'LEGO' : 'KIRA');
-
-            const item = {
-                id: 'custom-' + Date.now(),
-                title: `${modelTitles[currentTemplate]} ("${rawText}")`,
-                price: price,
-                quantity: 1,
-                image: snapshot,
-                specs: {
-                    model: modelTitles[currentTemplate],
-                    text: rawText,
-                    color: currentColorName,
-                    finish: currentFinish,
-                    height: (currentTemplate === 'lego' ? '6.0mm Multi-Color (3.2mm Red Base + 1.0mm Yellow + 1.0mm Black + 0.8mm White)' : `${lastDimensions.depth}mm 2-Tone`)
-                }
-            };
-
-            if (window.KiraCart) {
-                window.KiraCart.addItem(item);
+    // Preserve exactly the previewed configuration and its multi-colour print file.
+    let sendingDesign = false;
+    async function captureDesign() {
+        KiraDB.requireCloud();
+        await renderSolidModel();
+        if (!currentModelGroup) throw new Error('3D model not ready / মডেল এখনও তৈরি হয়নি');
+        const config = { version: 1, ...getDesignState(), dimensions: { ...lastDimensions } };
+        renderer.render(scene, camera);
+        const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
+        const price = currentCalculatedPrice;
+        const model = currentTemplate === 'lego' ? 'LEGO Keychain (4-Color 6.0mm)' : 'Customizable Name Tag';
+        const blob = await download3MF({ uploadOnly: true });
+        if (!blob) throw new Error('Model export failed / মডেল ফাইল তৈরি হয়নি');
+        const cleanName = (config.text || 'design').replace(/[^a-zA-Z0-9_-]/g, '_');
+        const modelFileUrl = await KiraDB.storage.uploadModel(blob, `${cleanName}_${config.template}.3mf`);
+        return { snapshot, text: config.text, model, font: config.font, color: config.colorName,
+            letterColor: config.letterColorName, thickness: lastDimensions.depth, price, designConfig: config, modelFileUrl };
+    }
+    async function submitDesign(toCart) {
+        if (sendingDesign) return;
+        sendingDesign = true;
+        if (btnAddToCart) btnAddToCart.disabled = true;
+        if (btnOrder) btnOrder.disabled = true;
+        try {
+            const design = await captureDesign();
+            if (toCart) {
+                KiraCart.addItem({ title: `${design.model} ("${design.text}")`, price: design.price, quantity: 1,
+                    image: design.snapshot, specs: { model: design.model, text: design.text, color: design.color,
+                        letterColor: design.letterColor, font: design.font, finish: design.designConfig.finish }, customData: design });
             } else {
-                alert(`Added "${item.title}" to cart!`);
+                localStorage.setItem('kiras_pending_custom_order', JSON.stringify(design));
+                window.location.href = 'contact.html?from=customizer&type=custom_order';
             }
-        });
+        } catch (error) {
+            console.error('Design was not sent:', error);
+            if (window.showToast) showToast('Upload failed; your design is kept / আপলোড হয়নি; ডিজাইন রাখা আছে। ' + error.message);
+        } finally {
+            sendingDesign = false;
+            if (btnAddToCart) btnAddToCart.disabled = false;
+            if (btnOrder) btnOrder.disabled = false;
+        }
     }
-
-    if (btnOrder) {
-        btnOrder.addEventListener('click', async () => {
-            renderer.render(scene, camera);
-            const snapshot = renderer.domElement.toDataURL('image/webp', 0.85);
-            const priceText = displayPrice ? displayPrice.textContent.trim() : `৳${currentCalculatedPrice}`;
-            const rawText = inputName ? inputName.value.trim() : (currentTemplate === 'lego' ? 'LEGO' : 'KIRA');
-            const modelTitles = {
-                lego: 'LEGO Keychain (4-Color 6.0mm)',
-                nametag: 'Customizable Name Tag'
-            };
-
-            const pendingOrder = {
-                snapshot: snapshot,
-                text: rawText,
-                model: modelTitles[currentTemplate],
-                font: currentFont.replace(/['",]/g, ''),
-                color: currentColorName,
-                letterColor: currentLetterColorName,
-                thickness: (currentTemplate === 'lego' ? '6.0' : lastDimensions.depth),
-                price: priceText
-            };
-
-            // If Supabase Storage is active, export binary STL and upload
-            if (window.KiraDB && window.KiraDB.isCloudEnabled() && typeof THREE.STLExporter !== 'undefined') {
-                try {
-                    const exporter = new THREE.STLExporter();
-                    const stlBinary = exporter.parse(mainMeshGroup || scene, { binary: true });
-                    const blob = new Blob([stlBinary], { type: 'application/sla' });
-                    const uploadedUrl = await window.KiraDB.storage.uploadModel(blob, `${rawText.toLowerCase()}_model.stl`);
-                    if (uploadedUrl) {
-                        pendingOrder.modelFileUrl = uploadedUrl;
-                    }
-                } catch(err) {
-                    console.warn("3D model auto-upload notice:", err);
-                }
-            }
-
-            try {
-                localStorage.setItem('kiras_pending_custom_order', JSON.stringify(pendingOrder));
-            } catch(e) {}
-            window.location.href = 'contact.html?from=customizer&type=custom_order';
-        });
-    }
+    if (btnAddToCart) btnAddToCart.addEventListener('click', () => submitDesign(true));
+    if (btnOrder) btnOrder.addEventListener('click', () => submitDesign(false));
 
     // Studio Category Tab Strip Handling
     const tabButtons = document.querySelectorAll('.studio-tab-btn');

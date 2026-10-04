@@ -22,7 +22,7 @@
 | **3D CAD Engine** | Three.js (r128+), WebGL | CAD standard Z-Up orientation, ACES Filmic tone mapping, PBR roughness/metalness, directional soft shadows. |
 | **2D Geometry & Offsets** | ClipperLib (`js/clipper.js`) | Exact 2D polygon offsetting (Minkowski dilation), Boolean unions/differences, Chaikin corner-cutting. |
 | **Multi-Color 3MF & STL** | JSZip (`js/jszip.min.js`), Three STLExporter | Closed manifold mesh welder (0.0001mm precision), Bambu Studio 3MF XML packaging with multi-extruder assignments. |
-| **State & Persistence** | LocalStorage, SessionStorage | LocalStorage cart (`KiraCart`), admin order queue, user presets, undo/redo state history stack (25 steps). |
+| **State & Persistence** | Supabase, LocalStorage, SessionStorage | Supabase authentication, orders, product catalogue and file uploads; local cart (`KiraCart`), confirmed caches, user presets and undo/redo state history stack (25 steps). |
 | **Internationalization** | `js/translations.js` | Bilingual support (English & Bengali) toggled via `.lang-toggle-btn`. |
 
 ---
@@ -40,7 +40,7 @@
 ├── about.html              # Studio story, equipment overview, and creator philosophy
 ├── contact.html            # Instant quote request form and direct contact details
 ├── account.html            # User profile, saved 3D customizer presets, and order history
-├── admin.html              # Operations portal (PIN: 1234), Orders, Products, Users, Walkthrough
+├── admin.html              # Operations portal (Supabase admin account), Orders, Products, Users, Walkthrough
 ├── walkthrough.html        # Interactive in-browser Project Walkthrough & Architecture Hub
 │
 ├── css/
@@ -55,7 +55,7 @@
 │   ├── clipper.js          # ClipperLib geometric library for polygon clipping & offsetting
 │   ├── main.js             # Theme toggle, mobile hamburger menu, navbar scroll effects, i18n
 │   ├── cart.js             # KiraCart shopping cart engine with drawer UI and checkout integration
-│   ├── admin.js            # Admin dashboard logic, PIN lock, order manager, product CRUD, CSV export
+│   ├── admin.js            # Admin dashboard logic, cloud role check, order manager, product CRUD, CSV export
 │   ├── portfolio.js        # Gallery filtering, modal image preview, dynamic URL sharing
 │   ├── translations.js     # Bilingual dictionary (EN / BN) for all dynamic elements
 │   ├── jszip.min.js        # Zip library for building multi-color .3mf archive files

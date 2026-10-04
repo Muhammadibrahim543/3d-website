@@ -99,12 +99,12 @@
             <div class="modal-content text-center">
                 <div style="font-size:2.8rem; margin-bottom:0.5rem;">🔐</div>
                 <h2>Admin Access Lock</h2>
-                <p style="color:var(--c-text-muted); margin-top:0.4rem; font-size:0.95rem;">Enter security PIN to access the orders database.</p>
+                <p style="color:var(--c-text-muted); margin-top:0.4rem; font-size:0.95rem;">Sign in with your Supabase admin account / Supabase অ্যাডমিন অ্যাকাউন্টে লগইন করুন।</p>
                 
                 <form id="pin-form" style="margin-top:1.5rem;">
-                    <input type="password" id="pin-input" class="clay-input text-center" placeholder="Enter Security PIN" maxlength="20" style="font-size:1.4rem; letter-spacing:4px;" autofocus>
+                    <input hidden type="password" id="pin-input" class="clay-input text-center" placeholder="Enter Security PIN" maxlength="20" style="font-size:1.4rem; letter-spacing:4px;" autofocus>
                     <div id="pin-error" style="color:#FF5E5E; font-size:0.85rem; margin-top:0.5rem; font-weight:700;"></div>
-                    <button type="submit" class="clay-btn btn-lg btn-coral btn-block" style="margin-top:1.2rem;">Unlock Dashboard</button>
+                    <button type="submit" class="clay-btn btn-lg btn-coral btn-block" style="margin-top:1.2rem;">Sign In / লগইন করুন</button>
                 </form>
             </div>
         </div>
@@ -123,7 +123,7 @@
         <main id="admin-main-content" class="section-block" style="display:none;">
             <div class="section-heading text-center">
                 <h2>Admin Operations & Order Database</h2>
-                <p class="section-sub">// LIVE_CUSTOMER_REQUESTS_&_GOOGLE_SHEETS_SYNC</p>
+                <p class="section-sub">// LIVE_ORDER_MANAGEMENT</p>
             </div>
 
             <!-- Main Tabs -->
@@ -170,7 +170,7 @@
                 </div>
                 <div style="display:flex; gap:0.8rem; flex-wrap:wrap; align-items:center;">
                     <span id="last-sync-time" style="font-size:0.85rem; color:var(--c-text-muted);">Last Synced: Never</span>
-                    <button id="btn-sync-sheets" class="clay-btn btn-sm btn-coral" style="background:var(--c-accent);">📊 Sync Google Sheets</button>
+                    <button id="btn-sync-sheets" class="clay-btn btn-sm btn-coral" style="background:var(--c-accent);">↻ Refresh Cloud / ক্লাউড রিফ্রেশ</button>
                     <button id="btn-export-csv" class="clay-btn btn-sm">📥 Export CSV</button>
                 </div>
             </div>
@@ -210,7 +210,7 @@
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Phone</th>
-                                    <th>Password</th>
+                                    <th>Role</th>
                                 </tr>
                             </thead>
                             <tbody id="admin-users-tbody">
@@ -249,7 +249,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Image URL</label>
-                            <input type="url" id="prod-image" class="clay-input" placeholder="e.g. images/torii_gate_lamp.webp">
+                            <input type="text" id="prod-image" class="clay-input" placeholder="Image URL or path, e.g. images/torii_gate_lamp.webp">
                         </div>
                         <div class="form-group">
                             <label class="form-label">Badge Tag</label>
@@ -389,7 +389,7 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Image URL</label>
-                        <input type="url" id="edit-prod-image" class="clay-input" placeholder="Image URL (e.g. images/lamp.webp)">
+                        <input type="text" id="edit-prod-image" class="clay-input" placeholder="Image URL or path (e.g. images/lamp.webp)">
                     </div>
                     <div class="form-group">
                         <label class="form-label">Badge Tag</label>
@@ -455,12 +455,12 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/supabaseClient.js"></script>
+    <script src="js/supabaseClient.js?v=20261004-fixes1"></script>
     <script src="js/translations.js?v=4"></script>
     <script src="js/main.js?v=4"></script>
-    <script src="js/auth.js?v=4"></script>
-    <script src="js/cart.js?v=6"></script>
+    <script src="js/auth.js?v=20261004-fixes1"></script>
+    <script src="js/cart.js?v=20261004-fixes1"></script>
     <script src="js/defaultProducts.js"></script>
-    <script src="js/admin.js?v=4"></script>
+    <script src="js/admin.js?v=20261004-fixes1"></script>
 </body>
 </html>

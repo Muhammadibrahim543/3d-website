@@ -133,7 +133,7 @@ BEGIN
     new.id, 
     new.email, 
     COALESCE(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
-    COALESCE(new.raw_user_meta_data->>'role', 'customer')
+    'customer'
   );
   RETURN new;
 END;

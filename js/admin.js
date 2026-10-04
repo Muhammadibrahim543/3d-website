@@ -1,183 +1,45 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const DEFAULT_PIN = '1234';
-
-    // PIN Authentication Elements
     const pinOverlay = document.getElementById('pin-modal-overlay');
-    const pinForm = document.getElementById('pin-form');
-    const pinInput = document.getElementById('pin-input');
-    const pinError = document.getElementById('pin-error');
     const adminMain = document.getElementById('admin-main-content');
-
-    // Check PIN unlock status
-    function checkAuth() {
-        if (sessionStorage.getItem('kiras_admin_unlocked') === 'true') {
-            if (pinOverlay) {
-                pinOverlay.classList.remove('open');
-                pinOverlay.style.display = 'none';
-            }
-            if (adminMain) adminMain.style.display = 'block';
+    const pinError = document.getElementById('pin-error');
+    const pinForm = document.getElementById('pin-form');
+    if (pinForm) pinForm.addEventListener('submit', e => { e.preventDefault(); KiraAuth.openModal('login'); });
+    let checkingAuth = false;
+    async function checkAuth() {
+        if (checkingAuth) return;
+        checkingAuth = true;
+        try {
+            await KiraDB.requireAdmin();
+            pinOverlay.style.display = 'none';
+            adminMain.style.display = 'block';
             loadOrders();
-        } else {
-            if (pinOverlay) {
-                pinOverlay.classList.add('open');
-                pinOverlay.style.display = 'flex';
-            }
-            if (adminMain) adminMain.style.display = 'none';
-        }
+            await refreshProducts();
+        } catch (error) {
+            adminMain.style.display = 'none'; pinOverlay.style.display = 'flex';
+            pinError.textContent = error.message;
+        } finally { checkingAuth = false; }
     }
-
-    if (pinForm) {
-        pinForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const val = pinInput.value.trim();
-            if (val !== '' && val === DEFAULT_PIN) {
-                sessionStorage.setItem('kiras_admin_unlocked', 'true');
-                if (pinOverlay) {
-                    pinOverlay.classList.remove('open');
-                    pinOverlay.style.display = 'none';
-                }
-                if (adminMain) adminMain.style.display = 'block';
-                loadOrders();
-            } else {
-                pinError.textContent = 'Incorrect Security PIN!';
-                pinInput.value = '';
-            }
-        });
-    }
-
-    // Default Demo Orders
-    const initialDemoOrders = [
-        {
-            id: 'KC-4091',
-            date: 'Jul 22, 2026',
-            time: '10:30 AM',
-            name: 'Md. Ibrahim',
-            email: 'sidratuluae@gmail.com',
-            material: 'Friendly PLA+ (Bio-Starch)',
-            details: 'Custom Drone Chassis Frame & Arm Brackets',
-            status: 'Printing',
-            estimatedPrice: '৳5,200'
-        },
-        {
-            id: 'KC-8812',
-            date: 'Jul 21, 2026',
-            time: '04:15 PM',
-            name: 'Nabila Rahman',
-            email: 'nabila@designhub.bd',
-            material: 'Flex Resin (Smooth Rubber)',
-            details: 'Backlit 3D Lithophane Photo Gift Box',
-            status: 'Completed',
-            estimatedPrice: '৳3,800'
-        },
-        {
-            id: 'KC-1049',
-            date: 'Jul 20, 2026',
-            time: '02:00 PM',
-            name: 'Tanvir Ahmed',
-            email: 'tanvir@robotics.org',
-            material: 'Tough ABS (Impact-Resistant)',
-            details: 'High Torque Servo Gear Box Casing',
-            status: 'Pending',
-            estimatedPrice: '৳7,500'
-        }
-    ];
-
-    const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
+    window.addEventListener('kira-auth-change', checkAuth);
 
     function getOrders() {
-        let stored = localStorage.getItem('kiras_orders');
-        if (!stored) {
-            localStorage.setItem('kiras_orders', JSON.stringify(initialDemoOrders));
-            return initialDemoOrders;
-        }
-        try {
-            const parsed = JSON.parse(stored);
-            // If empty array in storage, restore demo orders
-            if (Array.isArray(parsed) && parsed.length === 0) {
-                localStorage.setItem('kiras_orders', JSON.stringify(initialDemoOrders));
-                return initialDemoOrders;
-            }
-            return parsed;
-        } catch(e) {
-            localStorage.setItem('kiras_orders', JSON.stringify(initialDemoOrders));
-            return initialDemoOrders;
-        }
+        try { return JSON.parse(localStorage.getItem('kiras_orders') || '[]'); } catch (e) { return []; }
+    }
+    function normalizeOrder(o) {
+        const statuses = { pending: 'Pending', printing: 'Printing', delivered: 'Completed', processing: 'Processing', shipped: 'Shipped', cancelled: 'Cancelled' };
+        return { id: o.id, date: new Date(o.created_at).toLocaleDateString(), time: new Date(o.created_at).toLocaleTimeString(),
+            name: o.customer_name, email: o.customer_email, phone: o.customer_phone, address: o.shipping_address,
+            material: o.custom_3d_specs?.model || '3D Print Request', details: o.notes, status: statuses[o.status] || o.status,
+            estimatedPrice: KiraDB.money.format(o.total_amount), snapshot: o.custom_3d_specs?.snapshot || o.items?.[0]?.image,
+            modelFileUrl: o.model_file_url, items: o.items || [] };
     }
 
     async function fetchCloudOrders() {
-        const tbody = document.getElementById('admin-orders-tbody');
-        if (tbody) {
-            const tr = document.createElement('tr');
-            tr.innerHTML = '<td colspan="7" style="text-align:center; padding: 1rem; color:var(--c-primary); font-weight:600;">⏳ Loading latest orders from cloud...</td>';
-            tbody.insertBefore(tr, tbody.firstChild);
-        }
-        if (window.KiraDB && window.KiraDB.isCloudEnabled()) {
-            try {
-                const cloudOrders = await window.KiraDB.orders.getAll();
-                if (Array.isArray(cloudOrders) && cloudOrders.length > 0) {
-                    const localOrders = getOrders();
-                    const map = new Map();
-                    localOrders.forEach(o => map.set(o.id, o));
-                    cloudOrders.forEach(o => {
-                        const normalized = {
-                            id: o.id,
-                            date: o.created_at ? new Date(o.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : o.date || '',
-                            time: o.created_at ? new Date(o.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : o.time || '',
-                            name: o.customer_name || o.name,
-                            email: o.customer_email || o.email,
-                            material: o.custom_3d_specs ? `${o.custom_3d_specs.model || 'Custom'} (${o.custom_3d_specs.color || 'PLA'})` : '3D Print Order',
-                            details: o.notes || (o.items ? o.items.map(i => `${i.quantity}x ${i.title}`).join(', ') : 'Order'),
-                            status: o.status || 'Pending',
-                            estimatedPrice: o.total_amount ? `৳${o.total_amount}` : (o.estimatedPrice || '৳0'),
-                            modelFileUrl: o.model_file_url || null
-                        };
-                        map.set(o.id, normalized);
-                    });
-                    const merged = Array.from(map.values());
-                    localStorage.setItem('kiras_orders', JSON.stringify(merged));
-                    localStorage.setItem('kiras_last_sync_orders', new Date().toLocaleString('en-US'));
-                    updateLastSyncUI();
-                    renderOrders();
-                    return;
-                }
-            } catch (err) {
-                console.warn("[Admin] Cloud DB orders fetch error:", err);
-            }
-        }
-
         try {
-            const res = await fetch(GOOGLE_SHEET_URL + '?action=getOrders');
-            const text = await res.text();
-            // Only parse if it looks like a JSON array
-            if (!text.trim().startsWith('[')) {
-                console.log('Cloud orders: unexpected response, keeping local data.');
-                renderOrders(); // Re-render to clear the loading row
-                return;
-            }
-            const cloudOrders = JSON.parse(text);
-            if (Array.isArray(cloudOrders) && cloudOrders.length > 0) {
-                const localOrders = getOrders();
-                const map = new Map();
-                // Local orders are master, cloud adds new ones
-                localOrders.forEach(o => map.set(o.id, o));
-                cloudOrders.forEach(o => {
-                    if (!map.has(o.id) && o.id) map.set(o.id, o);
-                });
-                const merged = Array.from(map.values());
-                localStorage.setItem('kiras_orders', JSON.stringify(merged));
-                
-                // Update Last Sync
-                localStorage.setItem('kiras_last_sync_orders', new Date().toLocaleString('en-US'));
-                updateLastSyncUI();
-                
-                renderOrders();
-            } else {
-                renderOrders(); // clear loading row if no orders
-            }
-        } catch(err) {
-            console.log('Cloud sync notice:', err);
-            renderOrders(); // clear loading row on error
-        }
+            const orders = await KiraDB.orders.getAll();
+            KiraDB.cache('kiras_orders', orders.map(normalizeOrder));
+            localStorage.setItem('kiras_last_sync_orders', new Date().toLocaleString());
+            updateLastSyncUI(); renderOrders();
+        } catch (error) { showToast('Sync failed / সিঙ্ক হয়নি: ' + error.message); }
     }
 
     function updateLastSyncUI() {
@@ -250,23 +112,27 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td><strong style="color:var(--c-primary);">${escapeHtml(order.id)}</strong></td>
                 <td style="font-size:0.9rem;">${escapeHtml(order.date)}<br><small style="color:var(--c-text-muted);">${escapeHtml(order.time || '')}</small></td>
-                <td><strong>${escapeHtml(order.name)}</strong><br><small style="color:var(--c-text-muted);">${escapeHtml(order.email)}</small></td>
+                <td><strong>${escapeHtml(order.name)}</strong><br><small style="color:var(--c-text-muted);">${escapeHtml(order.email)}</small><br><small>${escapeHtml(order.phone)}<br>${escapeHtml(order.address)}</small></td>
                 <td>
                     <span style="font-weight:600;">${escapeHtml(order.material)}</span><br>
                     <small style="color:var(--c-text-muted);">${escapeHtml((order.details || '').substring(0, 35))}${(order.details || '').length > 35 ? '...' : ''}</small>
                     ${hasSnapshot ? `<br><button class="clay-btn btn-sm btn-view-design" data-id="${escapeHtml(order.id)}" style="margin-top:0.4rem; padding:0.25rem 0.6rem; font-size:0.75rem; background:var(--c-primary); color:#FFF;">🎨 View Custom Design</button>` : ''}
                     ${order.modelFileUrl ? `<br><a href="${order.modelFileUrl}" target="_blank" class="clay-btn btn-sm" style="margin-top:0.4rem; padding:0.25rem 0.6rem; font-size:0.75rem; background:#10B981; color:#FFF; display:inline-block; text-decoration:none;">⬇️ Download 3D Print File</a>` : ''}
+                    ${(order.items || []).filter(i => i.customData?.modelFileUrl).map(i => `<br><a href="${escapeHtml(i.customData.modelFileUrl)}" target="_blank" rel="noopener noreferrer">⬇️ ${escapeHtml(i.title)}</a>`).join('')}
                 </td>
                 <td><strong>${escapeHtml(order.estimatedPrice || '৳0')}</strong></td>
                 <td>
                     <select class="clay-select status-switcher" data-id="${escapeHtml(order.id)}" style="padding:0.3rem 0.6rem; font-size:0.85rem; width:auto;">
                         <option value="Pending" ${order.status === 'Pending' ? 'selected' : ''}>⏳ Pending</option>
+                        <option value="Processing" ${order.status === 'Processing' ? 'selected' : ''}>Processing</option>
+                        <option value="Shipped" ${order.status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                        <option value="Cancelled" ${order.status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                         <option value="Printing" ${order.status === 'Printing' ? 'selected' : ''}>⚙️ Printing</option>
                         <option value="Completed" ${order.status === 'Completed' ? 'selected' : ''}>✅ Completed</option>
                     </select>
                 </td>
                 <td>
-                    <button class="clay-btn btn-sm btn-delete-order" data-id="${escapeHtml(order.id)}" style="padding:0.3rem 0.6rem; background:#FF5E5E; color:#FFF; font-size:0.8rem;">Delete</button>
+                    <button class="clay-btn btn-sm btn-delete-order" data-id="${escapeHtml(order.id)}" style="padding:0.3rem 0.6rem; background:#FF5E5E; color:#FFF; font-size:0.8rem;">Cancel</button>
                 </td>
             `;
 
@@ -314,50 +180,20 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // Attach Status Change Listeners
-        tbody.querySelectorAll('.status-switcher').forEach(sel => {
-            sel.addEventListener('change', (e) => {
-                const id = e.target.getAttribute('data-id');
-                const newStatus = e.target.value;
-                const allOrders = getOrders();
-                const targetOrder = allOrders.find(o => o.id === id);
-                if (targetOrder) {
-                    targetOrder.status = newStatus;
-                    saveOrders(allOrders);
-                    showToast(`Order ${id} status updated to ${newStatus}`);
-
-                    if (window.KiraDB && window.KiraDB.isCloudEnabled()) {
-                        window.KiraDB.orders.updateStatus(id, newStatus.toLowerCase()).catch(err => console.warn(err));
-                    }
-                    
-                    // Sync this specific update to Google Sheets
-                    const params = new URLSearchParams({
-                        id: targetOrder.id || '',
-                        date: targetOrder.date || '',
-                        name: targetOrder.name || '',
-                        email: targetOrder.email || '',
-                        material: targetOrder.material || '',
-                        details: targetOrder.details || '',
-                        estimatedPrice: targetOrder.estimatedPrice || '',
-                        status: targetOrder.status || 'Pending'
-                    });
-                    try {
-                        fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
-                    } catch(err) {}
-                }
+        tbody.querySelectorAll('.status-switcher').forEach(select => {
+            select.addEventListener('change', async event => {
+                const id = event.target.dataset.id; select.disabled = true;
+                try { await KiraDB.orders.updateStatus(id, select.value.toLowerCase()); await fetchCloudOrders(); showToast('Order updated / অর্ডার আপডেট হয়েছে'); }
+                catch (error) { showToast(error.message); renderOrders(); }
+                finally { select.disabled = false; }
             });
         });
-
-        // Attach Delete Listeners
-        tbody.querySelectorAll('.btn-delete-order').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const id = e.target.getAttribute('data-id');
-                if (confirm(`Are you sure you want to delete order ${id}?`)) {
-                    let allOrders = getOrders();
-                    allOrders = allOrders.filter(o => o.id !== id);
-                    saveOrders(allOrders);
-                    showToast(`Order ${id} deleted`);
-                }
+        tbody.querySelectorAll('.btn-delete-order').forEach(button => {
+            button.addEventListener('click', async () => {
+                if (!confirm('Cancel this order? / অর্ডার বাতিল করবেন?')) return;
+                button.disabled = true;
+                try { await KiraDB.orders.remove(button.dataset.id); await fetchCloudOrders(); showToast('Order cancelled / অর্ডার বাতিল হয়েছে'); }
+                catch (error) { showToast(error.message); button.disabled = false; }
             });
         });
     }
@@ -401,33 +237,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Google Sheets Sync
     const btnSyncSheets = document.getElementById('btn-sync-sheets');
-    if (btnSyncSheets) {
-        btnSyncSheets.addEventListener('click', () => {
-            // First fetch the latest from cloud
-            fetchCloudOrders();
-            
-            // Then sync local status updates to cloud (only pushing, Apps Script handles Upsert)
-            const orders = getOrders();
-            orders.forEach(order => {
-                const params = new URLSearchParams({
-                    id: order.id || '',
-                    date: order.date || '',
-                    name: order.name || '',
-                    email: order.email || '',
-                    material: order.material || '',
-                    details: order.details || '',
-                    estimatedPrice: order.estimatedPrice || '',
-                    status: order.status || 'Pending'
-                });
-                try {
-                    fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
-                } catch(e) {}
-            });
-            showToast(`✓ Synced cloud data successfully!`);
-        });
-    }
+    if (btnSyncSheets) btnSyncSheets.addEventListener('click', async () => {
+        btnSyncSheets.disabled = true;
+        try { await fetchCloudOrders(); await refreshProducts(); }
+        catch (error) { showToast(error.message); }
+        finally { btnSyncSheets.disabled = false; }
+    });
 
     function showToast(msg) {
         let toast = document.getElementById('admin-toast');
@@ -480,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
             tabProducts.style.background = 'var(--c-primary)';
             tabProducts.style.color = 'white';
             viewProducts.style.display = 'block';
-            loadProducts();
+            refreshProducts().catch(error => showToast(error.message));
         });
     }
 
@@ -505,96 +321,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadUsers() {
         const tbody = document.getElementById('admin-users-tbody');
-        if (!tbody) return;
-        
-        let users = JSON.parse(localStorage.getItem('kiras_users')) || [];
-        
-        // Try fetching from Google Sheet
         try {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">Loading users from cloud...</td></tr>';
-            const res = await fetch(GOOGLE_SHEET_URL + '?action=getUsers');
-            const cloudUsers = await res.json();
-            if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
-                const map = new Map();
-                // We reverse the cloud users to keep newest at the top, if sheet appends to bottom
-                cloudUsers.reverse().forEach(u => map.set(u.email, u));
-                users.forEach(u => {
-                    if (!map.has(u.email)) map.set(u.email, u);
-                });
-                users = Array.from(map.values());
-                localStorage.setItem('kiras_users', JSON.stringify(users));
-            }
-        } catch (err) {
-            console.log('User cloud sync notice:', err);
-        }
-
-        tbody.innerHTML = '';
-        
-        if (users.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 2rem;">No registered users found.</td></tr>';
-            return;
-        }
-
-        users.forEach(u => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="font-weight:700; color:var(--c-primary);">${u.id || '-'}</td>
-                <td style="font-weight:600;">${u.name}</td>
-                <td>${u.email}</td>
-                <td>${u.phone || '-'}</td>
-                <td>
-                    <span class="masked-pwd" data-pwd="${u.password}">••••••••</span>
-                    <button class="clay-btn btn-sm" onclick="this.previousElementSibling.textContent = this.previousElementSibling.textContent === '••••••••' ? this.previousElementSibling.dataset.pwd : '••••••••'" style="padding: 0.2rem 0.5rem; margin-left: 0.5rem; font-size: 0.7rem; background: rgba(0,0,0,0.05); color: var(--c-text);">👁️</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
+            await KiraDB.requireAdmin();
+            const users = await KiraDB.users.getAll();
+            tbody.innerHTML = users.map(u => `<tr><td>${escapeHtml(u.id)}</td><td>${escapeHtml(u.full_name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.phone)}</td><td>${escapeHtml(u.role)}</td></tr>`).join('') || '<tr><td colspan="5">No users / ব্যবহারকারী নেই</td></tr>';
+        } catch (error) { tbody.textContent = error.message; }
     }
 
     // --- Products Logic ---
-    function getProducts() {
-        let products = JSON.parse(localStorage.getItem('kiras_products'));
-        let needsSave = false;
-        if (!products || products.length === 0) {
-            products = (typeof defaultProducts !== 'undefined') ? defaultProducts : [];
-            needsSave = true;
-        } else if (typeof defaultProducts !== 'undefined') {
-            products.forEach(dp => {
-                const defP = defaultProducts.find(x => x.id === dp.id);
-                if (defP) {
-                    if (defP.price && dp.price !== defP.price) {
-                        dp.price = defP.price;
-                        needsSave = true;
-                    }
-                    if (!dp.descKey && defP.descKey) {
-                        dp.descKey = defP.descKey;
-                        needsSave = true;
-                    }
-                    if (!dp.badgeI18n && defP.badgeI18n) {
-                        dp.badgeI18n = defP.badgeI18n;
-                        needsSave = true;
-                    }
-                }
-            });
-            defaultProducts.forEach(defP => {
-                if (!products.some(dp => dp.id === defP.id)) {
-                    products.push(defP);
-                    needsSave = true;
-                }
-            });
-        }
-        if (needsSave) {
-            localStorage.setItem('kiras_products', JSON.stringify(products));
-        }
-        return products;
-    }
-
+    let cloudProducts = [];
+    function getProducts() { return cloudProducts.map(p => ({ ...p })); }
     let adminCurrentPage = 1;
     const adminItemsPerPage = 8;
-
-    function saveProducts(products) {
-        localStorage.setItem('kiras_products', JSON.stringify(products));
+    async function refreshProducts() {
+        cloudProducts = await KiraDB.products.getAll();
         loadProducts();
+        let seed = document.getElementById('seed-catalogue');
+        if (!seed) {
+            seed = document.createElement('button'); seed.id = 'seed-catalogue'; seed.className = 'clay-btn btn-coral';
+            seed.textContent = 'Publish existing catalogue / বর্তমান পণ্যগুলো প্রকাশ করুন';
+            document.getElementById('admin-products-tbody').closest('table').before(seed);
+            seed.addEventListener('click', async () => {
+                seed.disabled = true;
+                try { await KiraDB.products.saveAll(typeof defaultProducts === 'undefined' ? [] : defaultProducts); await refreshProducts(); showToast('Catalogue published / পণ্যগুলো প্রকাশ হয়েছে'); }
+                catch (error) { showToast(error.message); }
+                finally { seed.disabled = false; }
+            });
+        }
+        seed.hidden = cloudProducts.length > 0;
+    }
+    async function saveProducts(products) {
+        const old = cloudProducts;
+        // Only write changed records; an unrelated edit never overwrites the entire catalogue.
+        for (const product of products) {
+            const previous = old.find(p => p.id === product.id);
+            if (!previous || JSON.stringify(previous) !== JSON.stringify(product)) await KiraDB.products.save(product);
+        }
+        for (const previous of old) if (!products.some(p => p.id === previous.id)) await KiraDB.products.remove(previous.id);
+        await refreshProducts();
     }
 
     function loadProducts() {
@@ -666,13 +430,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         tbody.querySelectorAll('.btn-delete-product').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 const index = btn.getAttribute('data-index');
                 if (confirm('Delete this product?')) {
                     const allP = getProducts();
                     allP.splice(index, 1);
-                    saveProducts(allP);
-                    showToast('Product deleted successfully');
+                    btn.disabled = true;
+                    try { await saveProducts(allP); showToast('Product deleted successfully'); }
+                    catch (error) { showToast(error.message); btn.disabled = false; }
                 }
             });
         });
@@ -763,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const editProductForm = document.getElementById('edit-product-form');
     if (editProductForm) {
-        editProductForm.addEventListener('submit', (e) => {
+        editProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const index = document.getElementById('edit-prod-id').value;
             const allP = getProducts();
@@ -781,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
             else if(category === 'functional') catLabel = 'Functional & Accessories';
 
             allP[index] = {
-                ...allP[index],
+                ...allP[index], titleI18n: '', descKey: '', badgeI18n: '', categoryI18n: '', nameBn: '', descBn: '',
                 name: document.getElementById('edit-prod-name').value.trim(),
                 price: document.getElementById('edit-prod-price').value.trim(),
                 delivery: document.getElementById('edit-prod-delivery').value.trim(),
@@ -793,15 +558,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 specs: specs
             };
             
-            saveProducts(allP);
-            showToast('Product updated successfully!');
-            document.getElementById('editProductModal').classList.remove('open');
+            const button = editProductForm.querySelector('[type=submit]'); button.disabled = true;
+            try { await saveProducts(allP); showToast('Product updated successfully!'); document.getElementById('editProductModal').classList.remove('open'); }
+            catch (error) { showToast(error.message); }
+            finally { button.disabled = false; }
         });
     }
 
     const addProductForm = document.getElementById('add-product-form');
     if (addProductForm) {
-        addProductForm.addEventListener('submit', (e) => {
+        addProductForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
             let specs = [];
@@ -833,9 +599,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 desc: document.getElementById('prod-desc').value.trim(),
                 specs: specs
             });
-            saveProducts(allP);
-            showToast('Product added successfully!');
-            addProductForm.reset();
+            const button = addProductForm.querySelector('[type=submit]'); button.disabled = true;
+            try { await saveProducts(allP); showToast('Product added successfully!'); addProductForm.reset(); }
+            catch (error) { showToast(error.message); }
+            finally { button.disabled = false; }
         });
     }
 

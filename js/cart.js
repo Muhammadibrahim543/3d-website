@@ -3,10 +3,22 @@
    ========================================================================== */
 
 (function() {
+    function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch]); }
     window.KiraCart = {
         getItems: function() {
             try {
-                return JSON.parse(localStorage.getItem('kiras_cart')) || [];
+                const items = JSON.parse(localStorage.getItem('kiras_cart')) || [];
+                let migrated = false;
+                for (const item of items) {
+                    if (!item.pricingBasis && item.title?.startsWith('Custom 3D Print (') && /\d+ Unit\(s\)/.test(String(item.specs)) && item.quantity > 1) {
+                        item.numPrice = Number(item.numPrice) / item.quantity;
+                        item.price = item.numPrice;
+                        migrated = true;
+                    }
+                    if (!item.pricingBasis) { item.pricingBasis = 'unit'; migrated = true; }
+                }
+                if (migrated) localStorage.setItem('kiras_cart', JSON.stringify(items));
+                return items;
             } catch(e) {
                 return [];
             }
@@ -20,7 +32,7 @@
         addItem: function(item) {
             let items = this.getItems();
             // Check if identical item already exists (by title and specs)
-            const idx = items.findIndex(i => i.title === item.title && i.specs === item.specs);
+            const idx = items.findIndex(i => i.title === item.title && JSON.stringify(i.specs) === JSON.stringify(item.specs) && JSON.stringify(i.customData) === JSON.stringify(item.customData || null));
             if (idx !== -1) {
                 items[idx].quantity += (item.quantity || 1);
             } else {
@@ -28,9 +40,10 @@
                     id: 'cart_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2,4),
                     title: item.title,
                     specs: item.specs || '',
+                    pricingBasis: 'unit',
                     price: item.price, // string format e.g. "৳484"
-                    numPrice: item.numPrice || parseInt(String(item.price).replace(/[^0-9]/g, ''), 10) || 0,
-                    quantity: item.quantity || 1,
+                    numPrice: KiraDB.money.parse(item.numPrice ?? item.price),
+                    quantity: Math.max(1, Math.floor(Number(item.quantity) || 1)),
                     image: item.image || 'images/torii_gate_lamp.webp',
                     customData: item.customData || null
                 });
@@ -72,7 +85,7 @@
 
         getTotalPrice: function() {
             const items = this.getItems();
-            return items.reduce((sum, item) => sum + (item.numPrice * item.quantity), 0);
+            return Math.round(items.reduce((sum, item) => sum + (item.numPrice * item.quantity), 0) * 100) / 100;
         },
 
         openDrawer: function() {
@@ -157,10 +170,10 @@
                 } else {
                     listEl.innerHTML = items.map(item => `
                         <div class="cart-item-row">
-                            <img src="${item.image}" alt="${item.title}" class="cart-item-img">
+                            <img src="${escapeHtml(item.image)}" alt="${escapeHtml(item.title)}" class="cart-item-img">
                             <div class="cart-item-info">
-                                <div class="cart-item-title">${item.title}</div>
-                                <div class="cart-item-meta">${item.specs}</div>
+                                <div class="cart-item-title">${escapeHtml(item.title)}</div>
+                                <div class="cart-item-meta">${escapeHtml(KiraDB.formatSpecs(item.specs))}</div>
                                 <div class="cart-item-price">৳${(item.numPrice * item.quantity).toLocaleString('en-US')}</div>
                             </div>
                             <div class="cart-qty-controls">
@@ -174,95 +187,15 @@
             }
         },
 
-        checkout: async function() {
+        checkout: function() {
             const items = this.getItems();
             if (items.length === 0) {
                 if (window.showToast) showToast('Your cart is empty!');
                 return;
             }
 
-            const user = window.KiraAuth ? KiraAuth.getCurrentUser() : null;
-            const userEmail = user ? user.email : 'guest@kira.com';
-            const userName = user ? user.name : 'Valued Customer';
-
-            const orderId = 'KC-' + Date.now().toString(36).toUpperCase();
-            const orderDate = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const orderTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const totalPrice = '৳' + this.getTotalPrice().toLocaleString('en-US');
-
-            const newOrder = {
-                id: orderId,
-                date: orderDate,
-                time: orderTime,
-                name: userName,
-                email: userEmail,
-                items: items,
-                details: items.map(i => `${i.quantity}x ${i.title} (${i.specs}) - ৳${(i.numPrice * i.quantity).toLocaleString('en-US')}`).join('\n'),
-                status: 'Pending',
-                estimatedPrice: totalPrice,
-                snapshot: items[0] ? items[0].image : null
-            };
-
-            // Save via KiraDB (Supabase Cloud + LocalStorage Mirror)
-            if (window.KiraDB && window.KiraDB.orders) {
-                try {
-                    await window.KiraDB.orders.create({
-                        id: newOrder.id,
-                        name: newOrder.name,
-                        email: newOrder.email,
-                        items: items,
-                        totalAmount: totalPrice,
-                        notes: newOrder.details
-                    });
-                } catch(e) {
-                    console.warn("KiraDB order create error:", e);
-                }
-            } else {
-                // Save to kiras_orders in localStorage
-                let orders = [];
-                try {
-                    orders = JSON.parse(localStorage.getItem('kiras_orders')) || [];
-                } catch(e) {}
-                orders.unshift(newOrder);
-                localStorage.setItem('kiras_orders', JSON.stringify(orders));
-            }
-
-            // Send to Google Sheets Cloud
-            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
-            const params = new URLSearchParams({
-                id: newOrder.id,
-                date: newOrder.date,
-                name: newOrder.name,
-                email: newOrder.email,
-                material: 'Custom 3D Product Cart',
-                details: newOrder.details,
-                estimatedPrice: newOrder.estimatedPrice,
-                status: newOrder.status
-            });
-            try {
-                // await the fetch so the browser doesn't cancel it during redirect
-                await fetch(GOOGLE_SHEET_URL + '?' + params.toString(), { mode: 'no-cors' });
-            } catch (err) {
-                const beacon = new Image();
-                beacon.src = GOOGLE_SHEET_URL + '?' + params.toString();
-            }
-
-            // Clear cart
-            this.clear();
             this.closeDrawer();
-
-            if (window.showToast) {
-                showToast(`Order ${orderId} placed successfully!`);
-            }
-
-            // Redirect to account page or WhatsApp confirmation
-            const waItemsText = items.map(i => `• ${i.quantity}x ${i.title} (${i.specs}) - ৳${(i.numPrice * i.quantity).toLocaleString('en-US')}`).join('\n');
-            const waMsg = `Hi Studio Kira's Creation! I have placed an order (${orderId}):\n\nCustomer: ${userName} (${userEmail})\n\nOrder Items:\n${waItemsText}\n\nTotal Price: ${totalPrice}\n\nPlease confirm my order status!`;
-            
-            setTimeout(() => {
-                window.location.href = `account.html#orders`;
-                window.open(`https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}`, '_blank');
-            }, 1000);
+            window.location.href = 'contact.html?from=cart';
         }
     };
 

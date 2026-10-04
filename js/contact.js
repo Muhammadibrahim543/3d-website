@@ -1,242 +1,97 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const contactForm = document.getElementById('shapey-contact-form');
-    const formFeedback = document.getElementById('contact-feedback');
-
-    // Pre-fill from calculator or customizer if URL query parameters exist
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.has('material') && document.getElementById('material-choice')) {
-        document.getElementById('material-choice').value = urlParams.get('material');
+document.addEventListener('DOMContentLoaded', async () => {
+    const form = document.getElementById('shapey-contact-form');
+    const feedback = document.getElementById('contact-feedback');
+    const query = new URLSearchParams(location.search);
+    const isCart = query.get('from') === 'cart';
+    const isCustom = query.get('from') === 'customizer' || query.get('type') === 'custom_order';
+    const tr = (en, bn) => localStorage.getItem('shapey_lang') === 'bn' ? bn : en;
+    const escape = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    let pending = null, busy = false, completed = false, uploadedFile = null;
+    let orderId = 'KC-' + crypto.randomUUID();
+    try { if (isCustom) pending = JSON.parse(localStorage.getItem('kiras_pending_custom_order') || 'null'); } catch (e) {}
+    const items = isCart ? KiraCart.getItems() : [];
+    const buying = isCart || Boolean(pending);
+    if (isCart && !items.length || isCustom && !pending) {
+        feedback.textContent = tr('Your design or cart is empty. Please start again.', 'ডিজাইন বা কার্ট পাওয়া যায়নি। আবার শুরু করুন।');
+        form.hidden = true; return;
     }
-    if (urlParams.has('details') && document.getElementById('project-details')) {
-        document.getElementById('project-details').value = urlParams.get('details');
+    if (query.has('details')) document.getElementById('project-details').value = query.get('details');
+    if (query.has('material')) {
+        const select = document.getElementById('material-choice');
+        const value = query.get('material');
+        const match = [...select.options].find(o => o.value === value || o.text === value);
+        if (match) select.value = match.value;
     }
-
-    // Check for live customizer snapshot payload ONLY if navigated with customizer query parameter
-    let pendingCustomOrder = null;
-    const isFromCustomizer = (urlParams.get('from') === 'customizer' || urlParams.get('type') === 'custom_order');
-    if (isFromCustomizer) {
+    const summary = document.getElementById('checkout-summary');
+    const preview = document.getElementById('customizer-preview-container');
+    const fileInput = document.getElementById('contact-file');
+    const button = form.querySelector('[type=submit]');
+    if (buying) {
+        button.removeAttribute('data-i18n');
+        button.textContent = tr('Place Order', 'অর্ডার পাঠান');
+        document.querySelector('[data-i18n=contact_headline]').textContent = tr('Complete Your Order', 'অর্ডারের তথ্য দিন');
+    }
+    let subtotal = 0;
+    if (isCart) {
+        subtotal = KiraCart.getTotalPrice();
+        summary.innerHTML = `<div class="clay-card" style="padding:1rem;">${items.map(i => `<p>${escape(i.quantity)} × ${escape(i.title)} — ${escape(KiraDB.money.format(i.numPrice * i.quantity))}</p>`).join('')}<strong>${tr('Products total', 'পণ্যের মোট দাম')}: ${escape(KiraDB.money.format(subtotal))}</strong><p>${tr('Delivery fee will be confirmed by the studio before payment.', 'পেমেন্টের আগে ডেলিভারি চার্জ স্টুডিও থেকে নিশ্চিত করা হবে।')}</p></div>`;
+    } else if (pending) {
+        subtotal = KiraDB.money.parse(pending.price);
+        preview.innerHTML = `<div class="clay-card" style="padding:1rem;"><img src="${escape(pending.snapshot)}" alt="Custom design" style="max-width:100%;max-height:220px;"><p>${escape(pending.text)} • ${escape(pending.model)} • ${escape(pending.color)}</p><strong>${escape(KiraDB.money.format(subtotal))}</strong><p>${tr('Delivery fee will be confirmed before payment.', 'পেমেন্টের আগে ডেলিভারি চার্জ নিশ্চিত করা হবে।')}</p><a href="customize.html" class="clay-btn btn-sm">${tr('Edit design', 'ডিজাইন পরিবর্তন')}</a> <button type="button" id="cancel-custom-order" class="clay-btn btn-sm">${tr('Cancel', 'বাতিল')}</button></div>`;
+        document.getElementById('cancel-custom-order').onclick = () => { localStorage.removeItem('kiras_pending_custom_order'); location.href = 'contact.html'; };
+        document.getElementById('file-upload-group').hidden = true;
+    } else {
+        document.getElementById('payment-method-group').hidden = true;
+        const match = document.getElementById('project-details').value.match(/৳[০-৯0-9,]+(?:\.[0-9]{1,2})?/);
+        subtotal = match ? KiraDB.money.parse(match[0]) : 0;
+    }
+    await window.KiraAuth?.ready;
+    const user = window.KiraAuth?.getCurrentUser();
+    for (const [id, value] of [['contact-name', user?.name], ['contact-email', user?.email], ['contact-phone', user?.phone], ['contact-address', user?.address]]) {
+        if (value && !document.getElementById(id).value) document.getElementById(id).value = value;
+    }
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        if (busy || completed || !form.reportValidity()) return;
+        busy = true; button.disabled = true; feedback.style.color = 'var(--c-text)';
+        feedback.textContent = tr('Saving your request…', 'আপনার তথ্য সংরক্ষণ হচ্ছে…');
         try {
-            const storedPending = localStorage.getItem('kiras_pending_custom_order');
-            if (storedPending) {
-                pendingCustomOrder = JSON.parse(storedPending);
-            }
-        } catch(e) {}
-    }
-
-    const fileUploadGroup = document.getElementById('file-upload-group');
-    const previewContainer = document.getElementById('customizer-preview-container');
-
-    if (isFromCustomizer && pendingCustomOrder && previewContainer) {
-        // Hide standard file requirement when ordering an active customizer design
-        if (fileUploadGroup) fileUploadGroup.style.display = 'none';
-
-        const rawPrice = pendingCustomOrder.price || '৳80';
-        const formattedPrice = rawPrice.toString().startsWith('৳') ? rawPrice : `৳${rawPrice}`;
-
-        previewContainer.innerHTML = `
-            <div class="customizer-order-preview-card" style="background:#181621; color:#FFFFFF; padding:1.4rem; border-radius:24px; margin-bottom:1.8rem; text-align:center; border:2px solid var(--c-primary); box-shadow: 0 12px 32px rgba(0,0,0,0.3);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.8rem;">
-                    <div style="font-size:0.85rem; text-transform:uppercase; letter-spacing:1px; color:var(--c-primary); font-weight:700;">🎨 Your 3D Customizer Design</div>
-                    <button type="button" id="btn-cancel-custom-order" class="clay-btn btn-sm" style="background:rgba(255,255,255,0.1); color:#FF8A75; border-radius:10px; font-size:0.75rem; padding:0.3rem 0.7rem;" title="Clear design and open standard contact form">✕ Cancel / Standard Inquiry</button>
-                </div>
-                
-                <div style="background:#121019; padding:0.8rem; border-radius:18px; display:inline-block; max-width:100%; margin:0.3rem 0;">
-                    <img src="${pendingCustomOrder.snapshot}" alt="3D Custom Model Preview" style="max-width:100%; max-height:220px; height:auto; border-radius:12px; display:block; margin:0 auto; object-fit:contain;">
-                </div>
-                
-                <div style="display:flex; justify-content:space-around; flex-wrap:wrap; gap:0.6rem; margin-top:0.8rem; font-size:0.9rem; font-family:var(--f-head); background:rgba(255,255,255,0.05); padding:0.7rem 1rem; border-radius:16px;">
-                    <span><strong>Text:</strong> <span style="color:var(--c-accent);">${pendingCustomOrder.text || 'Custom'}</span></span>
-                    <span><strong>Model:</strong> ${pendingCustomOrder.model || 'LEGO Keychain'}</span>
-                    <span><strong>Color:</strong> ${pendingCustomOrder.color || 'Multi-Color'}</span>
-                    <span><strong>Total:</strong> <strong style="color:var(--c-primary); font-size:1.15rem;">${formattedPrice}</strong></span>
-                </div>
-
-                <div style="display:flex; gap:0.8rem; margin-top:1.2rem; flex-wrap:wrap;">
-                    <a id="btn-whatsapp-direct" href="#" target="_blank" rel="noopener noreferrer" class="clay-btn btn-coral" style="background:#25D366; color:#FFF; flex:1; min-width:200px; font-size:0.95rem; gap:0.5rem; justify-content:center;">
-                        💬 Order via WhatsApp
-                    </a>
-                    <a href="customize.html" class="clay-btn btn-cream" style="flex:0.8; font-size:0.95rem; justify-content:center;">
-                        ✏️ Edit in 3D
-                    </a>
-                </div>
-            </div>
-        `;
-
-        // Configure WhatsApp direct message link
-        const btnWa = document.getElementById('btn-whatsapp-direct');
-        if (btnWa) {
-            const waMsg = `Hi Studio Kira's Creation! I want to order my customized 3D design:\n\n• Text: ${pendingCustomOrder.text || 'Custom'}\n• Model: ${pendingCustomOrder.model || 'LEGO Keychain'}\n• Color: ${pendingCustomOrder.color || 'Multi-Color'}\n• Quoted Price: ${formattedPrice}\n\nPlease confirm my order!`;
-            btnWa.href = `https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}`;
-        }
-
-        // Cancel / Clear custom order handler
-        const btnCancel = document.getElementById('btn-cancel-custom-order');
-        if (btnCancel) {
-            btnCancel.addEventListener('click', () => {
-                localStorage.removeItem('kiras_pending_custom_order');
-                window.location.href = 'contact.html';
-            });
-        }
-    } else if (fileUploadGroup) {
-        fileUploadGroup.style.display = 'block';
-    }
-
-    if (contactForm) {
-        contactForm.addEventListener('submit', (e) => {
-            e.preventDefault();
+            KiraDB.requireCloud();
             const name = document.getElementById('contact-name').value.trim();
             const email = document.getElementById('contact-email').value.trim();
-            const material = document.getElementById('material-choice') ? document.getElementById('material-choice').value : 'Friendly PLA (Bio-Starch)';
-            const details = document.getElementById('project-details') ? document.getElementById('project-details').value.trim() : '3D Print Request';
-
-            const currentLang = localStorage.getItem('shapey_lang') || 'en';
-
-            if (!name || !email) {
-                formFeedback.textContent = currentLang === 'en' ? 'Oops! Please fill in your name and email so we can reach you.' : 'দুঃখিত! অনুগ্রহ করে আপনার নাম ও ইমেইল ঠিকানা দিন।';
-                formFeedback.style.color = '#FF7E67';
-                return;
+            const phone = document.getElementById('contact-phone').value.trim();
+            const address = document.getElementById('contact-address').value.trim();
+            const normalizedPhone = phone.replace(/[০-৯]/g, n => '০১২৩৪৫৬৭৮৯'.indexOf(n)).replace(/[\s()-]/g, '');
+            if (!/^(?:\+?88)?01[3-9]\d{8}$/.test(normalizedPhone)) throw new Error(tr('Enter a valid Bangladesh mobile number.', 'সঠিক বাংলাদেশের মোবাইল নম্বর দিন।'));
+            if (!address) throw new Error(tr('Enter your shipping address.', 'ডেলিভারির ঠিকানা দিন।'));
+            const file = fileInput.files[0];
+            let fileUrl = pending?.modelFileUrl || null;
+            if (file) {
+                KiraDB.storage.validate(file, file.name);
+                if (!uploadedFile || uploadedFile.file !== file) uploadedFile = { file, url: await KiraDB.storage.uploadModel(file, file.name) };
+                fileUrl = uploadedFile.url;
             }
-
-            // Parse price from details if calculated, otherwise mark as Quote Required
-            let estPrice = (currentLang === 'bn' ? 'কোটেশন প্রয়োজন' : 'Quote Required');
-            const priceMatch = details.match(/৳[0-9,]+/);
-            if (priceMatch) {
-                estPrice = priceMatch[0];
-            }
-
-            // Create new order record for Admin Panel & Google Sheets Sync
-            const newOrder = {
-                id: 'KC-' + Date.now().toString(36).toUpperCase(),
-                date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                name: name,
-                email: email,
-                material: material,
-                details: details || 'Custom 3D Print Request',
-                status: 'Pending',
-                estimatedPrice: estPrice,
-                snapshot: pendingCustomOrder ? pendingCustomOrder.snapshot : null
-            };
-
-            if (window.KiraDB && window.KiraDB.orders) {
-                window.KiraDB.orders.create({
-                    id: newOrder.id,
-                    name: newOrder.name,
-                    email: newOrder.email,
-                    notes: newOrder.details,
-                    customSpecs: pendingCustomOrder,
-                    totalAmount: estPrice.replace(/[^0-9]/g, '') || 0
-                }).catch(err => console.warn("KiraDB contact order create error:", err));
-            } else {
-                const existingOrders = JSON.parse(localStorage.getItem('kiras_orders') || '[]');
-                existingOrders.unshift(newOrder);
-                localStorage.setItem('kiras_orders', JSON.stringify(existingOrders));
-            }
-
-            const GOOGLE_SHEET_URL = 'https://script.google.com/macros/s/AKfycbxlT_uFe-8zMu_LFpMZsGRQPaQuzcIxFZfmFa195FMp1b0IFJP-blzHYoFSv-nj_cs/exec';
-
-            // Send live data via URL parameters cleanly
-            const params = new URLSearchParams({
-                id: newOrder.id,
-                date: newOrder.date,
-                name: newOrder.name,
-                email: newOrder.email,
-                material: newOrder.material,
-                details: newOrder.details,
-                estimatedPrice: newOrder.estimatedPrice,
-                status: newOrder.status
+            if (pending && !fileUrl) throw new Error(tr('Please return to the customizer and upload the model again.', 'কাস্টমাইজারে ফিরে মডেলটি আবার পাঠান।'));
+            if (isCart && JSON.stringify(KiraCart.getItems()) !== JSON.stringify(items)) throw new Error(tr('Your cart changed. Reload checkout to review it.', 'কার্ট পরিবর্তন হয়েছে। checkout রিলোড করে যাচাই করুন।'));
+            const details = document.getElementById('project-details').value.trim();
+            const material = document.getElementById('material-choice').value;
+            const itemDetails = items.map(i => `${i.quantity} × ${i.title} (${KiraDB.formatSpecs(i.specs)})`).join('\n');
+            const record = await KiraDB.orders.create({
+                id: orderId, name, email, phone, address, subtotal, deliveryFee: 0,
+                paymentMethod: buying ? document.getElementById('contact-payment').value : 'quote',
+                notes: [buying ? 'Order request; delivery fee requires confirmation.' : 'Quote request.', material, itemDetails, details].filter(Boolean).join('\n'),
+                items, customSpecs: pending, modelFileUrl: fileUrl
             });
-
-            const getUrl = GOOGLE_SHEET_URL + '?' + params.toString();
-            
-            // Single reliable submit to Google Sheet
-            try {
-                fetch(getUrl, { mode: 'no-cors' });
-            } catch (err) {
-                const beacon = new Image();
-                beacon.src = getUrl;
-            }
-
-            // Clear pending customizer order after submission
-            localStorage.removeItem('kiras_pending_custom_order');
-
-            // Construct Rich Order Confirmation Card
-            const waDirectMsg = `Hi Studio Kira's Creation! I just placed an order:\n\n• Order ID: ${newOrder.id}\n• Name: ${newOrder.name}\n• Material/Specs: ${newOrder.material}\n• Price: ${newOrder.estimatedPrice}\n• Details: ${newOrder.details}\n\nPlease confirm my 3D order!`;
-
-            const formCard = contactForm.closest('.clay-card');
-            if (formCard) {
-                formCard.style.background = 'transparent';
-                formCard.style.boxShadow = 'none';
-                formCard.style.border = 'none';
-                formCard.style.padding = '0';
-            }
-
-            if (previewContainer) previewContainer.style.display = 'none';
-            contactForm.style.display = 'none';
-
-            formFeedback.innerHTML = `
-                <div class="clay-card order-confirmation-card" style="background:var(--c-bg-card); border:2px solid #88A47C; padding:2rem; border-radius:28px; text-align:center; box-shadow:0 20px 50px rgba(136,164,124,0.25);">
-                    <div style="font-size:3.5rem; margin-bottom:0.4rem;">✅</div>
-                    <h2 style="color:var(--c-accent); font-family:var(--f-head); margin-bottom:0.4rem;">Order Confirmed!</h2>
-                    <p style="color:var(--c-text-muted); font-size:0.95rem; margin-bottom:1.2rem;">Thank you, <strong style="color:var(--c-text);">${escapeHtml(name)}</strong>! Your 3D order payload has been received.</p>
-                    
-                    <!-- Order ID Badge -->
-                    <div style="display:inline-flex; align-items:center; gap:0.5rem; background:rgba(136,164,124,0.15); color:var(--c-accent); padding:0.5rem 1.2rem; border-radius:20px; font-weight:700; font-family:var(--f-head); margin-bottom:1.5rem; border:1px dashed var(--c-accent);">
-                        <span>Order Reference: <strong>${newOrder.id}</strong></span>
-                    </div>
-
-                    ${newOrder.snapshot ? `
-                    <!-- Custom 3D Design Snapshot Preview -->
-                    <div style="background:#121019; padding:1rem; border-radius:20px; margin-bottom:1.5rem; border:1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size:0.8rem; text-transform:uppercase; letter-spacing:1px; color:var(--c-primary); font-weight:700; margin-bottom:0.5rem;">🎨 Your Custom 3D Design</div>
-                        <img src="${newOrder.snapshot}" alt="Custom 3D Nameplate Design" style="max-width:100%; height:auto; border-radius:12px; display:block; margin:0 auto; box-shadow:0 8px 24px rgba(0,0,0,0.5);">
-                    </div>
-                    ` : ''}
-
-                    <!-- Receipt Info Grid -->
-                    <div style="background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.06); border-radius:20px; padding:1.2rem; margin-bottom:1.5rem; text-align:left; font-size:0.92rem; line-height:1.7;">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
-                            <span style="color:var(--c-text-muted);">Customer:</span>
-                            <strong>${escapeHtml(name)}</strong>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
-                            <span style="color:var(--c-text-muted);">Email:</span>
-                            <strong>${escapeHtml(email)}</strong>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
-                            <span style="color:var(--c-text-muted);">Material / Specs:</span>
-                            <strong>${escapeHtml(material)}</strong>
-                        </div>
-                        <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
-                            <span style="color:var(--c-text-muted);">Quoted Amount:</span>
-                            <strong style="color:var(--c-primary); font-size:1.05rem;">${escapeHtml(estPrice)}</strong>
-                        </div>
-                        <div style="display:flex; justify-content:space-between;">
-                            <span style="color:var(--c-text-muted);">Status:</span>
-                            <span style="color:var(--c-accent); font-weight:700;">✓ Live Synced to Admin Panel</span>
-                        </div>
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div style="display:flex; flex-direction:column; gap:0.8rem;">
-                        <a href="https://wa.me/8801793500131?text=${encodeURIComponent(waDirectMsg)}" target="_blank" rel="noopener noreferrer" class="clay-btn btn-coral btn-block" style="background:#25D366; color:#FFF; font-size:1.05rem; justify-content:center;">
-                            💬 Send Receipt to WhatsApp
-                        </a>
-                        <div style="display:flex; gap:0.8rem; flex-wrap:wrap;">
-                            <a href="customize.html" class="clay-btn btn-cream" style="flex:1; justify-content:center;">🎨 Design Another</a>
-                            <a href="tel:+8801793500131" class="clay-btn btn-cream" style="flex:1; justify-content:center;">📞 Call Studio</a>
-                        </div>
-                    </div>
-                </div>
-            `;
-            contactForm.reset();
-        });
-    }
-
-    function escapeHtml(str) {
-        if (!str) return '';
-        return str.replace(/[&<>"']/g, function(m) {
-            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[m];
-        });
-    }
+            completed = true;
+            if (isCart) KiraCart.clear();
+            if (pending) localStorage.removeItem('kiras_pending_custom_order');
+            form.hidden = true; preview.hidden = true; summary.hidden = true;
+            const message = `Order ${record.id}\n${name}\n${phone}\n${address}\n${itemDetails || pending?.text || details}\nProducts total: ${KiraDB.money.format(record.subtotal)}`;
+            feedback.innerHTML = `<div class="clay-card" style="padding:1.5rem;overflow-wrap:anywhere;"><h2>✓ ${buying ? tr('Order Request Received', 'অর্ডারের অনুরোধ পেয়েছি') : tr('Quote Request Received', 'কোটেশনের অনুরোধ পেয়েছি')}</h2><p>${tr('Reference', 'রেফারেন্স')}: <strong>${escape(record.id)}</strong></p><p>${escape(name)} • ${escape(phone)}</p><p>${escape(address)}</p><p>${tr('Products amount', 'পণ্যের দাম')}: ${record.subtotal ? escape(KiraDB.money.format(record.subtotal)) : tr('Quote required', 'কোটেশন প্রয়োজন')}</p><p>${tr('The studio will confirm delivery charges and payment. Payment is not yet confirmed.', 'স্টুডিও ডেলিভারি চার্জ ও পেমেন্ট নিশ্চিত করবে। পেমেন্ট এখনও নিশ্চিত হয়নি।')}</p><a class="clay-btn btn-coral" href="https://wa.me/8801793500131?text=${encodeURIComponent(message)}" target="_blank" rel="noopener noreferrer">${tr('Contact Studio', 'স্টুডিওতে যোগাযোগ')}</a></div>`;
+        } catch (error) {
+            console.error('Request not confirmed:', error);
+            feedback.style.color = '#C63D32';
+            feedback.textContent = `${tr('Not saved. Your information is kept; please retry.', 'সেভ হয়নি। আপনার তথ্য রাখা আছে; আবার চেষ্টা করুন।')} ${error.message || ''}`;
+        } finally { busy = false; button.disabled = completed; }
+    });
 });

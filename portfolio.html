@@ -394,16 +394,16 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/supabaseClient.js"></script>
+    <script src="js/supabaseClient.js?v=20261004-fixes1"></script>
     <script src="js/translations.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/cart.js?v=6"></script>
+    <script src="js/auth.js?v=20261004-fixes1"></script>
+    <script src="js/cart.js?v=20261004-fixes1"></script>
     <script src="js/defaultProducts.js"></script>
     <script src="js/portfolio.js"></script>
     <script>
         // Lightbox Modal Interactivity with i18n support & Deep-linking
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const lightbox = document.getElementById('portfolioLightbox');
             const lightboxImg = document.getElementById('lightboxImg');
             const lightboxTitle = document.getElementById('lightboxTitle');
@@ -414,47 +414,22 @@
             const btnAddCart = document.getElementById('btn-lightbox-add-cart');
             const btnLightboxShare = document.getElementById('btn-lightbox-share');
 
-            // Load dynamic products
-            let dynamicProducts = JSON.parse(localStorage.getItem('kiras_products'));
-            let needsSave = false;
-            if (!dynamicProducts || dynamicProducts.length === 0) {
-                dynamicProducts = (typeof defaultProducts !== 'undefined') ? defaultProducts : [];
-                needsSave = true;
-            } else if (typeof defaultProducts !== 'undefined') {
-                // Force sync prices and missing i18n keys
-                dynamicProducts.forEach(dp => {
-                    const defP = defaultProducts.find(x => x.id === dp.id);
-                    if (defP) {
-                        if (defP.price && dp.price !== defP.price) {
-                            dp.price = defP.price;
-                            needsSave = true;
-                        }
-                        if (!dp.descKey && defP.descKey) {
-                            dp.descKey = defP.descKey;
-                            needsSave = true;
-                        }
-                        if (!dp.badgeI18n && defP.badgeI18n) {
-                            dp.badgeI18n = defP.badgeI18n;
-                            needsSave = true;
-                        }
-                    }
-                });
-                defaultProducts.forEach(defP => {
-                    if (!dynamicProducts.some(dp => dp.id === defP.id)) {
-                        dynamicProducts.push(defP);
-                        needsSave = true;
-                    }
-                });
-            }
-            if (needsSave) {
-                localStorage.setItem('kiras_products', JSON.stringify(dynamicProducts));
+            // Always fetch the same cloud catalogue that the admin edits.
+            let dynamicProducts = [];
+            try { dynamicProducts = await KiraDB.products.getAll(); }
+            catch (error) {
+                const notice = document.createElement('p');
+                dynamicProducts = KiraDB.products.getCached();
+                notice.textContent = 'Showing saved catalogue; live updates unavailable / সংরক্ষিত পণ্য দেখানো হচ্ছে; লাইভ আপডেট পাওয়া যাচ্ছে না।';
+                document.querySelector('.portfolio-filters').after(notice);
+                console.error(error);
             }
 
             // Share handler with native Web Share API and Clipboard Toast fallback
             async function handleShareProduct(p) {
                 const currentLang = localStorage.getItem('shapey_lang') || 'en';
                 const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
-                const prodTitle = (dict && p.titleI18n && dict[p.titleI18n]) ? dict[p.titleI18n] : p.name;
+                const prodTitle = currentLang === 'bn' ? (p.nameBn || p.name) : p.name;
                 
                 // Construct clean shareable absolute URL
                 const shareUrl = new URL(window.location.origin + window.location.pathname);
@@ -520,7 +495,7 @@
                 const currentLang = localStorage.getItem('shapey_lang') || 'en';
                 const dict = (typeof translations !== 'undefined' && translations[currentLang]) ? translations[currentLang] : null;
 
-                lightboxTitle.textContent = (dict && p.titleI18n && dict[p.titleI18n]) ? dict[p.titleI18n] : p.name;
+                lightboxTitle.textContent = currentLang === 'bn' ? (p.nameBn || p.name) : p.name;
                 lightboxCategory.textContent = (dict && p.categoryI18n && dict[p.categoryI18n]) ? dict[p.categoryI18n] : (p.categoryLabel || p.category);
                 
                 // Price formatting
@@ -538,7 +513,7 @@
                     lblPrice.textContent = (dict && dict['lightbox_price']) ? dict['lightbox_price'] : 'Price:';
                 }
                 
-                let descText = p.desc || '';
+                let descText = currentLang === 'bn' ? (p.descBn || p.desc || '') : (p.desc || '');
                 if (dict && p.descKey && dict[p.descKey]) {
                     descText = dict[p.descKey];
                 }
@@ -550,6 +525,10 @@
                     let cartBtnText = (dict && dict['cart_add']) ? dict['cart_add'] : 'Add Model to Cart';
                     btnAddCart.textContent = `🛒 ${cartBtnText} (${priceText})`;
                     btnAddCart.onclick = () => {
+                        if (!p.price || /quote|কোটেশন/i.test(String(p.price))) {
+                            location.href = 'contact.html?details=' + encodeURIComponent('Quote for: ' + p.name);
+                            return;
+                        }
                         if (window.KiraCart) {
                             KiraCart.addItem({
                                 title: p.name,
@@ -621,11 +600,11 @@
                     div.setAttribute('data-product-id', p.id || '');
                     div.setAttribute('data-img', p.image || 'images/placeholder.webp');
                     
-                    const badgeHtml = p.badge ? `<span class="portfolio-card-badge" ${p.badgeI18n ? 'data-i18n="'+p.badgeI18n+'"' : ''}>${p.badge}</span>` : '';
+                    const badgeHtml = p.badge ? `<span class="portfolio-card-badge" ${p.badgeI18n ? 'data-i18n="'+p.badgeI18n+'"' : ''}>${KiraDB.escapeHtml(p.badge)}</span>` : '';
                     
                     let specsHtml = '';
                     if (p.specs && p.specs.length) {
-                        specsHtml = p.specs.map(s => `<span class="spec-tag" ${s.i18n ? 'data-i18n="'+s.i18n+'"' : ''}>${s.text}</span>`).join('');
+                        specsHtml = p.specs.map(s => `<span class="spec-tag" ${s.i18n ? 'data-i18n="'+s.i18n+'"' : ''}>${KiraDB.escapeHtml(s.text)}</span>`).join('');
                     }
 
                     div.innerHTML = `
@@ -640,14 +619,14 @@
                         </button>
                         ${badgeHtml}
                         <div class="gallery-frame">
-                            <img src="${p.image || 'images/placeholder.webp'}" alt="${p.name}" loading="lazy">
+                            <img src="${KiraDB.escapeHtml(p.image || 'images/placeholder.webp')}" alt="${KiraDB.escapeHtml(p.name)}" loading="lazy">
                         </div>
                         <div class="portfolio-meta">
-                            <span ${p.categoryI18n ? 'data-i18n="'+p.categoryI18n+'"' : ''}>${p.categoryLabel || p.category}</span>
-                            <h4 ${p.titleI18n ? 'data-i18n="'+p.titleI18n+'"' : ''}>${p.name}</h4>
+                            <span ${p.categoryI18n ? 'data-i18n="'+p.categoryI18n+'"' : ''}>${KiraDB.escapeHtml(p.categoryLabel || p.category)}</span>
+                            <h4 ${p.titleI18n ? 'data-i18n="'+p.titleI18n+'"' : ''}>${KiraDB.escapeHtml(p.name)}</h4>
                             <div class="portfolio-specs">
                                 ${specsHtml}
-                                <span class="spec-tag" style="font-weight:700; color:var(--c-primary);">${p.price || 'Contact for Quote'}</span>
+                                <span class="spec-tag" style="font-weight:700; color:var(--c-primary);">${KiraDB.escapeHtml(p.price || 'Contact for Quote')}</span>
                             </div>
                         </div>
                     `;

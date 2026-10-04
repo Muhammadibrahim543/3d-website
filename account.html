@@ -219,11 +219,11 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/supabaseClient.js"></script>
+    <script src="js/supabaseClient.js?v=20261004-fixes1"></script>
     <script src="js/translations.js"></script>
     <script src="js/main.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/cart.js?v=6"></script>
+    <script src="js/auth.js?v=20261004-fixes1"></script>
+    <script src="js/cart.js?v=20261004-fixes1"></script>
 
     <script>
         function switchAccountTab(tab) {
@@ -236,7 +236,7 @@
             if (btn) btn.classList.add('active');
         }
 
-        function renderAccountPage() {
+        async function renderAccountPage() {
             const user = KiraAuth.getCurrentUser();
             if (!user) {
                 KiraAuth.openModal('login');
@@ -297,9 +297,9 @@
                 presetsContainer.innerHTML = presets.map(p => `
                     <div class="preset-card">
                         <img src="${p.snapshot}" alt="${p.name || p.text}" class="preset-thumb">
-                        <div class="preset-title">${p.text}</div>
+                        <div class="preset-title">${KiraDB.escapeHtml(p.text)}</div>
                         <div class="preset-specs">
-                            🎨 ${p.color} • ${p.font} • ${p.thickness}mm<br>
+                            🎨 ${KiraDB.escapeHtml(p.color)} • ${KiraDB.escapeHtml(p.font)} • ${p.thickness}mm<br>
                             📅 Saved: ${p.date} • Price: <strong>${p.price}</strong>
                         </div>
                         <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
@@ -316,7 +316,15 @@
 
             // Render Orders
             const ordersContainer = document.getElementById('user-orders-container');
-            const orders = KiraAuth.getUserOrders();
+            let orders;
+            try {
+                orders = (await KiraDB.orders.getForUser(user.id)).map(o => ({
+                    ...o, date: new Date(o.created_at).toLocaleDateString(), time: new Date(o.created_at).toLocaleTimeString(),
+                    details: o.notes || '', estimatedPrice: KiraDB.money.format(o.total_amount),
+                    status: ({ pending: 'Pending', printing: 'In Production', delivered: 'Delivered' })[o.status] || o.status,
+                    snapshot: o.custom_3d_specs?.snapshot || o.items?.[0]?.image
+                }));
+            } catch (error) { ordersContainer.textContent = 'Orders could not load / অর্ডার লোড হয়নি: ' + error.message; return; }
             if (orders.length === 0) {
                 ordersContainer.innerHTML = `
                     <div class="clay-card" style="text-align:center; padding:3rem 1rem;">
@@ -332,13 +340,13 @@
                     if (o.status === 'In Production') statusClass = 'status-progress';
                     if (o.status === 'Completed' || o.status === 'Delivered') statusClass = 'status-completed';
 
-                    const waMsg = `Hi Studio Kira's Creation! Inquiry about Order ${o.id} (${o.date}):\n\nItems:\n${o.details}\nTotal: ${o.estimatedPrice}\n\nStatus check please!`;
+                    const waMsg = `Hi Studio Kira's Creation! Inquiry about Order ${KiraDB.escapeHtml(o.id)} (${o.date}):\n\nItems:\n${o.details}\nTotal: ${KiraDB.escapeHtml(o.estimatedPrice)}\n\nStatus check please!`;
 
                     return `
                         <div class="order-card">
                             <div class="order-header">
                                 <div>
-                                    <span style="font-weight:800; font-size:1.1rem; color:var(--c-primary);">Order #${o.id}</span>
+                                    <span style="font-weight:800; font-size:1.1rem; color:var(--c-primary);">Order #${KiraDB.escapeHtml(o.id)}</span>
                                     <span style="font-size:0.85rem; color:var(--c-text-muted); margin-left:0.8rem;">📅 ${o.date} ${o.time ? 'at ' + o.time : ''}</span>
                                 </div>
                                 <span class="order-status-badge ${statusClass}">${o.status || 'Pending'}</span>
@@ -348,14 +356,14 @@
                                 ${o.snapshot ? `<img src="${o.snapshot}" alt="Preview" style="max-width:120px; border-radius:14px; background:#181621; border:1px solid rgba(255,255,255,0.2);">` : ''}
                                 <div style="flex:1;">
                                     <div style="font-weight:700; margin-bottom:0.4rem; font-size:0.95rem;">Order Details:</div>
-                                    <pre style="font-family:var(--f-body); white-space:pre-wrap; background:rgba(0,0,0,0.03); padding:0.8rem; border-radius:12px; font-size:0.85rem; margin:0; color:var(--c-text);">${o.details || '3D Print Order'}</pre>
+                                    <pre style="font-family:var(--f-body); white-space:pre-wrap; background:rgba(0,0,0,0.03); padding:0.8rem; border-radius:12px; font-size:0.85rem; margin:0; color:var(--c-text);">${KiraDB.escapeHtml(o.details || '3D Print Order')}</pre>
                                 </div>
                             </div>
 
                             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.8rem; background:rgba(0,0,0,0.03); padding:0.8rem 1.2rem; border-radius:16px;">
                                 <div>
                                     <span style="font-size:0.88rem; color:var(--c-text-muted);">Total Quoted Amount:</span>
-                                    <span style="font-size:1.2rem; font-weight:800; color:var(--c-primary); margin-left:0.4rem;">${o.estimatedPrice}</span>
+                                    <span style="font-size:1.2rem; font-weight:800; color:var(--c-primary); margin-left:0.4rem;">${KiraDB.escapeHtml(o.estimatedPrice)}</span>
                                 </div>
                                 <a href="https://wa.me/8801793500131?text=${encodeURIComponent(waMsg)}" target="_blank" class="clay-btn btn-coral btn-sm" style="background:#25D366; color:#FFF; font-size:0.85rem;">
                                     💬 Contact Studio via WhatsApp
@@ -367,18 +375,15 @@
             }
         }
 
-        function handleUpdateProfile(e) {
+        async function handleUpdateProfile(e) {
             e.preventDefault();
-            let user = KiraAuth.getCurrentUser();
-            if (!user) return;
-
-            user.name = document.getElementById('prof-name').value;
-            user.phone = document.getElementById('prof-phone').value;
-            user.address = document.getElementById('prof-address').value;
-
-            KiraAuth.setCurrentUser(user);
-            showToast('✅ Profile updated successfully!');
-            renderAccountPage();
+            const button = e.target.querySelector('[type=submit]'); button.disabled = true;
+            try {
+                const user = await KiraDB.auth.updateProfile({ name: document.getElementById('prof-name').value,
+                    phone: document.getElementById('prof-phone').value, address: document.getElementById('prof-address').value });
+                KiraAuth.setCurrentUser(user); showToast('Profile saved / প্রোফাইল সেভ হয়েছে'); await renderAccountPage();
+            } catch (error) { showToast(error.message); }
+            finally { button.disabled = false; }
         }
 
         function applyPresetToCustomizer(encodedPreset) {
@@ -391,8 +396,9 @@
             }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderAccountPage();
+        document.addEventListener('DOMContentLoaded', async () => {
+            await KiraAuth.ready;
+            await renderAccountPage();
             // Handle URL Hash tabs
             const hash = window.location.hash.replace('#', '');
             if (hash === 'presets' || hash === 'orders' || hash === 'profile') {

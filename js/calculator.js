@@ -127,7 +127,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 KiraCart.addItem({
                     title: `Custom 3D Print (${matName})`,
                     specs: `${weight}g • ${infill}% Infill • ${qty} Unit(s)`,
-                    price: price,
+                    price: price / qty,
+                    numPrice: price / qty,
                     quantity: qty,
                     image: 'images/torii_gate_lamp.webp'
                 });

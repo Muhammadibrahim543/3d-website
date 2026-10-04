@@ -22,6 +22,7 @@
     <link rel="stylesheet" href="css/components.css?v=3.4">
     <link rel="stylesheet" href="css/animations.css?v=3.0">
     <link rel="stylesheet" href="css/pages.css?v=3.0">
+    <style>[hidden] { display: none !important; }</style>
 </head>
 <body>
     <div class="site-wrapper">
@@ -95,6 +96,7 @@
             <div class="contact-grid">
                 <div class="clay-card reveal-on-scroll">
                     <div id="customizer-preview-container"></div>
+                    <div id="checkout-summary" style="margin-bottom:1rem;"></div>
                     <div id="contact-feedback" style="font-family:var(--f-head); font-weight:700; margin-bottom:1rem;"></div>
                     <form id="shapey-contact-form">
                         <div class="form-group">
@@ -106,16 +108,33 @@
                             <input type="email" id="contact-email" class="clay-input" data-i18n-placeholder="ph_email" placeholder="e.g. yourname@example.com" required>
                         </div>
                         <div class="form-group">
+                            <label for="contact-phone">Mobile Number / মোবাইল নম্বর</label>
+                            <input type="tel" id="contact-phone" class="clay-input" autocomplete="tel" placeholder="01712345678" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="contact-address">Shipping Address / ডেলিভারির ঠিকানা</label>
+                            <textarea id="contact-address" class="clay-textarea" autocomplete="street-address" rows="2" required></textarea>
+                        </div>
+                        <div class="form-group" id="payment-method-group">
+                            <label for="contact-payment">Payment Method / পেমেন্ট মাধ্যম</label>
+                            <select id="contact-payment" class="clay-select">
+                                <option value="cod">Cash on Delivery / ক্যাশ অন ডেলিভারি</option>
+                                <option value="bkash">bKash / বিকাশ</option>
+                                <option value="nagad">Nagad / নগদ</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label for="material-choice" data-i18n="label_material">Preferred Material</label>
                             <select id="material-choice" class="clay-select">
-                                <option value="Anycubic / Sunlu PLA+">Anycubic / Sunlu PLA+ (Friendly Bio-Starch - ৳২/g)</option>
-                                <option value="Silk Glossy PLA">Silk Glossy PLA (Metallic Luster - ৳২.৫০/g)</option>
-                                <option value="Tough PETG">Tough PETG (Impact & Heat Resistant - ৳২.৫০/g)</option>
+                                <option value="Anycubic / Sunlu PLA+">Anycubic / Sunlu PLA+ (Friendly Bio-Starch)</option>
+                                <option value="Silk Glossy PLA">Silk Glossy PLA (Metallic Luster)</option>
+                                <option value="Tough PETG">Tough PETG (Impact & Heat Resistant)</option>
                             </select>
                         </div>
                         <div class="form-group" id="file-upload-group">
                             <label data-i18n="label_file">Upload Optional 3D Model / Reference Photo (.stl, .obj, .step, images)</label>
-                            <input type="file" class="clay-input" accept="image/*,.stl,.obj,.step,.stp,.3mf">
+                            <input type="file" id="contact-file" class="clay-input" accept=".png,.jpg,.jpeg,.webp,.stl,.obj,.step,.stp,.3mf">
+                            <small>Maximum 25 MB / সর্বোচ্চ ২৫ MB</small>
                         </div>
                         <div class="form-group">
                             <label for="project-details" data-i18n="label_details">Project Details & Requirements</label>
@@ -215,11 +234,11 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/supabaseClient.js"></script>
-    <script src="js/translations.js"></script>
+    <script src="js/supabaseClient.js?v=20261004-fixes1"></script>
+    <script src="js/translations.js?v=20261004-fixes1"></script>
     <script src="js/main.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/cart.js?v=6"></script>
-    <script src="js/contact.js"></script>
+    <script src="js/auth.js?v=20261004-fixes1"></script>
+    <script src="js/cart.js?v=20261004-fixes1"></script>
+    <script src="js/contact.js?v=20261004-fixes1"></script>
 </body>
 </html>
