@@ -395,11 +395,11 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/supabaseClient.js?v=20261004-fixes1"></script>
-    <script src="js/translations.js"></script>
+    <script src="js/translations.js?v=20261120"></script>
     <script src="js/main.js"></script>
     <script src="js/auth.js?v=20261004-fixes1"></script>
     <script src="js/cart.js?v=20261004-fixes1"></script>
-    <script src="js/defaultProducts.js"></script>
+    <script src="js/defaultProducts.js?v=20261120"></script>
     <script src="js/portfolio.js"></script>
     <script>
         // Lightbox Modal Interactivity with i18n support & Deep-linking
@@ -415,6 +415,13 @@
             const btnLightboxShare = document.getElementById('btn-lightbox-share');
 
             // Always fetch the same cloud catalogue that the admin edits.
+            try {
+                const cached = localStorage.getItem('kiras_products');
+                if (cached && (cached.includes('PROD-OLD-20') || cached.includes('16 December Ibrahim Wide Desk Plaque') || !cached.includes('PROD-OLD-39'))) {
+                    localStorage.removeItem('kiras_products');
+                }
+            } catch (e) {}
+
             let dynamicProducts = [];
             try { dynamicProducts = await KiraDB.products.getAll(); }
             catch (error) {

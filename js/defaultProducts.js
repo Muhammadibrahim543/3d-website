@@ -551,35 +551,6 @@ const defaultProducts = [
         "delivery": "3-5 Days"
     },
     {
-        "id": "PROD-OLD-20",
-        "category": "custom",
-        "desc": "",
-        "descKey": "g18_desc",
-        "image": "images/Gemini_Generated_Image_smt185smt185smt1-01.webp",
-        "badge": "🏆 Desk Stand",
-        "badgeI18n": "g18_badge",
-        "categoryLabel": "Custom & Keychains",
-        "categoryI18n": "g18_cat",
-        "name": "16 December Ibrahim Wide Desk Plaque",
-        "titleI18n": "g18_title",
-        "specs": [
-            {
-                "text": "Ocean Blue & Charcoal",
-                "i18n": "g18_spec1"
-            },
-            {
-                "text": "Wide Arch",
-                "i18n": "g18_spec2"
-            },
-            {
-                "text": "Memorial Plaque",
-                "i18n": "g18_spec3"
-            }
-        ],
-        "price": "৳450",
-        "delivery": "3-5 Days"
-    },
-    {
         "id": "PROD-OLD-21",
         "category": "functional",
         "desc": "",
@@ -779,7 +750,7 @@ const defaultProducts = [
                 "i18n": "g25_spec3"
             }
         ],
-        "price": "৳250",
+        "price": "৳650",
         "delivery": "3-5 Days"
     },
     {
@@ -866,7 +837,7 @@ const defaultProducts = [
                 "i18n": "g28_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳200",
         "delivery": "3-5 Days"
     },
     {
@@ -982,7 +953,7 @@ const defaultProducts = [
                 "i18n": "g32_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳200",
         "delivery": "3-5 Days"
     },
     {
@@ -1009,9 +980,13 @@ const defaultProducts = [
             {
                 "text": "Heart & Note Charms",
                 "i18n": "g33_spec3"
+            },
+            {
+                "text": "৳12 - ৳15 / Piece",
+                "i18n": "g33_unit_price"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳15",
         "delivery": "3-5 Days"
     },
     {
@@ -1040,7 +1015,7 @@ const defaultProducts = [
                 "i18n": "g34_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳80",
         "delivery": "3-5 Days"
     },
     {
@@ -1069,7 +1044,7 @@ const defaultProducts = [
                 "i18n": "g35_spec3"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳1,000",
         "delivery": "3-5 Days"
     },
     {
@@ -1125,9 +1100,13 @@ const defaultProducts = [
             {
                 "text": "Micro Miniature Size",
                 "i18n": "g37_spec3"
+            },
+            {
+                "text": "৳20 / Piece",
+                "i18n": "g37_unit_price"
             }
         ],
-        "price": "Contact for Quote",
+        "price": "৳20",
         "delivery": "3-5 Days"
     },
     {

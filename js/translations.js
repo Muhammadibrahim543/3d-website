@@ -76,7 +76,11 @@ const translations = {
         "btn_learn_more": "Learn More >",
         "stat_objects": "Custom Prints Delivered",
         "stat_clients": "Happy Clients",
-        "stat_dispatch": "Fast Dispatch",
+        "stat_dispatch": "Speed Post Delivery",
+        "stat_delivery_time": "Custom: 5-7 Days | Ready: 3 Days",
+        "stat_delivery_post": "Nationwide delivery across Bangladesh via Speed Post for only ৳17",
+        "g33_unit_price": "৳12 - ৳15 / Piece",
+        "g37_unit_price": "৳20 / Piece",
 
         // Services Page
         "services_headline": "Full Tactile Services",
@@ -680,7 +684,11 @@ const translations = {
         "btn_learn_more": "আরও জানুন >",
         "stat_objects": "সফল প্রিন্ট ডেলিভারি",
         "stat_clients": "সন্তুষ্ট গ্রাহক",
-        "stat_dispatch": "দ্রুত ডেলিভারি",
+        "stat_dispatch": "সুপার ফাস্ট ডেলিভারি",
+        "stat_delivery_time": "কাস্টম ডেলিভারি ৫-৭ দিন | রেডিমেড ৩ দিন",
+        "stat_delivery_post": "বাংলাদেশ স্পিড পোস্টে মাত্র ১৭ টাকায় সারাদেশে ডেলিভারি",
+        "g33_unit_price": "প্রতি পিস ১২ - ১৫ টাকা",
+        "g37_unit_price": "প্রতি পিস ২০ টাকা",
 
         // Services Page
         "services_headline": "সম্পূর্ণ সার্ভিস তালিকা",
